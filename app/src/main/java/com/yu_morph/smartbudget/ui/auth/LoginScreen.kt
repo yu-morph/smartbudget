@@ -2,6 +2,7 @@ package com.yu_morph.smartbudget.ui.auth
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -55,10 +56,18 @@ fun LoginScreen(onLogin: () -> Unit, onSignUp: () -> Unit) {
             modifier = Modifier.fillMaxWidth(),
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
-            TextButton(onClick = onSignUp) {
+            TextButton(
+                onClick = onSignUp,
+                modifier = Modifier.height(40.dp),
+                contentPadding = PaddingValues(0.dp),
+            ) {
                 Text(stringResource(R.string.sign_up_action), color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
-            TextButton(onClick = {}) {
+            TextButton(
+                onClick = {},
+                modifier = Modifier.height(40.dp),
+                contentPadding = PaddingValues(0.dp),
+            ) {
                 Text(
                     text = stringResource(R.string.forgot_password),
                     color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),

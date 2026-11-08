@@ -9,13 +9,13 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.imePadding
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawingPadding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.CheckboxDefaults
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -33,6 +33,7 @@ import androidx.compose.ui.unit.sp
 import com.yu_morph.smartbudget.R
 import com.yu_morph.smartbudget.ui.components.BrandSignature
 import com.yu_morph.smartbudget.ui.theme.SmartBudgetGreen
+import com.yu_morph.smartbudget.ui.theme.SmartBudgetGreenLight
 
 @Composable
 fun SignUpScreen(onSignUp: () -> Unit, onLogin: () -> Unit) {
@@ -82,7 +83,7 @@ fun SignUpScreen(onSignUp: () -> Unit, onLogin: () -> Unit) {
             TextButton(onClick = onLogin) {
                 Text(
                     text = stringResource(R.string.login_action),
-                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
+                    color = SmartBudgetGreenLight,
                     textDecoration = TextDecoration.Underline,
                 )
             }
@@ -102,6 +103,7 @@ private fun PrivacyAgreementRow(agreed: Boolean, onAgreementChange: (Boolean) ->
         Checkbox(
             checked = agreed,
             onCheckedChange = onAgreementChange,
+            modifier = Modifier.offset(x = (-12).dp),
             colors = CheckboxDefaults.colors(checkedColor = SmartBudgetGreen),
         )
         Text(stringResource(R.string.privacy_agreement_prefix), fontSize = 13.sp)
