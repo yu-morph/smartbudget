@@ -48,10 +48,13 @@ fun LoginScreen(onLogin: (String, String) -> Unit, onSignUp: () -> Unit) {
         Spacer(Modifier.height(26.dp))
         Text(stringResource(R.string.login_title), fontSize = 24.sp, fontWeight = FontWeight.SemiBold)
         Spacer(Modifier.height(28.dp))
-        Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-            AuthTextField(username, { username = it }, stringResource(R.string.username_hint))
-            AuthTextField(password, { password = it }, stringResource(R.string.password_hint), true)
-        }
+        LoginInputFields(
+            username = username,
+            onUsernameChange = { username = it },
+            password = password,
+            onPasswordChange = { password = it },
+            onDone = { if (username.isNotBlank() && password.isNotBlank()) onLogin(username, password) },
+        )
         Spacer(Modifier.height(20.dp))
         PrimaryAuthButton(
             text = stringResource(R.string.login_action),
@@ -82,5 +85,25 @@ fun LoginScreen(onLogin: (String, String) -> Unit, onSignUp: () -> Unit) {
                 )
             }
         }
+    }
+}
+
+@Composable
+private fun LoginInputFields(
+    username: String,
+    onUsernameChange: (String) -> Unit,
+    password: String,
+    onPasswordChange: (String) -> Unit,
+    onDone: () -> Unit,
+) {
+    Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+        AuthTextField(username, onUsernameChange, stringResource(R.string.username_hint))
+        AuthTextField(
+            value = password,
+            onValueChange = onPasswordChange,
+            placeholder = stringResource(R.string.password_hint),
+            isPassword = true,
+            onDone = onDone,
+        )
     }
 }

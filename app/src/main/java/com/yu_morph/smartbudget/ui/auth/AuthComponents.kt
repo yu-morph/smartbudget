@@ -3,6 +3,8 @@ package com.yu_morph.smartbudget.ui.auth
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.OutlinedTextField
@@ -12,6 +14,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
@@ -28,6 +31,7 @@ internal fun AuthTextField(
     placeholder: String,
     isPassword: Boolean = false,
     isError: Boolean = false,
+    onDone: (() -> Unit)? = null,
 ) {
     OutlinedTextField(
         value = value,
@@ -37,6 +41,14 @@ internal fun AuthTextField(
         textStyle = TextStyle(fontSize = 13.sp),
         singleLine = true,
         isError = isError,
+        keyboardOptions = KeyboardOptions(imeAction = if (onDone != null) ImeAction.Done else ImeAction.Default),
+        keyboardActions =
+            KeyboardActions(
+                onDone = {
+                    defaultKeyboardAction(ImeAction.Done)
+                    onDone?.invoke()
+                },
+            ),
         visualTransformation = if (isPassword) PasswordVisualTransformation() else VisualTransformation.None,
         shape = RoundedCornerShape(10.dp),
         colors = OutlinedTextFieldDefaults.colors(
