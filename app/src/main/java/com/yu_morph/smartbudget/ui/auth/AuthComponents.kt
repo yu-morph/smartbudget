@@ -1,7 +1,6 @@
 package com.yu_morph.smartbudget.ui.auth
 
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
@@ -31,7 +30,7 @@ internal fun AuthTextField(
     OutlinedTextField(
         value = value,
         onValueChange = onValueChange,
-        modifier = Modifier.fillMaxWidth().height(48.dp),
+        modifier = Modifier.fillMaxWidth().heightIn(min = 56.dp),
         placeholder = { Text(text = placeholder, fontSize = 13.sp) },
         textStyle = TextStyle(fontSize = 13.sp),
         singleLine = true,
