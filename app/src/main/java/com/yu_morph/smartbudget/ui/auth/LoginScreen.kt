@@ -54,6 +54,7 @@ fun LoginScreen(onLogin: () -> Unit, onSignUp: () -> Unit) {
         }
         Spacer(Modifier.height(20.dp))
         PrimaryAuthButton(stringResource(R.string.login_action), onLogin)
+        Spacer(Modifier.height(4.dp))
         Column(
             modifier = Modifier.fillMaxWidth(),
             horizontalAlignment = Alignment.CenterHorizontally,

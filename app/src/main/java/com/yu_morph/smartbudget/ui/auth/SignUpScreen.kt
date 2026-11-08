@@ -71,9 +71,9 @@ fun SignUpScreen(onSignUp: () -> Unit, onLogin: () -> Unit, onBack: () -> Unit) 
             verticalArrangement = Arrangement.Center,
         ) {
             BrandSignature(logoSize = 48.dp, textSize = 24)
-            Spacer(Modifier.height(56.dp))
+            Spacer(Modifier.height(26.dp))
             Text(stringResource(R.string.sign_up_title), fontSize = 26.sp, fontWeight = FontWeight.Bold)
-            Spacer(Modifier.height(34.dp))
+            Spacer(Modifier.height(28.dp))
             SignUpInputFields(
                 username = name,
                 onUsernameChange = { name = it },
@@ -82,7 +82,7 @@ fun SignUpScreen(onSignUp: () -> Unit, onLogin: () -> Unit, onBack: () -> Unit) 
                 passwordConfirmation = passwordConfirm,
                 onPasswordConfirmationChange = { passwordConfirm = it },
             )
-            Spacer(Modifier.height(8.dp))
+            Spacer(Modifier.height(6.dp))
             PrivacyAgreementRow(
                 agreed = agreed,
                 onAgreementChange = { agreed = it },
@@ -169,7 +169,7 @@ private fun SignUpConditionLabel(text: String) {
         text = text,
         modifier = Modifier.fillMaxWidth(),
         color = SignUpConditionColor,
-        fontSize = 11.sp,
+        fontSize = 11.sp
     )
 }
 
