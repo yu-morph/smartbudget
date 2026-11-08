@@ -1,77 +1,78 @@
-# SmartBudget Agent Guide
+# SmartBudget 에이전트 작업 지침
 
-## Project scope
+## 프로젝트 범위
 
-SmartBudget is an Android personal-finance app built with Kotlin and Jetpack Compose. It combines manual entry, receipt OCR, and financial-data import with monthly budgets and AI-assisted spending reports. Keep the client usable on its own while backend features are still being implemented.
+SmartBudget은 Kotlin과 Jetpack Compose로 개발하는 Android 개인 재무 관리 앱이다. 수기 입력, 영수증 OCR, 금융 데이터 연동으로 수집한 거래를 월간 예산 및 AI 기반 소비 분석 리포트와 결합한다. 백엔드 기능이 아직 구현 중이더라도 클라이언트 자체의 사용성을 유지한다.
 
-## Repository map
+## 저장소 구성
 
-- `app/src/main/java/com/yu_morph/smartbudget`: application and Compose UI code.
-- `app/src/test`: local JVM tests.
-- `app/src/androidTest`: device and emulator tests.
-- `knowledges/design/proposal.docx`: product scope, user flows, architecture, and technology choices.
-- `knowledges/design/ui-mockups`: screen and interaction references. Match the intended flow as well as the static appearance.
-- `knowledges/api/openapi.json`: target backend contract and the source of truth for paths and schemas.
-- `knowledges/api/authentication.md`: authentication, validation, token, and account-management details.
-- `knowledges/api/ocr.md`: receipt OCR contract and implementation decisions.
-- `knowledges/api/azure-deployment-design.md`: development server, deployment, and version-check information.
-- `knowledges/mock-api`: temporary fixed-transaction API documentation. Do not treat this API as the production contract.
+- `app/src/main/java/com/yu_morph/smartbudget`: 애플리케이션 및 Compose UI 코드.
+- `app/src/test`: 로컬 JVM 테스트.
+- `app/src/androidTest`: 기기 및 에뮬레이터 테스트.
+- `knowledges/design/proposal.docx`: 제품 범위, 사용자 흐름, 아키텍처, 기술 선택 자료.
+- `knowledges/design/ui-mockups`: 화면 및 상호작용 참고 자료. 정적인 화면 형태뿐 아니라 의도된 흐름까지 일치시킨다.
+- `knowledges/api/openapi.json`: 백엔드 목표 계약이며 경로와 스키마의 단일 기준.
+- `knowledges/api/authentication.md`: 인증, 입력 검증, 토큰, 계정 관리 상세 자료.
+- `knowledges/api/ocr.md`: 영수증 OCR 계약 및 구현 결정 사항.
+- `knowledges/api/azure-deployment-design.md`: 개발 서버, 배포, 버전 확인 정보.
+- `knowledges/mock-api`: 임시 고정 거래 내역 API 문서. 운영 API 계약으로 간주하지 않는다.
 
-## Working rules
+## 작업 원칙
 
-- Read the relevant documents under `knowledges` before changing a screen, domain model, or API integration.
-- When documents conflict, follow `knowledges/api/openapi.json` for the target API contract. Treat the running server's `/openapi.json` and `/docs` as the authority for what is implemented today.
-- Keep target-contract support separate from temporary compatibility code. Do not silently replace target `/api/v1` endpoints with the mock API.
-- Use Kotlin and Jetpack Compose for UI. Follow unidirectional data flow: composables render immutable state and emit events; networking and persistence stay outside composables.
-- Prefer small, feature-oriented packages and interfaces at external boundaries. Keep DTOs, domain models, and UI models distinct when their shapes or lifecycles differ.
-- Put user-visible text in Android string resources. Preserve accessibility semantics, touch-target sizes, loading states, empty states, and actionable error states.
-- Never commit secrets, tokens, API keys, local database paths, `.env` files, or production financial data. Do not log passwords, JWTs, receipt images, or full API payloads containing personal data.
-- Add or update tests with behavior changes. Include failure paths and ownership/authentication cases for API-facing code.
-- Before finishing, run the repository verification harness described below and resolve failures caused by the change.
+- 화면, 도메인 모델, API 연동을 변경하기 전에 `knowledges` 아래의 관련 문서를 확인한다.
+- 문서 간 내용이 충돌하면 목표 API 계약은 `knowledges/api/openapi.json`을 따른다. 현재 구현된 범위는 실행 중인 서버의 `/openapi.json`과 `/docs`를 기준으로 판단한다.
+- 목표 계약 지원 코드와 임시 호환 코드를 분리한다. 목표 `/api/v1` 엔드포인트를 mock API로 암묵적으로 대체하지 않는다.
+- UI에는 Kotlin과 Jetpack Compose를 사용한다. 컴포저블은 불변 상태를 렌더링하고 이벤트를 전달하며, 네트워크와 영속성 처리는 컴포저블 밖에 두는 단방향 데이터 흐름을 따른다.
+- 작고 기능 중심적인 패키지와 외부 경계의 인터페이스를 선호한다. 형태나 생명주기가 다르면 DTO, 도메인 모델, UI 모델을 분리한다.
+- 사용자에게 표시되는 문구는 Android 문자열 리소스에 둔다. 접근성 의미 정보, 터치 영역 크기, 로딩 상태, 빈 상태, 사용자가 조치할 수 있는 오류 상태를 보존한다.
+- 새로 작성하거나 수정하는 모든 코드 주석과 KDoc은 한국어로 작성한다. 외부 API의 고유 명칭, 코드 식별자, 오류 코드처럼 원문 유지가 필요한 부분만 예외로 한다.
+- 새로 작성하거나 수정하는 README, 설계서, 작업 지침, 운영 안내 등 모든 프로젝트 문서는 한국어로 작성한다. 외부 표준의 원문 인용이나 도구가 요구하는 고정 문구는 원문을 유지할 수 있다.
+- 비밀값, 토큰, API 키, 로컬 데이터베이스 경로, `.env` 파일, 실제 금융 데이터를 커밋하지 않는다. 비밀번호, JWT, 영수증 이미지, 개인정보를 포함한 전체 API 페이로드를 로그로 남기지 않는다.
+- 동작을 변경할 때 테스트를 추가하거나 갱신한다. API 연동 코드에는 실패 경로와 소유권 및 인증 사례를 포함한다.
+- 작업을 마치기 전에 아래의 저장소 검증 하네스를 실행하고, 변경으로 발생한 실패를 해결한다.
 
-## Backend API integration reference
+## 백엔드 API 연동 참조
 
-### Contract and environment
+### 계약 및 환경
 
-- Target API prefix: `/api/v1`.
-- Development server documented in `knowledges/api/azure-deployment-design.md`: `https://smartbudget-dev-kc-260925.koreacentral.cloudapp.azure.com`.
-- Check `GET /api/v1/version` before diagnosing an apparent contract mismatch. The root path returning 404 is not a health-check failure.
-- Do not hardcode the base URL in feature code. Supply it through build configuration or dependency injection so local, development, and test servers can be selected independently.
-- API implementation is incremental. Authentication and version endpoints are documented as implemented; transaction, monthly-budget, report, and OCR endpoints may still be stubs. Confirm the running server contract before relying on them.
+- 목표 API 접두사: `/api/v1`.
+- `knowledges/api/azure-deployment-design.md`에 기록된 개발 서버: `https://smartbudget-dev-kc-260925.koreacentral.cloudapp.azure.com`.
+- 계약 불일치로 판단하기 전에 `GET /api/v1/version`을 확인한다. 루트 경로가 404를 반환하는 것은 상태 확인 실패가 아니다.
+- 기능 코드에 기본 URL을 하드코딩하지 않는다. 로컬, 개발, 테스트 서버를 독립적으로 선택할 수 있도록 빌드 설정이나 의존성 주입으로 전달한다.
+- API는 점진적으로 구현되고 있다. 인증과 버전 엔드포인트는 구현된 것으로 문서화되어 있지만 거래, 월별 예산, 리포트, OCR 엔드포인트는 아직 스텁일 수 있다. 해당 기능에 의존하기 전에 실행 중인 서버의 계약을 확인한다.
 
-### HTTP and response handling
+### HTTP 및 응답 처리
 
-- Send JSON for `POST`, `PUT`, and `PATCH` unless an endpoint explicitly specifies multipart data.
-- The standard API envelope contains `status`, stable English `code`, English `message`, and `data`. Branch application behavior on `code`, not `message`.
-- Model error bodies as normal API responses even when the HTTP status is non-2xx. Preserve the status and stable code for UI mapping and diagnostics.
-- Expect `400 INVALID_REQUEST`, authentication-related `401` codes, `409 USERNAME_CONFLICT`, `429 SIGN_IN_RATE_LIMITED`, and `503 SERVICE_UNAVAILABLE` where documented.
-- Honor `Retry-After` on sign-in rate limits. Do not automatically retry authentication, mutation, OCR, or report-generation requests unless the operation is proven idempotent.
-- Use ISO 8601 `YYYY-MM-DD` for dates, `HH:mm:ss` for optional transaction times, and an offset-bearing timestamp such as `YYYY-MM-DDTHH:mm:ss+09:00` for instants.
+- 엔드포인트가 multipart 데이터를 명시하지 않는 한 `POST`, `PUT`, `PATCH` 요청은 JSON으로 전송한다.
+- 표준 API 응답 래퍼는 `status`, 안정적인 영문 `code`, 영문 `message`, `data`를 포함한다. 애플리케이션 동작은 `message`가 아니라 `code`를 기준으로 분기한다.
+- HTTP 상태가 2xx가 아니어도 오류 본문을 정상적인 API 응답 모델로 처리한다. UI 매핑과 진단을 위해 상태와 안정적인 오류 코드를 보존한다.
+- 문서에 정의된 경우 `400 INVALID_REQUEST`, 인증 관련 `401` 코드, `409 USERNAME_CONFLICT`, `429 SIGN_IN_RATE_LIMITED`, `503 SERVICE_UNAVAILABLE`를 처리한다.
+- 로그인 요청 제한 응답의 `Retry-After`를 준수한다. 멱등성이 입증되지 않은 인증, 변경, OCR, 리포트 생성 요청은 자동으로 재시도하지 않는다.
+- 날짜는 ISO 8601 `YYYY-MM-DD`, 선택적 거래 시각은 `HH:mm:ss`, 정확한 시점은 `YYYY-MM-DDTHH:mm:ss+09:00`처럼 오프셋이 포함된 형식을 사용한다.
 
-### Authentication and ownership
+### 인증 및 소유권
 
-- Send access tokens only as `Authorization: Bearer <JWT>` for protected endpoints. The refresh endpoint is the exception: it accepts the token in its JSON body and rejects an Authorization header.
-- Store JWTs in secure platform storage. Clear local credentials on logout or terminal authentication failure; remember that local deletion does not revoke a server token.
-- A password change increments the server token version and invalidates existing JWTs. Return the user to sign-in after a successful password change.
-- Token refresh is recommended only when the token is at least one day old and has no more than six hours remaining. An old token remains valid until its original expiry unless otherwise invalidated.
-- Never accept or send another user's identifier for account-scoped operations. Transaction, budget, report, and account data must always remain scoped to the authenticated user.
+- 보호된 엔드포인트에는 접근 토큰을 `Authorization: Bearer <JWT>`로만 전송한다. 갱신 엔드포인트는 예외로, 토큰을 JSON 본문으로 받고 Authorization 헤더를 거부한다.
+- JWT는 플랫폼의 안전한 저장소에 보관한다. 로그아웃하거나 복구할 수 없는 인증 오류가 발생하면 로컬 인증 정보를 삭제한다. 로컬에서 토큰을 삭제해도 서버 토큰이 폐기되는 것은 아니다.
+- 비밀번호를 변경하면 서버의 토큰 버전이 증가해 기존 JWT가 무효화된다. 비밀번호 변경 성공 후 사용자를 로그인 화면으로 이동시킨다.
+- 토큰은 발급 후 하루 이상 지났고 만료까지 6시간 이하로 남았을 때만 갱신하도록 권장한다. 별도로 무효화되지 않았다면 기존 토큰은 원래 만료 시각까지 유효하다.
+- 계정 범위 작업에서 다른 사용자의 식별자를 받거나 전송하지 않는다. 거래, 예산, 리포트, 계정 데이터는 항상 인증된 사용자에게 귀속되어야 한다.
 
-### Feature endpoints
+### 기능별 엔드포인트
 
-- Authentication: `/api/v1/auth/sign-up`, `/sign-in`, `/refresh`, and `/account` as defined in `authentication.md`.
-- Transactions: list/create at `/api/v1/transaction`; detail/update/delete at `/api/v1/transaction/{id}`.
-- Monthly budgets: get or replace `/api/v1/monthly-budget/{month}`.
-- Reports: list/request at `/api/v1/report`; detail/delete at `/api/v1/report/{id}`.
-- Receipt OCR: proxy through `/api/v1/proxy/ocr`. Validate image type and size, let the user review and correct extracted values, and only then create a transaction.
-- Never send identifying fields to an LLM from the client. The backend must calculate statistics and remove identifying data before analysis.
+- 인증: `authentication.md`에 정의된 `/api/v1/auth/sign-up`, `/sign-in`, `/refresh`, `/account`.
+- 거래: `/api/v1/transaction`에서 목록 조회 및 생성, `/api/v1/transaction/{id}`에서 상세 조회, 수정, 삭제.
+- 월별 예산: `/api/v1/monthly-budget/{month}`에서 조회 또는 전체 교체.
+- 리포트: `/api/v1/report`에서 목록 조회 및 생성 요청, `/api/v1/report/{id}`에서 상세 조회 및 삭제.
+- 영수증 OCR: `/api/v1/proxy/ocr`을 통해 프록시한다. 이미지 형식과 크기를 검증하고, 사용자가 추출 결과를 확인하고 수정한 뒤에만 거래를 생성한다.
+- 클라이언트에서 LLM으로 식별 가능한 필드를 전송하지 않는다. 통계 계산과 식별 정보 제거는 백엔드에서 수행해야 한다.
 
-## Build and verification
+## 빌드 및 검증
 
-Run Gradle with the checked-in wrapper from the repository root.
+저장소 루트에서 체크인된 Gradle Wrapper를 사용한다.
 
 ```powershell
 .\gradlew.bat verify
 ```
 
-The `verify` harness formats Kotlin sources first, then runs local tests, ktlint checks, and detekt analysis. Use it before handing off work. Formatting may change files, so review the resulting diff before committing or reporting completion.
-
+`verify` 하네스는 Kotlin 소스를 먼저 포맷한 뒤 로컬 테스트, ktlint 검사, detekt 분석을 실행한다. 작업을 인계하기 전에 반드시 사용한다. 포맷 작업이 파일을 변경할 수 있으므로 커밋하거나 완료를 보고하기 전에 변경 내용을 검토한다.
