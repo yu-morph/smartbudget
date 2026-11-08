@@ -1,10 +1,12 @@
 package com.yu_morph.smartbudget.ui.auth
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
@@ -13,6 +15,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.CheckboxDefaults
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -24,6 +27,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.yu_morph.smartbudget.R
@@ -36,6 +40,7 @@ fun SignUpScreen(onSignUp: () -> Unit, onLogin: () -> Unit) {
     var password by rememberSaveable { mutableStateOf("") }
     var passwordConfirm by rememberSaveable { mutableStateOf("") }
     var agreed by rememberSaveable { mutableStateOf(false) }
+    var showPrivacyPolicy by rememberSaveable { mutableStateOf(false) }
     Column(
         modifier =
             Modifier
@@ -45,8 +50,8 @@ fun SignUpScreen(onSignUp: () -> Unit, onLogin: () -> Unit) {
                 .verticalScroll(rememberScrollState())
                 .padding(horizontal = 46.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center,
     ) {
-        Spacer(Modifier.height(40.dp))
         BrandSignature(logoSize = 48.dp, textSize = 24)
         Spacer(Modifier.height(56.dp))
         Text(stringResource(R.string.sign_up_title), fontSize = 26.sp, fontWeight = FontWeight.Bold)
@@ -61,16 +66,11 @@ fun SignUpScreen(onSignUp: () -> Unit, onLogin: () -> Unit) {
                 passwordConfirm = it
             }, stringResource(R.string.password_confirm_hint), true)
         }
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            Checkbox(
-                checked = agreed,
-                onCheckedChange = { agreed = it },
-                colors = CheckboxDefaults.colors(checkedColor = SmartBudgetGreen),
-            )
-            Text(stringResource(R.string.privacy_agreement_prefix), fontSize = 13.sp)
-            Text(stringResource(R.string.privacy_policy), color = SmartBudgetGreen, fontSize = 13.sp)
-            Text(stringResource(R.string.privacy_agreement_suffix), fontSize = 13.sp)
-        }
+        PrivacyAgreementRow(
+            agreed = agreed,
+            onAgreementChange = { agreed = it },
+            onOpenPolicy = { showPrivacyPolicy = true },
+        )
         Spacer(Modifier.height(12.dp))
         PrimaryAuthButton(
             text = stringResource(R.string.sign_up_action),
@@ -80,8 +80,38 @@ fun SignUpScreen(onSignUp: () -> Unit, onLogin: () -> Unit) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             Text(stringResource(R.string.already_have_account), fontSize = 13.sp)
             TextButton(onClick = onLogin) {
-                Text(stringResource(R.string.login_action), color = SmartBudgetGreen)
+                Text(
+                    text = stringResource(R.string.login_action),
+                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
+                    textDecoration = TextDecoration.Underline,
+                )
             }
         }
+    }
+    if (showPrivacyPolicy) {
+        PrivacyPolicyDialog(onDismiss = { showPrivacyPolicy = false })
+    }
+}
+
+@Composable
+private fun PrivacyAgreementRow(agreed: Boolean, onAgreementChange: (Boolean) -> Unit, onOpenPolicy: () -> Unit) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Checkbox(
+            checked = agreed,
+            onCheckedChange = onAgreementChange,
+            colors = CheckboxDefaults.colors(checkedColor = SmartBudgetGreen),
+        )
+        Text(stringResource(R.string.privacy_agreement_prefix), fontSize = 13.sp)
+        Text(
+            text = stringResource(R.string.privacy_policy),
+            modifier = Modifier.clickable(onClick = onOpenPolicy),
+            color = SmartBudgetGreen,
+            fontSize = 13.sp,
+            textDecoration = TextDecoration.Underline,
+        )
+        Text(stringResource(R.string.privacy_agreement_suffix), fontSize = 13.sp)
     }
 }
