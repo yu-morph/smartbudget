@@ -8,11 +8,13 @@ internal object SignUpValidation {
     private val SpecialCharacterPattern = Regex("[!@#\\$%^&*_=+?\\-]")
 
     fun isValid(username: String, password: String, passwordConfirmation: String): Boolean =
-        UsernamePattern.matches(username) &&
+        isValidUsername(username) &&
             isValidPassword(password) &&
             password == passwordConfirmation
 
-    private fun isValidPassword(password: String): Boolean {
+    fun isValidUsername(username: String): Boolean = UsernamePattern.matches(username)
+
+    fun isValidPassword(password: String): Boolean {
         if (!PasswordPattern.matches(password)) return false
         val categoryCount =
             listOf(

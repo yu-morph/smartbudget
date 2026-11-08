@@ -19,6 +19,7 @@ import androidx.compose.ui.unit.sp
 import com.yu_morph.smartbudget.ui.theme.SmartBudgetGreen
 
 internal val AuthFieldBorderColor = Color(0xFFD7D7D7)
+internal val AuthFieldErrorColor = Color(0xFFB3261E)
 
 @Composable
 internal fun AuthTextField(
@@ -26,6 +27,7 @@ internal fun AuthTextField(
     onValueChange: (String) -> Unit,
     placeholder: String,
     isPassword: Boolean = false,
+    isError: Boolean = false,
 ) {
     OutlinedTextField(
         value = value,
@@ -34,11 +36,13 @@ internal fun AuthTextField(
         placeholder = { Text(text = placeholder, fontSize = 13.sp) },
         textStyle = TextStyle(fontSize = 13.sp),
         singleLine = true,
+        isError = isError,
         visualTransformation = if (isPassword) PasswordVisualTransformation() else VisualTransformation.None,
         shape = RoundedCornerShape(10.dp),
         colors = OutlinedTextFieldDefaults.colors(
             focusedBorderColor = SmartBudgetGreen,
             unfocusedBorderColor = AuthFieldBorderColor,
+            errorBorderColor = AuthFieldErrorColor,
         ),
     )
 }
