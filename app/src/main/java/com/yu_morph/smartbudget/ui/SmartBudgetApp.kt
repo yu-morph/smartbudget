@@ -1,5 +1,6 @@
 package com.yu_morph.smartbudget.ui
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
@@ -24,6 +25,9 @@ private const val MORPH_DURATION_MILLIS = 350
 @Composable
 fun SmartBudgetApp() {
     var destination by rememberSaveable { mutableStateOf(AppDestination.SPLASH) }
+    BackHandler(enabled = destination == AppDestination.SIGN_UP) {
+        destination = AppDestination.LOGIN
+    }
     AnimatedContent(
         targetState = destination,
         transitionSpec = {
