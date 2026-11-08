@@ -60,7 +60,6 @@ fun SignUpScreen(onSignUp: () -> Unit, onLogin: () -> Unit, onBack: () -> Unit) 
     var agreed by rememberSaveable { mutableStateOf(false) }
     val context = LocalContext.current
     Box(modifier = Modifier.fillMaxSize().safeDrawingPadding()) {
-        SignUpBackButton(onClick = onBack)
         Column(
             modifier =
                 Modifier
@@ -106,6 +105,7 @@ fun SignUpScreen(onSignUp: () -> Unit, onLogin: () -> Unit, onBack: () -> Unit) 
                 }
             }
         }
+        SignUpBackButton(onClick = onBack)
     }
 }
 
