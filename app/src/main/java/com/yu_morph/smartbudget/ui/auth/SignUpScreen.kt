@@ -22,8 +22,10 @@ import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.rounded.ArrowBack
 import androidx.compose.material.icons.rounded.Check
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.ripple
@@ -49,59 +51,71 @@ import com.yu_morph.smartbudget.ui.theme.SmartBudgetGreen
 import com.yu_morph.smartbudget.ui.theme.SmartBudgetGreenLight
 
 @Composable
-fun SignUpScreen(onSignUp: () -> Unit, onLogin: () -> Unit) {
+fun SignUpScreen(onSignUp: () -> Unit, onLogin: () -> Unit, onBack: () -> Unit) {
     var name by rememberSaveable { mutableStateOf("") }
     var password by rememberSaveable { mutableStateOf("") }
     var passwordConfirm by rememberSaveable { mutableStateOf("") }
     var agreed by rememberSaveable { mutableStateOf(false) }
     val context = LocalContext.current
-    Column(
-        modifier =
-            Modifier
-                .fillMaxSize()
-                .safeDrawingPadding()
-                .imePadding()
-                .verticalScroll(rememberScrollState())
-                .padding(horizontal = 46.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center,
-    ) {
-        BrandSignature(logoSize = 48.dp, textSize = 24)
-        Spacer(Modifier.height(56.dp))
-        Text(stringResource(R.string.sign_up_title), fontSize = 26.sp, fontWeight = FontWeight.Bold)
-        Spacer(Modifier.height(34.dp))
-        Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-            Text(stringResource(R.string.name_label))
-            AuthTextField(name, { name = it }, stringResource(R.string.username_hint))
-            Spacer(Modifier.height(4.dp))
-            Text(stringResource(R.string.password_label))
-            AuthTextField(password, { password = it }, stringResource(R.string.password_rule_hint), true)
-            AuthTextField(passwordConfirm, {
-                passwordConfirm = it
-            }, stringResource(R.string.password_confirm_hint), true)
-        }
-        Spacer(Modifier.height(8.dp))
-        PrivacyAgreementRow(
-            agreed = agreed,
-            onAgreementChange = { agreed = it },
-            onOpenPolicy = { openExampleCustomTab(context) },
-        )
-        Spacer(Modifier.height(8.dp))
-        PrimaryAuthButton(
-            text = stringResource(R.string.sign_up_action),
-            onClick = onSignUp,
-            enabled = agreed && SignUpValidation.isValid(name, password, passwordConfirm),
-        )
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            Text(stringResource(R.string.already_have_account), fontSize = 13.sp)
-            TextButton(onClick = onLogin) {
-                Text(
-                    text = stringResource(R.string.login_action),
-                    color = SmartBudgetGreenLight,
-                    textDecoration = TextDecoration.Underline,
-                )
+    Box(modifier = Modifier.fillMaxSize().safeDrawingPadding()) {
+        SignUpBackButton(onClick = onBack)
+        Column(
+            modifier =
+                Modifier
+                    .fillMaxSize()
+                    .imePadding()
+                    .verticalScroll(rememberScrollState())
+                    .padding(horizontal = 46.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center,
+        ) {
+            BrandSignature(logoSize = 48.dp, textSize = 24)
+            Spacer(Modifier.height(56.dp))
+            Text(stringResource(R.string.sign_up_title), fontSize = 26.sp, fontWeight = FontWeight.Bold)
+            Spacer(Modifier.height(34.dp))
+            Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                Text(stringResource(R.string.name_label))
+                AuthTextField(name, { name = it }, stringResource(R.string.username_hint))
+                Spacer(Modifier.height(4.dp))
+                Text(stringResource(R.string.password_label))
+                AuthTextField(password, { password = it }, stringResource(R.string.password_rule_hint), true)
+                AuthTextField(passwordConfirm, {
+                    passwordConfirm = it
+                }, stringResource(R.string.password_confirm_hint), true)
+            }
+            Spacer(Modifier.height(8.dp))
+            PrivacyAgreementRow(
+                agreed = agreed,
+                onAgreementChange = { agreed = it },
+                onOpenPolicy = { openExampleCustomTab(context) },
+            )
+            Spacer(Modifier.height(8.dp))
+            PrimaryAuthButton(
+                text = stringResource(R.string.sign_up_action),
+                onClick = onSignUp,
+                enabled = agreed && SignUpValidation.isValid(name, password, passwordConfirm),
+            )
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text(stringResource(R.string.already_have_account), fontSize = 13.sp)
+                TextButton(onClick = onLogin) {
+                    Text(
+                        text = stringResource(R.string.login_action),
+                        color = SmartBudgetGreenLight,
+                        textDecoration = TextDecoration.Underline,
+                    )
+                }
             }
         }
+    }
+}
+
+@Composable
+private fun SignUpBackButton(onClick: () -> Unit) {
+    IconButton(onClick = onClick) {
+        Icon(
+            imageVector = Icons.AutoMirrored.Rounded.ArrowBack,
+            contentDescription = stringResource(R.string.back_to_login_description),
+        )
     }
 }
 

@@ -18,6 +18,7 @@
     <string name="close_action">닫기</string>
     <string name="privacy_agreement_suffix">에 동의합니다.</string>
     <string name="already_have_account">이미 계정이 있으신가요? </string>
+    <string name="back_to_login_description">로그인 화면으로 돌아가기</string>
     <string name="home_tab">홈</string>
     <string name="budget_book_tab">가계부</string>
     <string name="analysis_tab">분석</string>
