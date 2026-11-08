@@ -31,7 +31,7 @@ internal fun AuthTextField(
         value = value,
         onValueChange = onValueChange,
         modifier = Modifier.fillMaxWidth().heightIn(min = 56.dp),
-        placeholder = { Text(placeholder) },
+        placeholder = { Text(text = placeholder, fontSize = 13.sp) },
         textStyle = TextStyle(fontSize = 13.sp),
         singleLine = true,
         visualTransformation = if (isPassword) PasswordVisualTransformation() else VisualTransformation.None,

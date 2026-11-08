@@ -3,6 +3,7 @@ package com.yu_morph.smartbudget.ui.auth
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -25,9 +26,11 @@ import androidx.compose.material.icons.rounded.Check
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.ripple
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -115,7 +118,18 @@ private fun PrivacyAgreementRow(agreed: Boolean, onAgreementChange: (Boolean) ->
             onCheckedChange = onAgreementChange,
             modifier = Modifier.offset(x = (-12).dp),
         )
-        Row(modifier = Modifier.offset(x = (-16).dp)) {
+        Row(
+            modifier =
+                Modifier
+                    .offset(x = (-16).dp)
+                    .toggleable(
+                        value = agreed,
+                        interactionSource = remember { MutableInteractionSource() },
+                        indication = null,
+                        role = Role.Checkbox,
+                        onValueChange = onAgreementChange,
+                    ),
+        ) {
             Text(stringResource(R.string.privacy_agreement_prefix), fontSize = 13.sp)
             Text(
                 text = stringResource(R.string.privacy_policy),
@@ -135,11 +149,18 @@ private fun RoundedAgreementCheckbox(
     onCheckedChange: (Boolean) -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    val interactionSource = remember { MutableInteractionSource() }
     Box(
         modifier =
             modifier
                 .size(48.dp)
-                .toggleable(value = checked, role = Role.Checkbox, onValueChange = onCheckedChange),
+                .toggleable(
+                    value = checked,
+                    interactionSource = interactionSource,
+                    indication = ripple(bounded = false, radius = 20.dp),
+                    role = Role.Checkbox,
+                    onValueChange = onCheckedChange,
+                ),
         contentAlignment = Alignment.Center,
     ) {
         Box(
