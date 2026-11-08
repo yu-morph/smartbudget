@@ -5,6 +5,9 @@ plugins {
     alias(libs.plugins.ktlint)
 }
 
+val appVersionName = providers.gradleProperty("appVersionName").orElse("1.0")
+val appVersionCode = providers.gradleProperty("appVersionCode").map(String::toInt).orElse(1)
+
 ktlint {
     android.set(true)
     version.set("1.8.0")
@@ -33,8 +36,12 @@ android {
         applicationId = "com.yu_morph.smartbudget"
         minSdk = 29
         targetSdk = 37
-        versionCode = 1
-        versionName = "1.0"
+        versionCode = appVersionCode.get()
+        versionName = appVersionName.get()
+
+        ndk {
+            abiFilters += setOf("arm64-v8a", "armeabi-v7a")
+        }
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
