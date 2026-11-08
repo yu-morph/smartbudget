@@ -13,6 +13,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -22,6 +23,8 @@ import androidx.compose.ui.unit.sp
 import com.yu_morph.smartbudget.R
 import com.yu_morph.smartbudget.ui.theme.OutfitFontFamily
 import com.yu_morph.smartbudget.ui.theme.SmartBudgetGreen
+
+private const val INTERNAL_LOGO_SCALE = 1.68f
 
 @Composable
 fun BrandSignature(modifier: Modifier = Modifier, logoSize: Dp = 64.dp, textSize: Int = 28) {
@@ -40,7 +43,13 @@ fun BrandSignature(modifier: Modifier = Modifier, logoSize: Dp = 64.dp, textSize
             Image(
                 painter = painterResource(R.drawable.ic_launcher_foreground),
                 contentDescription = stringResource(R.string.app_logo_description),
-                modifier = Modifier.size(logoSize),
+                modifier =
+                    Modifier
+                        .size(logoSize)
+                        .graphicsLayer(
+                            scaleX = INTERNAL_LOGO_SCALE,
+                            scaleY = INTERNAL_LOGO_SCALE,
+                        ),
             )
         }
         Row(verticalAlignment = Alignment.CenterVertically) {
