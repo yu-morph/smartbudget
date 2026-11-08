@@ -11,12 +11,14 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.yu_morph.smartbudget.ui.theme.SmartBudgetGreen
 
-private val AuthFieldBorderColor = Color(0xFFD7D7D7)
+internal val AuthFieldBorderColor = Color(0xFFD7D7D7)
 
 @Composable
 internal fun AuthTextField(
@@ -30,6 +32,7 @@ internal fun AuthTextField(
         onValueChange = onValueChange,
         modifier = Modifier.fillMaxWidth().heightIn(min = 56.dp),
         placeholder = { Text(placeholder) },
+        textStyle = TextStyle(fontSize = 13.sp),
         singleLine = true,
         visualTransformation = if (isPassword) PasswordVisualTransformation() else VisualTransformation.None,
         shape = RoundedCornerShape(10.dp),

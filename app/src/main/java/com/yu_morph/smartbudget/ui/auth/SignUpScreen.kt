@@ -1,7 +1,10 @@
 package com.yu_morph.smartbudget.ui.auth
 
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -12,10 +15,14 @@ import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawingPadding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.selection.toggleable
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.Checkbox
-import androidx.compose.material3.CheckboxDefaults
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.Check
+import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -25,7 +32,9 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
@@ -67,12 +76,13 @@ fun SignUpScreen(onSignUp: () -> Unit, onLogin: () -> Unit) {
                 passwordConfirm = it
             }, stringResource(R.string.password_confirm_hint), true)
         }
+        Spacer(Modifier.height(8.dp))
         PrivacyAgreementRow(
             agreed = agreed,
             onAgreementChange = { agreed = it },
             onOpenPolicy = { showPrivacyPolicy = true },
         )
-        Spacer(Modifier.height(12.dp))
+        Spacer(Modifier.height(8.dp))
         PrimaryAuthButton(
             text = stringResource(R.string.sign_up_action),
             onClick = onSignUp,
@@ -100,20 +110,58 @@ private fun PrivacyAgreementRow(agreed: Boolean, onAgreementChange: (Boolean) ->
         modifier = Modifier.fillMaxWidth(),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Checkbox(
+        RoundedAgreementCheckbox(
             checked = agreed,
             onCheckedChange = onAgreementChange,
             modifier = Modifier.offset(x = (-12).dp),
-            colors = CheckboxDefaults.colors(checkedColor = SmartBudgetGreen),
         )
-        Text(stringResource(R.string.privacy_agreement_prefix), fontSize = 13.sp)
-        Text(
-            text = stringResource(R.string.privacy_policy),
-            modifier = Modifier.clickable(onClick = onOpenPolicy),
-            color = SmartBudgetGreen,
-            fontSize = 13.sp,
-            textDecoration = TextDecoration.Underline,
-        )
-        Text(stringResource(R.string.privacy_agreement_suffix), fontSize = 13.sp)
+        Row(modifier = Modifier.offset(x = (-16).dp)) {
+            Text(stringResource(R.string.privacy_agreement_prefix), fontSize = 13.sp)
+            Text(
+                text = stringResource(R.string.privacy_policy),
+                modifier = Modifier.clickable(onClick = onOpenPolicy),
+                color = SmartBudgetGreen,
+                fontSize = 13.sp,
+                textDecoration = TextDecoration.Underline,
+            )
+            Text(stringResource(R.string.privacy_agreement_suffix), fontSize = 13.sp)
+        }
+    }
+}
+
+@Composable
+private fun RoundedAgreementCheckbox(
+    checked: Boolean,
+    onCheckedChange: (Boolean) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    Box(
+        modifier =
+            modifier
+                .size(48.dp)
+                .toggleable(value = checked, role = Role.Checkbox, onValueChange = onCheckedChange),
+        contentAlignment = Alignment.Center,
+    ) {
+        Box(
+            modifier =
+                Modifier
+                    .size(20.dp)
+                    .background(if (checked) SmartBudgetGreen else Color.Transparent, RoundedCornerShape(6.dp))
+                    .border(
+                        width = 1.dp,
+                        color = if (checked) SmartBudgetGreen else AuthFieldBorderColor,
+                        shape = RoundedCornerShape(6.dp),
+                    ),
+            contentAlignment = Alignment.Center,
+        ) {
+            if (checked) {
+                Icon(
+                    imageVector = Icons.Rounded.Check,
+                    contentDescription = null,
+                    modifier = Modifier.size(15.dp),
+                    tint = Color.White,
+                )
+            }
+        }
     }
 }
