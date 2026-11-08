@@ -40,3 +40,11 @@ jobs:
 
       - name: 디버그 앱 빌드
         run: ./gradlew assembleDebug --no-daemon
+
+      - name: 디버그 APK를 워크플로 아티팩트로 업로드
+        uses: actions/upload-artifact@v7
+        with:
+          name: smartbudget-debug-apk
+          path: app/build/outputs/apk/debug/*.apk
+          if-no-files-found: error
+          retention-days: 14

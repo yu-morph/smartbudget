@@ -100,9 +100,19 @@ jobs:
           cp app/build/outputs/apk/release/app-release.apk "release-assets/smartbudget-${RELEASE_TAG}-arm.apk"
           cp app/build/outputs/bundle/release/app-release.aab "release-assets/smartbudget-${RELEASE_TAG}-arm.aab"
 
-      - name: GitHub 릴리즈에 앱 파일 첨부
+      - name: APK와 AAB를 워크플로 아티팩트로 업로드
+        uses: actions/upload-artifact@v7
+        with:
+          name: smartbudget-${{ github.event.release.tag_name }}-builds
+          path: |
+            release-assets/*.apk
+            release-assets/*.aab
+          if-no-files-found: error
+          retention-days: 30
+
+      - name: GitHub 릴리즈에 APK 첨부
         shell: bash
         env:
           GH_TOKEN: ${{ github.token }}
           RELEASE_TAG: ${{ github.event.release.tag_name }}
-        run: gh release upload "$RELEASE_TAG" release-assets/*.apk release-assets/*.aab --clobber
+        run: gh release upload "$RELEASE_TAG" release-assets/*.apk --clobber
