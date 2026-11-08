@@ -20,6 +20,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextDecoration
@@ -32,6 +33,7 @@ import com.yu_morph.smartbudget.ui.components.BrandSignature
 fun LoginScreen(onLogin: () -> Unit, onSignUp: () -> Unit) {
     var username by rememberSaveable { mutableStateOf("") }
     var password by rememberSaveable { mutableStateOf("") }
+    val context = LocalContext.current
     Column(
         modifier =
             Modifier
@@ -64,7 +66,7 @@ fun LoginScreen(onLogin: () -> Unit, onSignUp: () -> Unit) {
                 Text(stringResource(R.string.sign_up_action), color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
             TextButton(
-                onClick = {},
+                onClick = { openExampleCustomTab(context) },
                 modifier = Modifier.height(40.dp),
                 contentPadding = PaddingValues(0.dp),
             ) {

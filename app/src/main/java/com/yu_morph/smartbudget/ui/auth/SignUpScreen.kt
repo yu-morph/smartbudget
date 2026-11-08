@@ -36,6 +36,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
@@ -53,7 +54,7 @@ fun SignUpScreen(onSignUp: () -> Unit, onLogin: () -> Unit) {
     var password by rememberSaveable { mutableStateOf("") }
     var passwordConfirm by rememberSaveable { mutableStateOf("") }
     var agreed by rememberSaveable { mutableStateOf(false) }
-    var showPrivacyPolicy by rememberSaveable { mutableStateOf(false) }
+    val context = LocalContext.current
     Column(
         modifier =
             Modifier
@@ -83,13 +84,13 @@ fun SignUpScreen(onSignUp: () -> Unit, onLogin: () -> Unit) {
         PrivacyAgreementRow(
             agreed = agreed,
             onAgreementChange = { agreed = it },
-            onOpenPolicy = { showPrivacyPolicy = true },
+            onOpenPolicy = { openExampleCustomTab(context) },
         )
         Spacer(Modifier.height(8.dp))
         PrimaryAuthButton(
             text = stringResource(R.string.sign_up_action),
             onClick = onSignUp,
-            enabled = agreed && password == passwordConfirm,
+            enabled = agreed && SignUpValidation.isValid(name, password, passwordConfirm),
         )
         Row(verticalAlignment = Alignment.CenterVertically) {
             Text(stringResource(R.string.already_have_account), fontSize = 13.sp)
@@ -101,9 +102,6 @@ fun SignUpScreen(onSignUp: () -> Unit, onLogin: () -> Unit) {
                 )
             }
         }
-    }
-    if (showPrivacyPolicy) {
-        PrivacyPolicyDialog(onDismiss = { showPrivacyPolicy = false })
     }
 }
 
