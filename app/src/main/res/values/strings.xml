@@ -4,6 +4,9 @@
     <string name="brand_budget">Budget.</string>
     <string name="login_title">로그인</string>
     <string name="username_hint">사용자 이름</string>
+    <string name="username_label">사용자 이름</string>
+    <string name="display_name_hint">표시 이름</string>
+    <string name="display_name_condition_label">2~10자의 한글, 영문, 숫자 또는 공백을 입력해 주세요.</string>
     <string name="password_hint">비밀번호</string>
     <string name="password_rule_hint">비밀번호 (8자 이상)</string>
     <string name="password_confirm_hint">비밀번호 확인</string>
@@ -25,4 +28,13 @@
     <string name="analysis_tab">분석</string>
     <string name="settings_tab">설정</string>
     <string name="app_logo_description">SmartBudget 앱 로고</string>
+    <string name="sign_up_success">회원가입이 완료되었습니다. 로그인해 주세요.</string>
+    <string name="invalid_credentials_error">사용자 이름 또는 비밀번호가 올바르지 않습니다.</string>
+    <string name="username_conflict_error">이미 사용 중인 사용자 이름입니다.</string>
+    <string name="sign_in_rate_limited_error">로그인 시도가 너무 많습니다. 잠시 후 다시 시도해 주세요.</string>
+    <string name="invalid_request_error">입력 내용을 다시 확인해 주세요.</string>
+    <string name="service_unavailable_error">서비스를 일시적으로 사용할 수 없습니다.</string>
+    <string name="network_error">네트워크 연결을 확인해 주세요.</string>
+    <string name="response_error">서버 응답을 처리하지 못했습니다.</string>
+    <string name="unknown_error">요청 처리 중 오류가 발생했습니다.</string>
 </resources>

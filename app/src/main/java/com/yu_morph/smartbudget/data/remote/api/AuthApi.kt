@@ -2,6 +2,7 @@ package com.yu_morph.smartbudget.data.remote.api
 
 import com.yu_morph.smartbudget.data.local.AuthTokenStore
 import com.yu_morph.smartbudget.data.local.StoredAuthToken
+import com.yu_morph.smartbudget.data.local.isValidAt
 import com.yu_morph.smartbudget.data.remote.ApiRequestExecutor
 import com.yu_morph.smartbudget.data.remote.ApiResult
 import com.yu_morph.smartbudget.data.remote.model.AccountData
@@ -45,6 +46,12 @@ class AuthApi(private val executor: ApiRequestExecutor, private val tokenStore: 
         cacheKey = "account",
     )
 
+    suspend fun validateSession(): ApiResult<AccountData> = executor.execute(
+        method = HttpMethod.Get,
+        path = "/api/v1/auth/account",
+        authenticated = true,
+    )
+
     suspend fun updateAccount(request: UpdateAccountRequest): ApiResult<AccountData> = executor
         .execute<AccountData>(
             method = HttpMethod.Patch,
@@ -63,6 +70,12 @@ class AuthApi(private val executor: ApiRequestExecutor, private val tokenStore: 
         ).also { result -> if (result is ApiResult.Success) tokenStore.clear() }
 
     fun signOut() = tokenStore.clear()
+
+    fun hasValidStoredToken(): Boolean {
+        val isValid = tokenStore.read()?.isValidAt() == true
+        if (!isValid) tokenStore.clear()
+        return isValid
+    }
 
     private fun storeTokenOnSuccess(result: ApiResult<AuthTokenData>) {
         val token = (result as? ApiResult.Success)?.data ?: return

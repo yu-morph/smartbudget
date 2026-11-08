@@ -78,6 +78,17 @@ class ApiRequestExecutorTest {
     }
 
     @Test
+    fun `세션 검증은 네트워크 실패 시 캐시를 사용하지 않는다`() = runBlocking {
+        val stores = TestStores(token = TEST_TOKEN)
+        stores.write("account", ACCOUNT_RESPONSE)
+        val executor = executor(stores) { throw IOException("네트워크 연결 실패") }
+
+        val result = AuthApi(executor, stores).validateSession()
+
+        assertTrue(result is ApiResult.NetworkFailure)
+    }
+
+    @Test
     fun `오류 코드와 재시도 시간을 보존한다`() = runBlocking {
         val stores = TestStores()
         val executor =

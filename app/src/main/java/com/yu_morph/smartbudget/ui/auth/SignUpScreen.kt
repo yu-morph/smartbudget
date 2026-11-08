@@ -51,8 +51,9 @@ import com.yu_morph.smartbudget.ui.theme.SmartBudgetGreenLight
 private val SignUpConditionColor = Color(0xFF555555)
 
 @Composable
-fun SignUpScreen(onSignUp: () -> Unit, onLogin: () -> Unit) {
-    var name by rememberSaveable { mutableStateOf("") }
+fun SignUpScreen(onSignUp: (String, String, String) -> Unit, onLogin: () -> Unit) {
+    var displayName by rememberSaveable { mutableStateOf("") }
+    var username by rememberSaveable { mutableStateOf("") }
     var password by rememberSaveable { mutableStateOf("") }
     var passwordConfirm by rememberSaveable { mutableStateOf("") }
     var agreed by rememberSaveable { mutableStateOf(false) }
@@ -73,8 +74,10 @@ fun SignUpScreen(onSignUp: () -> Unit, onLogin: () -> Unit) {
             Text(stringResource(R.string.sign_up_title), fontSize = 26.sp, fontWeight = FontWeight.Bold)
             Spacer(Modifier.height(28.dp))
             SignUpInputFields(
-                username = name,
-                onUsernameChange = { name = it },
+                displayName = displayName,
+                onDisplayNameChange = { displayName = it },
+                username = username,
+                onUsernameChange = { username = it },
                 password = password,
                 onPasswordChange = { password = it },
                 passwordConfirmation = passwordConfirm,
@@ -89,8 +92,8 @@ fun SignUpScreen(onSignUp: () -> Unit, onLogin: () -> Unit) {
             Spacer(Modifier.height(8.dp))
             PrimaryAuthButton(
                 text = stringResource(R.string.sign_up_action),
-                onClick = onSignUp,
-                enabled = agreed && SignUpValidation.isValid(name, password, passwordConfirm),
+                onClick = { onSignUp(displayName, username, password) },
+                enabled = agreed && SignUpValidation.isValid(displayName, username, password, passwordConfirm),
             )
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Text(stringResource(R.string.already_have_account), fontSize = 13.sp)
@@ -108,6 +111,8 @@ fun SignUpScreen(onSignUp: () -> Unit, onLogin: () -> Unit) {
 
 @Composable
 private fun SignUpInputFields(
+    displayName: String,
+    onDisplayNameChange: (String) -> Unit,
     username: String,
     onUsernameChange: (String) -> Unit,
     password: String,
@@ -115,11 +120,26 @@ private fun SignUpInputFields(
     passwordConfirmation: String,
     onPasswordConfirmationChange: (String) -> Unit,
 ) {
+    var displayNameEdited by rememberSaveable { mutableStateOf(false) }
     var usernameEdited by rememberSaveable { mutableStateOf(false) }
     var passwordEdited by rememberSaveable { mutableStateOf(false) }
     var passwordConfirmationEdited by rememberSaveable { mutableStateOf(false) }
     Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
         Text(stringResource(R.string.name_label))
+        Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+            AuthTextField(
+                value = displayName,
+                onValueChange = {
+                    displayNameEdited = true
+                    onDisplayNameChange(it)
+                },
+                placeholder = stringResource(R.string.display_name_hint),
+                isError = displayNameEdited && !SignUpValidation.isValidDisplayName(displayName),
+            )
+            SignUpConditionLabel(text = stringResource(R.string.display_name_condition_label))
+        }
+        Spacer(Modifier.height(4.dp))
+        Text(stringResource(R.string.username_label))
         Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
             AuthTextField(
                 value = username,

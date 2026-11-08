@@ -30,7 +30,7 @@ import com.yu_morph.smartbudget.R
 import com.yu_morph.smartbudget.ui.components.BrandSignature
 
 @Composable
-fun LoginScreen(onLogin: () -> Unit, onSignUp: () -> Unit) {
+fun LoginScreen(onLogin: (String, String) -> Unit, onSignUp: () -> Unit) {
     var username by rememberSaveable { mutableStateOf("") }
     var password by rememberSaveable { mutableStateOf("") }
     val context = LocalContext.current
@@ -53,7 +53,11 @@ fun LoginScreen(onLogin: () -> Unit, onSignUp: () -> Unit) {
             AuthTextField(password, { password = it }, stringResource(R.string.password_hint), true)
         }
         Spacer(Modifier.height(20.dp))
-        PrimaryAuthButton(stringResource(R.string.login_action), onLogin)
+        PrimaryAuthButton(
+            text = stringResource(R.string.login_action),
+            onClick = { onLogin(username, password) },
+            enabled = username.isNotBlank() && password.isNotBlank(),
+        )
         Spacer(Modifier.height(4.dp))
         Column(
             modifier = Modifier.fillMaxWidth(),

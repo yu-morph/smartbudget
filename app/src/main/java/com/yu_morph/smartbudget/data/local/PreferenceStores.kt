@@ -4,6 +4,7 @@ import android.content.Context
 import android.content.SharedPreferences
 import androidx.security.crypto.EncryptedSharedPreferences
 import androidx.security.crypto.MasterKey
+import java.time.OffsetDateTime
 
 interface ApiResponseCache {
     fun read(key: String): String?
@@ -60,6 +61,11 @@ interface AuthTokenStore {
 }
 
 data class StoredAuthToken(val accessToken: String, val expiresAt: String, val tokenType: String)
+
+fun StoredAuthToken.isValidAt(now: OffsetDateTime = OffsetDateTime.now()): Boolean {
+    val expiration = runCatching { OffsetDateTime.parse(expiresAt) }.getOrNull() ?: return false
+    return accessToken.isNotBlank() && tokenType.equals("Bearer", ignoreCase = true) && expiration.isAfter(now)
+}
 
 class EncryptedPreferencesAuthTokenStore(private val preferences: SharedPreferences) : AuthTokenStore {
     override fun read(): StoredAuthToken? {
