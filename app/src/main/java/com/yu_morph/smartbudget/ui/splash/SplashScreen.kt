@@ -19,6 +19,6 @@ fun SplashScreen(onFinished: () -> Unit) {
         onFinished()
     }
     Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-        BrandSignature(logoSize = 128.dp, textSize = 30)
+        BrandSignature(logoSize = 100.dp, textSize = 24)
     }
 }
