@@ -70,10 +70,8 @@ SmartBudget is an Android personal-finance app built with Kotlin and Jetpack Com
 Run Gradle with the checked-in wrapper from the repository root.
 
 ```powershell
-.\gradlew.bat test
-.\gradlew.bat ktlintCheck detekt
-.\gradlew.bat ktlintFormat
+.\gradlew.bat verify
 ```
 
-Use the repository's final verification harness before handing off work. Formatting may change files, so review the resulting diff and repeat checks after formatting when necessary.
+The `verify` harness formats Kotlin sources first, then runs local tests, ktlint checks, and detekt analysis. Use it before handing off work. Formatting may change files, so review the resulting diff before committing or reporting completion.
 

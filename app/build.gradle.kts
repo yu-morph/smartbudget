@@ -15,6 +15,14 @@ detekt {
     config.setFrom(rootProject.files("config/detekt/detekt.yml"))
 }
 
+tasks.matching {
+    it.name == "preBuild" ||
+        it.name == "detekt" ||
+        it.name.startsWith("runKtlintCheck")
+}.configureEach {
+    mustRunAfter("ktlintFormat")
+}
+
 android {
     namespace = "com.yu_morph.smartbudget"
     compileSdk {

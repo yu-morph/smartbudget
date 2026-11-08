@@ -5,3 +5,15 @@ plugins {
     alias(libs.plugins.kotlin.compose) apply false
     alias(libs.plugins.ktlint) apply false
 }
+
+tasks.register("verify") {
+    group = "verification"
+    description = "Formats Kotlin sources, then runs tests and static analysis."
+
+    dependsOn(
+        ":app:ktlintFormat",
+        ":app:test",
+        ":app:ktlintCheck",
+        ":app:detekt",
+    )
+}
