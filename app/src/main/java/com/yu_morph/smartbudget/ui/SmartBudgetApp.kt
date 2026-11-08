@@ -53,7 +53,6 @@ fun SmartBudgetApp() {
             AppDestination.SIGN_UP -> SignUpScreen(
                 onSignUp = { destination = AppDestination.LOGIN },
                 onLogin = { destination = AppDestination.LOGIN },
-                onBack = { destination = AppDestination.LOGIN },
             )
 
             AppDestination.MAIN -> MainScreen()

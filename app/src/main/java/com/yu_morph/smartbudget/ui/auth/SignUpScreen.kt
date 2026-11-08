@@ -22,10 +22,8 @@ import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.rounded.ArrowBack
 import androidx.compose.material.icons.rounded.Check
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.ripple
@@ -53,7 +51,7 @@ import com.yu_morph.smartbudget.ui.theme.SmartBudgetGreenLight
 private val SignUpConditionColor = Color(0xFF555555)
 
 @Composable
-fun SignUpScreen(onSignUp: () -> Unit, onLogin: () -> Unit, onBack: () -> Unit) {
+fun SignUpScreen(onSignUp: () -> Unit, onLogin: () -> Unit) {
     var name by rememberSaveable { mutableStateOf("") }
     var password by rememberSaveable { mutableStateOf("") }
     var passwordConfirm by rememberSaveable { mutableStateOf("") }
@@ -105,7 +103,6 @@ fun SignUpScreen(onSignUp: () -> Unit, onLogin: () -> Unit, onBack: () -> Unit) 
                 }
             }
         }
-        SignUpBackButton(onClick = onBack)
     }
 }
 
@@ -171,16 +168,6 @@ private fun SignUpConditionLabel(text: String) {
         color = SignUpConditionColor,
         fontSize = 11.sp
     )
-}
-
-@Composable
-private fun SignUpBackButton(onClick: () -> Unit) {
-    IconButton(onClick = onClick) {
-        Icon(
-            imageVector = Icons.AutoMirrored.Rounded.ArrowBack,
-            contentDescription = stringResource(R.string.back_to_login_description),
-        )
-    }
 }
 
 @Composable
