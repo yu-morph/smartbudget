@@ -69,6 +69,7 @@ fun SignUpScreen(onSignUp: (String, String, String) -> Unit, onLogin: () -> Unit
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center,
         ) {
+            Spacer(Modifier.height(56.dp))
             BrandSignature(logoSize = 48.dp, textSize = 24)
             Spacer(Modifier.height(26.dp))
             Text(stringResource(R.string.sign_up_title), fontSize = 26.sp, fontWeight = FontWeight.Bold)
@@ -105,6 +106,7 @@ fun SignUpScreen(onSignUp: (String, String, String) -> Unit, onLogin: () -> Unit
                     )
                 }
             }
+            Spacer(Modifier.height(56.dp))
         }
     }
 }
