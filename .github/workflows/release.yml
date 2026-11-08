@@ -97,8 +97,8 @@ jobs:
           RELEASE_TAG: ${{ github.event.release.tag_name }}
         run: |
           mkdir -p release-assets
-          cp app/build/outputs/apk/release/app-release.apk "release-assets/smartbudget-${RELEASE_TAG}-arm.apk"
-          cp app/build/outputs/bundle/release/app-release.aab "release-assets/smartbudget-${RELEASE_TAG}-arm.aab"
+          cp app/build/outputs/apk/release/app-release.apk "release-assets/smartbudget-${RELEASE_TAG}.apk"
+          cp app/build/outputs/bundle/release/app-release.aab "release-assets/smartbudget-${RELEASE_TAG}.aab"
 
       - name: APK와 AAB를 워크플로 아티팩트로 업로드
         uses: actions/upload-artifact@v7
