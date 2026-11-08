@@ -1,0 +1,64 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-labelledby="title description">
+  <title id="title">SmartBudget icon</title>
+  <desc id="description">A white wallet holding a dollar coin with a sparkle on a rounded green square.</desc>
+  <defs>
+    <linearGradient id="background" x1="96" y1="64" x2="416" y2="448" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#18A874"/>
+      <stop offset="1" stop-color="#087A55"/>
+    </linearGradient>
+    <linearGradient id="walletBack" x1="154" y1="175" x2="395" y2="252" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#E7FAF2"/>
+      <stop offset="1" stop-color="#BCEBD7"/>
+    </linearGradient>
+    <linearGradient id="walletFront" x1="130" y1="213" x2="365" y2="434" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#FFFFFF"/>
+      <stop offset="1" stop-color="#F0F8F4"/>
+    </linearGradient>
+    <linearGradient id="coin" x1="183" y1="101" x2="265" y2="222" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#FFFFFF"/>
+      <stop offset="1" stop-color="#E5F6EE"/>
+    </linearGradient>
+    <linearGradient id="clasp" x1="309" y1="275" x2="423" y2="354" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#087A55"/>
+      <stop offset="1" stop-color="#055E43"/>
+    </linearGradient>
+    <filter id="depthShadow" x="-30%" y="-30%" width="160%" height="180%">
+      <feDropShadow dx="0" dy="10" stdDeviation="8" flood-color="#034E39" flood-opacity="0.28"/>
+    </filter>
+    <filter id="softShadow" x="-30%" y="-30%" width="160%" height="170%">
+      <feDropShadow dx="0" dy="5" stdDeviation="5" flood-color="#034E39" flood-opacity="0.22"/>
+    </filter>
+  </defs>
+
+  <rect x="24" y="24" width="464" height="464" rx="112" fill="url(#background)"/>
+
+  <g transform="translate(256 256) scale(0.84) translate(-256 -256)">
+    <path
+      d="M380 48c5 26 18 39 44 44-26 5-39 18-44 44-5-26-18-39-44-44 26-5 39-18 44-44Z"
+      fill="#FFFFFF"
+      filter="url(#softShadow)"
+    />
+
+    <rect x="124" y="176" width="288" height="104" rx="45" fill="url(#walletBack)" filter="url(#softShadow)"/>
+
+    <circle cx="224" cy="157" r="76" fill="url(#coin)" filter="url(#depthShadow)"/>
+    <path
+      d="M224 107v94M247 125c-6-7-14-10-24-10-14 0-24 7-24 18 0 12 10 16 25 19 16 3 26 8 26 20 0 11-10 18-25 18-13 0-23-4-30-11"
+      fill="none"
+      stroke="#159768"
+      stroke-width="12"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+    />
+
+    <rect x="86" y="205" width="332" height="229" rx="34" fill="url(#walletFront)" filter="url(#depthShadow)"/>
+    <path d="M119 224h266" fill="none" stroke="#C9EBDD" stroke-width="8" stroke-linecap="round"/>
+
+    <path
+      d="M344 268h94v96h-94c-28 0-50-22-50-50v4c0-28 22-50 50-50Z"
+      fill="url(#clasp)"
+      filter="url(#softShadow)"
+    />
+    <circle cx="347" cy="316" r="13" fill="#FFFFFF"/>
+  </g>
+</svg>
