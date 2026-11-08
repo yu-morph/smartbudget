@@ -123,16 +123,18 @@ private fun SignUpInputFields(
     var passwordConfirmationEdited by rememberSaveable { mutableStateOf(false) }
     Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
         Text(stringResource(R.string.name_label))
-        AuthTextField(
-            value = username,
-            onValueChange = {
-                usernameEdited = true
-                onUsernameChange(it)
-            },
-            placeholder = stringResource(R.string.username_hint),
-            isError = usernameEdited && !SignUpValidation.isValidUsername(username),
-        )
-        SignUpConditionLabel(text = stringResource(R.string.username_condition_label))
+        Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+            AuthTextField(
+                value = username,
+                onValueChange = {
+                    usernameEdited = true
+                    onUsernameChange(it)
+                },
+                placeholder = stringResource(R.string.username_hint),
+                isError = usernameEdited && !SignUpValidation.isValidUsername(username),
+            )
+            SignUpConditionLabel(text = stringResource(R.string.username_condition_label))
+        }
         Spacer(Modifier.height(4.dp))
         Text(stringResource(R.string.password_label))
         AuthTextField(
@@ -145,17 +147,19 @@ private fun SignUpInputFields(
             isPassword = true,
             isError = passwordEdited && !SignUpValidation.isValidPassword(password),
         )
-        AuthTextField(
-            value = passwordConfirmation,
-            onValueChange = {
-                passwordConfirmationEdited = true
-                onPasswordConfirmationChange(it)
-            },
-            placeholder = stringResource(R.string.password_confirm_hint),
-            isPassword = true,
-            isError = passwordConfirmationEdited && passwordConfirmation != password,
-        )
-        SignUpConditionLabel(text = stringResource(R.string.password_condition_label))
+        Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+            AuthTextField(
+                value = passwordConfirmation,
+                onValueChange = {
+                    passwordConfirmationEdited = true
+                    onPasswordConfirmationChange(it)
+                },
+                placeholder = stringResource(R.string.password_confirm_hint),
+                isPassword = true,
+                isError = passwordConfirmationEdited && passwordConfirmation != password,
+            )
+            SignUpConditionLabel(text = stringResource(R.string.password_condition_label))
+        }
     }
 }
 
