@@ -7,6 +7,8 @@
     <string name="password_hint">비밀번호</string>
     <string name="password_rule_hint">비밀번호 (8자 이상)</string>
     <string name="password_confirm_hint">비밀번호 확인</string>
+    <string name="username_condition_label">4~12자의 영문 또는 숫자를 입력해 주세요.</string>
+    <string name="password_condition_label">8~20자의 영문, 숫자, 특수문자 중 2종류 이상을 조합해 주세요.</string>
     <string name="login_action">로그인</string>
     <string name="sign_up_action">회원가입</string>
     <string name="forgot_password">비밀번호를 잊어버리셨나요?</string>

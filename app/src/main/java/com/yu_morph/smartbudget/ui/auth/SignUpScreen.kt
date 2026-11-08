@@ -50,6 +50,8 @@ import com.yu_morph.smartbudget.ui.components.BrandSignature
 import com.yu_morph.smartbudget.ui.theme.SmartBudgetGreen
 import com.yu_morph.smartbudget.ui.theme.SmartBudgetGreenLight
 
+private val SignUpConditionColor = Color(0xFF555555)
+
 @Composable
 fun SignUpScreen(onSignUp: () -> Unit, onLogin: () -> Unit, onBack: () -> Unit) {
     var name by rememberSaveable { mutableStateOf("") }
@@ -73,16 +75,14 @@ fun SignUpScreen(onSignUp: () -> Unit, onLogin: () -> Unit, onBack: () -> Unit) 
             Spacer(Modifier.height(56.dp))
             Text(stringResource(R.string.sign_up_title), fontSize = 26.sp, fontWeight = FontWeight.Bold)
             Spacer(Modifier.height(34.dp))
-            Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                Text(stringResource(R.string.name_label))
-                AuthTextField(name, { name = it }, stringResource(R.string.username_hint))
-                Spacer(Modifier.height(4.dp))
-                Text(stringResource(R.string.password_label))
-                AuthTextField(password, { password = it }, stringResource(R.string.password_rule_hint), true)
-                AuthTextField(passwordConfirm, {
-                    passwordConfirm = it
-                }, stringResource(R.string.password_confirm_hint), true)
-            }
+            SignUpInputFields(
+                username = name,
+                onUsernameChange = { name = it },
+                password = password,
+                onPasswordChange = { password = it },
+                passwordConfirmation = passwordConfirm,
+                onPasswordConfirmationChange = { passwordConfirm = it },
+            )
             Spacer(Modifier.height(8.dp))
             PrivacyAgreementRow(
                 agreed = agreed,
@@ -107,6 +107,42 @@ fun SignUpScreen(onSignUp: () -> Unit, onLogin: () -> Unit, onBack: () -> Unit) 
             }
         }
     }
+}
+
+@Composable
+private fun SignUpInputFields(
+    username: String,
+    onUsernameChange: (String) -> Unit,
+    password: String,
+    onPasswordChange: (String) -> Unit,
+    passwordConfirmation: String,
+    onPasswordConfirmationChange: (String) -> Unit,
+) {
+    Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+        Text(stringResource(R.string.name_label))
+        AuthTextField(username, onUsernameChange, stringResource(R.string.username_hint))
+        SignUpConditionLabel(text = stringResource(R.string.username_condition_label))
+        Spacer(Modifier.height(4.dp))
+        Text(stringResource(R.string.password_label))
+        AuthTextField(password, onPasswordChange, stringResource(R.string.password_rule_hint), true)
+        AuthTextField(
+            value = passwordConfirmation,
+            onValueChange = onPasswordConfirmationChange,
+            placeholder = stringResource(R.string.password_confirm_hint),
+            isPassword = true,
+        )
+        SignUpConditionLabel(text = stringResource(R.string.password_condition_label))
+    }
+}
+
+@Composable
+private fun SignUpConditionLabel(text: String) {
+    Text(
+        text = text,
+        modifier = Modifier.fillMaxWidth(),
+        color = SignUpConditionColor,
+        fontSize = 11.sp,
+    )
 }
 
 @Composable
