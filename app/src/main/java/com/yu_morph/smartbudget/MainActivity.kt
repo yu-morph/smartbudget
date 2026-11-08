@@ -13,7 +13,7 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             SmartBudgetTheme {
-                SmartBudgetApp()
+                SmartBudgetApp(onExit = ::finish)
             }
         }
     }

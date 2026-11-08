@@ -33,7 +33,7 @@ private enum class AppDestination { SPLASH, LOGIN, SIGN_UP, MAIN }
 private const val MORPH_DURATION_MILLIS = 350
 
 @Composable
-fun SmartBudgetApp() {
+fun SmartBudgetApp(onExit: () -> Unit) {
     var destination by rememberSaveable { mutableStateOf(AppDestination.SPLASH) }
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
@@ -50,6 +50,7 @@ fun SmartBudgetApp() {
             destination = destination,
             coordinator = coordinator,
             onDestinationChange = { destination = it },
+            onExit = onExit,
         )
         if (coordinator.isLoading) AuthLoadingDialog()
     }
@@ -60,6 +61,7 @@ private fun AuthenticationContent(
     destination: AppDestination,
     coordinator: AuthCoordinator,
     onDestinationChange: (AppDestination) -> Unit,
+    onExit: () -> Unit,
 ) {
     AnimatedContent(
         targetState = destination,
@@ -101,7 +103,7 @@ private fun AuthenticationContent(
                 onLogin = { onDestinationChange(AppDestination.LOGIN) },
             )
 
-            AppDestination.MAIN -> MainScreen()
+            AppDestination.MAIN -> MainScreen(onExit = onExit)
         }
     }
 }

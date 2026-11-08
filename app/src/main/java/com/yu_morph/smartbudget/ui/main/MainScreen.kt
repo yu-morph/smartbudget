@@ -1,5 +1,8 @@
 package com.yu_morph.smartbudget.ui.main
 
+import android.os.SystemClock
+import android.widget.Toast
+import androidx.activity.compose.BackHandler
 import androidx.annotation.StringRes
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
@@ -17,10 +20,12 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import com.yu_morph.smartbudget.R
 
@@ -32,8 +37,17 @@ private enum class MainTab(@param:StringRes val label: Int, val icon: ImageVecto
 }
 
 @Composable
-fun MainScreen() {
+fun MainScreen(onExit: () -> Unit) {
     var selectedTab by rememberSaveable { mutableStateOf(MainTab.HOME) }
+    val context = LocalContext.current
+    val exitConfirmation = remember { ExitConfirmation() }
+    BackHandler {
+        if (exitConfirmation.shouldExit(SystemClock.elapsedRealtime())) {
+            onExit()
+        } else {
+            Toast.makeText(context, R.string.exit_confirmation, Toast.LENGTH_SHORT).show()
+        }
+    }
     Scaffold(
         bottomBar = {
             NavigationBar {

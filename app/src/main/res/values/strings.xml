@@ -37,4 +37,5 @@
     <string name="network_error">네트워크 연결을 확인해 주세요.</string>
     <string name="response_error">서버 응답을 처리하지 못했습니다.</string>
     <string name="unknown_error">요청 처리 중 오류가 발생했습니다.</string>
+    <string name="exit_confirmation">한 번 더 누르면 앱을 끌 수 있어요.</string>
 </resources>
