@@ -100,8 +100,12 @@ fun MainScreen(api: SmartBudgetApi, onExit: () -> Unit) {
         },
     ) { innerPadding ->
         // 설정 외 탭의 실제 화면은 후속 작업에서 구현합니다.
-        Box(modifier = Modifier.fillMaxSize().background(Color.White).padding(innerPadding)) {
-            if (selectedTab == MainTab.SETTINGS) SettingsScreen(api)
+        Box(modifier = Modifier.fillMaxSize().background(Color.White)) {
+            if (selectedTab == MainTab.SETTINGS) {
+                SettingsScreen(api = api, bottomContentPadding = innerPadding.calculateBottomPadding())
+            } else {
+                Box(modifier = Modifier.fillMaxSize().padding(innerPadding))
+            }
         }
     }
 }

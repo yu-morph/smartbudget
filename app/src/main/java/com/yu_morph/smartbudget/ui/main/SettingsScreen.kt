@@ -31,19 +31,24 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.yu_morph.smartbudget.R
 import com.yu_morph.smartbudget.data.local.PreferenceStoreFactory
+import com.yu_morph.smartbudget.data.local.readSubjectFromJwt
 import com.yu_morph.smartbudget.data.remote.ApiResult
 import com.yu_morph.smartbudget.data.remote.SmartBudgetApi
 import com.yu_morph.smartbudget.ui.theme.SmartBudgetGreen
 
-private val SettingsBackground = Color(0xFFF4F5F7)
+private val SettingsGradientGray = Color(0xFFF0F1F3)
+private val SettingsGradientLightGray = Color(0xFFF8F8F7)
+private val SettingsGradientGreen = Color(0xFFF0F8F4)
 private val SettingsPrimaryText = Color(0xFF404247)
 private val SettingsSecondaryText = Color(0xFF8A8D92)
 private val SettingsChevronColor = Color(0xFFB3B7BC)
@@ -68,9 +73,9 @@ private val SettingsGroups =
             title = R.string.settings_app_section,
             entries =
                 listOf(
+                    SettingsEntry(R.string.settings_language, R.string.settings_language_value),
                     SettingsEntry(R.string.settings_notifications),
                     SettingsEntry(R.string.settings_display),
-                    SettingsEntry(R.string.settings_language, R.string.settings_language_value),
                 ),
         ),
         SettingsGroup(
@@ -84,9 +89,11 @@ private val SettingsGroups =
     )
 
 @Composable
-internal fun SettingsScreen(api: SmartBudgetApi) {
+internal fun SettingsScreen(api: SmartBudgetApi, bottomContentPadding: Dp) {
     val context = LocalContext.current
-    val username = remember(context) { PreferenceStoreFactory.userIdentity(context).readUsername().orEmpty() }
+    val userId = remember(context) {
+        PreferenceStoreFactory.authTokens(context).read()?.accessToken?.let(::readSubjectFromJwt).orEmpty()
+    }
     var displayName by remember { mutableStateOf("") }
 
     LaunchedEffect(api) {
@@ -95,14 +102,21 @@ internal fun SettingsScreen(api: SmartBudgetApi) {
     }
 
     LazyColumn(
-        modifier = Modifier.fillMaxSize().background(SettingsBackground),
-        contentPadding = PaddingValues(start = 20.dp, top = 24.dp, end = 20.dp, bottom = 28.dp),
+        modifier =
+            Modifier
+                .fillMaxSize()
+                .background(
+                    Brush.linearGradient(
+                        listOf(SettingsGradientGray, SettingsGradientLightGray, SettingsGradientGreen),
+                    ),
+                ),
+        contentPadding = PaddingValues(start = 20.dp, top = 24.dp, end = 20.dp, bottom = bottomContentPadding),
         verticalArrangement = Arrangement.spacedBy(16.dp),
     ) {
         item {
             ProfileHeader(
                 displayName = displayName.ifBlank { stringResource(R.string.settings_profile_default_name) },
-                username = username.ifBlank { stringResource(R.string.settings_username_unavailable) },
+                userId = userId,
             )
         }
         SettingsGroups.forEach { group ->
@@ -112,14 +126,9 @@ internal fun SettingsScreen(api: SmartBudgetApi) {
 }
 
 @Composable
-private fun ProfileHeader(displayName: String, username: String) {
+private fun ProfileHeader(displayName: String, userId: String) {
     Row(
-        modifier =
-            Modifier
-                .fillMaxWidth()
-                .clickable {
-                    // 개인정보 수정 화면 연결은 후속 작업에서 구현합니다.
-                }.padding(horizontal = 4.dp, vertical = 16.dp),
+        modifier = Modifier.fillMaxWidth().padding(horizontal = 4.dp, vertical = 16.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Surface(
@@ -139,10 +148,17 @@ private fun ProfileHeader(displayName: String, username: String) {
             verticalArrangement = Arrangement.spacedBy(3.dp),
         ) {
             Text(text = displayName, fontSize = 22.sp, fontWeight = FontWeight.Bold)
-            Text(text = username, color = SettingsSecondaryText, fontSize = 14.sp)
+            Text(
+                text =
+                    if (userId.isBlank()) {
+                        stringResource(R.string.settings_user_id_unavailable)
+                    } else {
+                        stringResource(R.string.settings_user_id, userId)
+                    },
+                color = SettingsSecondaryText,
+                fontSize = 14.sp,
+            )
         }
-        Spacer(modifier = Modifier.weight(1f))
-        SettingsChevron()
     }
 }
 
@@ -154,7 +170,7 @@ private fun SettingsGroupCard(group: SettingsGroup) {
         colors = CardDefaults.cardColors(containerColor = Color.White),
         elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
     ) {
-        Column(modifier = Modifier.padding(vertical = 14.dp)) {
+        Column(modifier = Modifier.padding(top = 14.dp, bottom = 2.dp)) {
             Text(
                 text = stringResource(group.title),
                 modifier = Modifier.padding(start = 20.dp, end = 20.dp, top = 6.dp, bottom = 4.dp),
