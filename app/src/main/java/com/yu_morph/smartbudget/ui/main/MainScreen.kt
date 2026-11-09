@@ -57,6 +57,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.yu_morph.smartbudget.R
+import com.yu_morph.smartbudget.data.remote.SmartBudgetApi
 import com.yu_morph.smartbudget.ui.theme.SmartBudgetGreen
 import kotlinx.coroutines.launch
 
@@ -81,7 +82,7 @@ private enum class MainTab(
 }
 
 @Composable
-fun MainScreen(onExit: () -> Unit) {
+fun MainScreen(api: SmartBudgetApi, onExit: () -> Unit) {
     var selectedTab by rememberSaveable { mutableStateOf(MainTab.HOME) }
     val context = LocalContext.current
     val exitConfirmation = remember { ExitConfirmation() }
@@ -98,8 +99,10 @@ fun MainScreen(onExit: () -> Unit) {
             MainNavigationBar(selectedTab = selectedTab, onTabSelected = { selectedTab = it })
         },
     ) { innerPadding ->
-        // 각 탭의 실제 화면은 후속 작업에서 구현합니다.
-        Box(modifier = Modifier.fillMaxSize().background(Color.White).padding(innerPadding))
+        // 설정 외 탭의 실제 화면은 후속 작업에서 구현합니다.
+        Box(modifier = Modifier.fillMaxSize().background(Color.White).padding(innerPadding)) {
+            if (selectedTab == MainTab.SETTINGS) SettingsScreen(api)
+        }
     }
 }
 

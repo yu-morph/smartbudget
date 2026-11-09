@@ -20,6 +20,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import com.yu_morph.smartbudget.data.remote.SmartBudgetApi
 import com.yu_morph.smartbudget.data.remote.SmartBudgetApiFactory
 import com.yu_morph.smartbudget.ui.auth.AuthCoordinator
 import com.yu_morph.smartbudget.ui.auth.AuthLoadingDialog
@@ -48,6 +49,7 @@ fun SmartBudgetApp(onExit: () -> Unit) {
     Box(modifier = Modifier.fillMaxSize()) {
         AuthenticationContent(
             destination = destination,
+            api = api,
             coordinator = coordinator,
             onDestinationChange = { destination = it },
             onExit = onExit,
@@ -59,6 +61,7 @@ fun SmartBudgetApp(onExit: () -> Unit) {
 @Composable
 private fun AuthenticationContent(
     destination: AppDestination,
+    api: SmartBudgetApi,
     coordinator: AuthCoordinator,
     onDestinationChange: (AppDestination) -> Unit,
     onExit: () -> Unit,
@@ -103,7 +106,7 @@ private fun AuthenticationContent(
                 onLogin = { onDestinationChange(AppDestination.LOGIN) },
             )
 
-            AppDestination.MAIN -> MainScreen(onExit = onExit)
+            AppDestination.MAIN -> MainScreen(api = api, onExit = onExit)
         }
     }
 }

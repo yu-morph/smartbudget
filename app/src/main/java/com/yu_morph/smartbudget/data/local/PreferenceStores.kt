@@ -52,6 +52,30 @@ class SharedPreferencesRemoteResourceStore(private val preferences: SharedPrefer
     }
 }
 
+interface UserIdentityStore {
+    fun readUsername(): String?
+
+    fun writeUsername(username: String)
+
+    fun clear()
+}
+
+class SharedPreferencesUserIdentityStore(private val preferences: SharedPreferences) : UserIdentityStore {
+    override fun readUsername(): String? = preferences.getString(KEY_USERNAME, null)
+
+    override fun writeUsername(username: String) {
+        preferences.edit().putString(KEY_USERNAME, username).apply()
+    }
+
+    override fun clear() {
+        preferences.edit().clear().apply()
+    }
+
+    private companion object {
+        const val KEY_USERNAME = "username"
+    }
+}
+
 interface AuthTokenStore {
     fun read(): StoredAuthToken?
 
@@ -102,6 +126,7 @@ class EncryptedPreferencesAuthTokenStore(private val preferences: SharedPreferen
 object PreferenceStoreFactory {
     private const val RESPONSE_CACHE_FILE = "smartbudget_response_cache"
     private const val REMOTE_RESOURCE_FILE = "smartbudget_remote_resources"
+    private const val USER_IDENTITY_FILE = "smartbudget_user_identity"
     private const val SECURE_AUTH_FILE = "smartbudget_secure_auth"
 
     fun responseCache(context: Context): ApiResponseCache = SharedPreferencesResponseCache(
@@ -110,6 +135,10 @@ object PreferenceStoreFactory {
 
     fun remoteResources(context: Context): RemoteResourceStore = SharedPreferencesRemoteResourceStore(
         context.getSharedPreferences(REMOTE_RESOURCE_FILE, Context.MODE_PRIVATE),
+    )
+
+    fun userIdentity(context: Context): UserIdentityStore = SharedPreferencesUserIdentityStore(
+        context.getSharedPreferences(USER_IDENTITY_FILE, Context.MODE_PRIVATE),
     )
 
     @Suppress("DEPRECATION")

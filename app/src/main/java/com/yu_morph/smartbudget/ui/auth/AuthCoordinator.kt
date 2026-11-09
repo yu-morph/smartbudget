@@ -6,6 +6,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import com.yu_morph.smartbudget.R
+import com.yu_morph.smartbudget.data.local.PreferenceStoreFactory
 import com.yu_morph.smartbudget.data.remote.ApiResult
 import com.yu_morph.smartbudget.data.remote.SmartBudgetApi
 import com.yu_morph.smartbudget.data.remote.model.SignInRequest
@@ -15,6 +16,7 @@ import kotlinx.coroutines.launch
 
 class AuthCoordinator(context: Context, private val api: SmartBudgetApi, private val scope: CoroutineScope) {
     private val applicationContext = context.applicationContext
+    private val userIdentityStore = PreferenceStoreFactory.userIdentity(applicationContext)
 
     var isLoading by mutableStateOf(false)
         private set
@@ -39,7 +41,10 @@ class AuthCoordinator(context: Context, private val api: SmartBudgetApi, private
         executeRequest(
             request = { api.auth.signIn(SignInRequest(username, password)) },
             isSuccessful = { it.data != null },
-            onSuccess = onSuccess,
+            onSuccess = {
+                userIdentityStore.writeUsername(username)
+                onSuccess()
+            },
         )
     }
 
