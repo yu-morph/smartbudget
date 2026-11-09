@@ -20,13 +20,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.AccountBalanceWallet as FilledAccountBalanceWallet
-import androidx.compose.material.icons.filled.BarChart as FilledBarChart
-import androidx.compose.material.icons.filled.Home as FilledHome
-import androidx.compose.material.icons.filled.Settings as FilledSettings
-import androidx.compose.material.icons.outlined.AccountBalanceWallet as OutlinedAccountBalanceWallet
-import androidx.compose.material.icons.outlined.Home as OutlinedHome
-import androidx.compose.material.icons.outlined.Settings as OutlinedSettings
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.FloatingActionButtonDefaults
 import androidx.compose.material3.Icon
@@ -52,6 +45,13 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.yu_morph.smartbudget.R
 import com.yu_morph.smartbudget.ui.theme.SmartBudgetGreen
+import androidx.compose.material.icons.filled.AccountBalanceWallet as FilledAccountBalanceWallet
+import androidx.compose.material.icons.filled.BarChart as FilledBarChart
+import androidx.compose.material.icons.filled.Home as FilledHome
+import androidx.compose.material.icons.filled.Settings as FilledSettings
+import androidx.compose.material.icons.outlined.AccountBalanceWallet as OutlinedAccountBalanceWallet
+import androidx.compose.material.icons.outlined.Home as OutlinedHome
+import androidx.compose.material.icons.outlined.Settings as OutlinedSettings
 
 private val MainNavigationInactiveColor = Color(0xFF737373)
 private val MainActionGradientStart = Color(0xFF18A874)
@@ -105,7 +105,7 @@ private fun MainNavigationBar(selectedTab: MainTab, onTabSelected: (MainTab) -> 
             shadowElevation = 16.dp,
         ) {
             Row(
-                modifier = Modifier.fillMaxWidth().navigationBarsPadding().height(72.dp).padding(horizontal = 12.dp),
+                modifier = Modifier.fillMaxWidth().navigationBarsPadding().height(68.dp).padding(horizontal = 12.dp),
                 horizontalArrangement = Arrangement.SpaceEvenly,
                 verticalAlignment = Alignment.CenterVertically,
             ) {
@@ -154,7 +154,7 @@ private fun MainActionButton(modifier: Modifier = Modifier) {
         modifier = modifier.size(58.dp),
         shape = CircleShape,
         containerColor = Color.Transparent,
-        elevation = FloatingActionButtonDefaults.elevation(defaultElevation = 8.dp, pressedElevation = 12.dp),
+        elevation = FloatingActionButtonDefaults.elevation(defaultElevation = 2.dp, pressedElevation = 4.dp),
     ) {
         Box(
             modifier =
