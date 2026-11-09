@@ -53,6 +53,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.yu_morph.smartbudget.R
@@ -162,7 +163,12 @@ private fun MainNavigationTab(tab: MainTab, isSelected: Boolean, onTabSelected: 
                 contentDescription = null,
                 modifier = Modifier.size(24.dp),
             )
-            Text(text = stringResource(tab.label), fontSize = 10.sp, lineHeight = 12.sp)
+            Text(
+                text = stringResource(tab.label),
+                fontSize = 11.sp,
+                fontWeight = FontWeight.Medium,
+                lineHeight = 12.sp,
+            )
         }
     }
 }
