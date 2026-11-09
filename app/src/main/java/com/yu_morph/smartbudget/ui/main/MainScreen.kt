@@ -86,7 +86,8 @@ fun MainScreen(onExit: () -> Unit) {
 private fun MainNavigationBar(selectedTab: MainTab, onTabSelected: (MainTab) -> Unit) {
     Surface(
         color = Color.White,
-        shadowElevation = 8.dp,
+        shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp),
+        shadowElevation = 16.dp,
     ) {
         Row(
             modifier = Modifier.fillMaxWidth().navigationBarsPadding().height(64.dp).padding(horizontal = 12.dp),
