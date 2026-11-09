@@ -4,9 +4,11 @@ import android.os.SystemClock
 import android.widget.Toast
 import androidx.activity.compose.BackHandler
 import androidx.annotation.StringRes
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -14,6 +16,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccountBalanceWallet as FilledAccountBalanceWallet
@@ -23,9 +26,12 @@ import androidx.compose.material.icons.filled.Settings as FilledSettings
 import androidx.compose.material.icons.outlined.AccountBalanceWallet as OutlinedAccountBalanceWallet
 import androidx.compose.material.icons.outlined.Home as OutlinedHome
 import androidx.compose.material.icons.outlined.Settings as OutlinedSettings
+import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material3.FloatingActionButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -34,15 +40,20 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.yu_morph.smartbudget.R
 import com.yu_morph.smartbudget.ui.theme.SmartBudgetGreen
 
 private val MainNavigationInactiveColor = Color(0xFF737373)
+private val MainActionGradientStart = Color(0xFF18A874)
+private val MainActionGradientEnd = Color(0xFF087A55)
 
 private enum class MainTab(
     @param:StringRes val label: Int,
@@ -90,28 +101,70 @@ private fun MainNavigationBar(selectedTab: MainTab, onTabSelected: (MainTab) -> 
         shadowElevation = 16.dp,
     ) {
         Row(
-            modifier = Modifier.fillMaxWidth().navigationBarsPadding().height(64.dp).padding(horizontal = 12.dp),
+            modifier = Modifier.fillMaxWidth().navigationBarsPadding().height(72.dp).padding(horizontal = 12.dp),
             horizontalArrangement = Arrangement.SpaceEvenly,
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            MainTab.entries.forEach { tab ->
-                val isSelected = selectedTab == tab
-                Surface(
-                    onClick = { onTabSelected(tab) },
-                    modifier = Modifier.size(56.dp),
-                    shape = RoundedCornerShape(16.dp),
-                    color = Color.Transparent,
-                    contentColor = if (isSelected) SmartBudgetGreen else MainNavigationInactiveColor,
-                ) {
-                    Box(contentAlignment = Alignment.Center) {
-                        Icon(
-                            imageVector = if (isSelected) tab.selectedIcon else tab.unselectedIcon,
-                            contentDescription = stringResource(tab.label),
-                            modifier = Modifier.size(26.dp),
-                        )
-                    }
-                }
+            MainTab.entries.take(2).forEach { tab ->
+                MainNavigationTab(tab, selectedTab == tab, onTabSelected)
             }
+            MainActionButton()
+            MainTab.entries.drop(2).forEach { tab ->
+                MainNavigationTab(tab, selectedTab == tab, onTabSelected)
+            }
+        }
+    }
+}
+
+@Composable
+private fun MainNavigationTab(tab: MainTab, isSelected: Boolean, onTabSelected: (MainTab) -> Unit) {
+    Surface(
+        onClick = { onTabSelected(tab) },
+        modifier = Modifier.size(56.dp),
+        shape = RoundedCornerShape(16.dp),
+        color = Color.Transparent,
+        contentColor = if (isSelected) SmartBudgetGreen else MainNavigationInactiveColor,
+    ) {
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center,
+        ) {
+            Icon(
+                imageVector = if (isSelected) tab.selectedIcon else tab.unselectedIcon,
+                contentDescription = null,
+                modifier = Modifier.size(24.dp),
+            )
+            Text(text = stringResource(tab.label), fontSize = 10.sp, lineHeight = 12.sp)
+        }
+    }
+}
+
+@Composable
+private fun MainActionButton() {
+    FloatingActionButton(
+        onClick = {
+            // FAB 동작은 후속 작업에서 구현합니다.
+        },
+        modifier = Modifier.size(58.dp),
+        shape = CircleShape,
+        containerColor = Color.Transparent,
+        elevation = FloatingActionButtonDefaults.elevation(defaultElevation = 8.dp, pressedElevation = 12.dp),
+    ) {
+        Box(
+            modifier =
+                Modifier
+                    .fillMaxSize()
+                    .background(
+                        brush = Brush.linearGradient(listOf(MainActionGradientStart, MainActionGradientEnd)),
+                        shape = CircleShape,
+                    ),
+            contentAlignment = Alignment.Center,
+        ) {
+            Image(
+                painter = painterResource(R.drawable.ic_launcher_foreground),
+                contentDescription = stringResource(R.string.app_logo_description),
+                modifier = Modifier.fillMaxSize(),
+            )
         }
     }
 }
