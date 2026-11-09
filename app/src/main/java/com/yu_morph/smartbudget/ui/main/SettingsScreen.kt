@@ -1,7 +1,8 @@
 package com.yu_morph.smartbudget.ui.main
 
 import androidx.annotation.StringRes
-import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -12,18 +13,10 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.AccountBalance
 import androidx.compose.material.icons.outlined.ChevronRight
-import androidx.compose.material.icons.outlined.Description
-import androidx.compose.material.icons.outlined.DisplaySettings
-import androidx.compose.material.icons.outlined.Info
-import androidx.compose.material.icons.outlined.Language
-import androidx.compose.material.icons.outlined.ManageAccounts
-import androidx.compose.material.icons.outlined.Notifications
 import androidx.compose.material.icons.outlined.Person
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -39,7 +32,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -51,29 +43,44 @@ import com.yu_morph.smartbudget.data.remote.ApiResult
 import com.yu_morph.smartbudget.data.remote.SmartBudgetApi
 import com.yu_morph.smartbudget.ui.theme.SmartBudgetGreen
 
-private val SettingsCardBorder = Color(0xFFE8E8E8)
-private val SettingsSecondaryText = Color(0xFF737373)
-private val SettingsIconColor = Color(0xFF5F5F5F)
+private val SettingsBackground = Color(0xFFF4F5F7)
+private val SettingsPrimaryText = Color(0xFF404247)
+private val SettingsSecondaryText = Color(0xFF8A8D92)
+private val SettingsChevronColor = Color(0xFFB3B7BC)
+private val SettingsAvatarBackground = Color(0xFFE2E5E9)
+private val SettingsAvatarForeground = Color(0xFFB8BEC7)
 
-private data class SettingsEntry(@param:StringRes val label: Int, val icon: ImageVector)
+private data class SettingsEntry(@param:StringRes val label: Int, @param:StringRes val value: Int? = null)
 
-private val AccountSettings =
+private data class SettingsGroup(@param:StringRes val title: Int, val entries: List<SettingsEntry>)
+
+private val SettingsGroups =
     listOf(
-        SettingsEntry(R.string.settings_edit_profile, Icons.Outlined.ManageAccounts),
-        SettingsEntry(R.string.settings_connect_bank, Icons.Outlined.AccountBalance),
-    )
-
-private val AppSettings =
-    listOf(
-        SettingsEntry(R.string.settings_notifications, Icons.Outlined.Notifications),
-        SettingsEntry(R.string.settings_display, Icons.Outlined.DisplaySettings),
-        SettingsEntry(R.string.settings_language, Icons.Outlined.Language),
-    )
-
-private val InformationSettings =
-    listOf(
-        SettingsEntry(R.string.settings_open_source_licenses, Icons.Outlined.Description),
-        SettingsEntry(R.string.settings_app_info, Icons.Outlined.Info),
+        SettingsGroup(
+            title = R.string.settings_account_section,
+            entries =
+                listOf(
+                    SettingsEntry(R.string.settings_edit_profile),
+                    SettingsEntry(R.string.settings_connect_bank),
+                ),
+        ),
+        SettingsGroup(
+            title = R.string.settings_app_section,
+            entries =
+                listOf(
+                    SettingsEntry(R.string.settings_notifications),
+                    SettingsEntry(R.string.settings_display),
+                    SettingsEntry(R.string.settings_language, R.string.settings_language_value),
+                ),
+        ),
+        SettingsGroup(
+            title = R.string.settings_information_section,
+            entries =
+                listOf(
+                    SettingsEntry(R.string.settings_open_source_licenses),
+                    SettingsEntry(R.string.settings_app_info),
+                ),
+        ),
     )
 
 @Composable
@@ -88,108 +95,114 @@ internal fun SettingsScreen(api: SmartBudgetApi) {
     }
 
     LazyColumn(
-        modifier = Modifier.fillMaxSize(),
-        contentPadding = PaddingValues(20.dp),
-        verticalArrangement = Arrangement.spacedBy(12.dp),
+        modifier = Modifier.fillMaxSize().background(SettingsBackground),
+        contentPadding = PaddingValues(start = 20.dp, top = 24.dp, end = 20.dp, bottom = 28.dp),
+        verticalArrangement = Arrangement.spacedBy(16.dp),
     ) {
         item {
-            ProfileCard(
+            ProfileHeader(
                 displayName = displayName.ifBlank { stringResource(R.string.settings_profile_default_name) },
                 username = username.ifBlank { stringResource(R.string.settings_username_unavailable) },
             )
         }
-        settingsSection(R.string.settings_account_section, AccountSettings)
-        settingsSection(R.string.settings_app_section, AppSettings)
-        settingsSection(R.string.settings_information_section, InformationSettings)
-    }
-}
-
-private fun LazyListScope.settingsSection(@StringRes title: Int, entries: List<SettingsEntry>) {
-    item { SettingsSectionTitle(title) }
-    entries.forEach { entry ->
-        item { SettingsItemCard(entry) }
-    }
-}
-
-@Composable
-private fun ProfileCard(displayName: String, username: String) {
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(20.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White),
-        border = BorderStroke(1.dp, SettingsCardBorder),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
-    ) {
-        Row(
-            modifier = Modifier.fillMaxWidth().padding(20.dp),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            Surface(
-                modifier = Modifier.size(56.dp),
-                shape = CircleShape,
-                color = SmartBudgetGreen.copy(alpha = 0.12f),
-            ) {
-                Icon(
-                    imageVector = Icons.Outlined.Person,
-                    contentDescription = null,
-                    modifier = Modifier.padding(14.dp),
-                    tint = SmartBudgetGreen,
-                )
-            }
-            Column(modifier = Modifier.padding(start = 16.dp)) {
-                Text(text = displayName, fontSize = 20.sp, fontWeight = FontWeight.SemiBold)
-                Text(text = username, color = SettingsSecondaryText, fontSize = 13.sp)
-            }
+        SettingsGroups.forEach { group ->
+            item { SettingsGroupCard(group) }
         }
     }
 }
 
 @Composable
-private fun SettingsSectionTitle(@StringRes title: Int) {
-    Text(
-        text = stringResource(title),
-        modifier = Modifier.padding(start = 4.dp, top = 8.dp),
-        color = SettingsSecondaryText,
-        fontSize = 13.sp,
-        fontWeight = FontWeight.SemiBold,
-    )
+private fun ProfileHeader(displayName: String, username: String) {
+    Row(
+        modifier =
+            Modifier
+                .fillMaxWidth()
+                .clickable {
+                    // 개인정보 수정 화면 연결은 후속 작업에서 구현합니다.
+                }.padding(horizontal = 4.dp, vertical = 16.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Surface(
+            modifier = Modifier.size(72.dp),
+            shape = CircleShape,
+            color = SettingsAvatarBackground,
+        ) {
+            Icon(
+                imageVector = Icons.Outlined.Person,
+                contentDescription = null,
+                modifier = Modifier.padding(17.dp),
+                tint = SettingsAvatarForeground,
+            )
+        }
+        Column(
+            modifier = Modifier.padding(start = 18.dp),
+            verticalArrangement = Arrangement.spacedBy(3.dp),
+        ) {
+            Text(text = displayName, fontSize = 22.sp, fontWeight = FontWeight.Bold)
+            Text(text = username, color = SettingsSecondaryText, fontSize = 14.sp)
+        }
+        Spacer(modifier = Modifier.weight(1f))
+        SettingsChevron()
+    }
 }
 
 @Composable
-private fun SettingsItemCard(entry: SettingsEntry) {
+private fun SettingsGroupCard(group: SettingsGroup) {
     Card(
-        onClick = {
-            // 각 설정 화면 연결은 후속 작업에서 구현합니다.
-        },
         modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(16.dp),
+        shape = RoundedCornerShape(24.dp),
         colors = CardDefaults.cardColors(containerColor = Color.White),
-        border = BorderStroke(1.dp, SettingsCardBorder),
-        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
     ) {
-        Row(
-            modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 15.dp),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            Icon(
-                imageVector = entry.icon,
-                contentDescription = null,
-                modifier = Modifier.size(22.dp),
-                tint = SettingsIconColor,
-            )
+        Column(modifier = Modifier.padding(vertical = 14.dp)) {
             Text(
-                text = stringResource(entry.label),
-                modifier = Modifier.padding(start = 14.dp),
+                text = stringResource(group.title),
+                modifier = Modifier.padding(start = 20.dp, end = 20.dp, top = 6.dp, bottom = 4.dp),
+                fontSize = 17.sp,
+                fontWeight = FontWeight.Bold,
+            )
+            group.entries.forEach { entry -> SettingsRow(entry) }
+        }
+    }
+}
+
+@Composable
+private fun SettingsRow(entry: SettingsEntry) {
+    Row(
+        modifier =
+            Modifier
+                .fillMaxWidth()
+                .clickable {
+                    // 각 설정 화면 연결은 후속 작업에서 구현합니다.
+                }.padding(horizontal = 20.dp, vertical = 16.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Text(
+            text = stringResource(entry.label),
+            color = SettingsPrimaryText,
+            fontSize = 16.sp,
+            fontWeight = FontWeight.Medium,
+        )
+        Spacer(modifier = Modifier.weight(1f))
+        entry.value?.let { value ->
+            Text(
+                text = stringResource(value),
+                modifier = Modifier.padding(end = 10.dp),
+                color = SmartBudgetGreen,
                 fontSize = 15.sp,
                 fontWeight = FontWeight.Medium,
             )
-            Spacer(modifier = Modifier.weight(1f))
-            Icon(
-                imageVector = Icons.Outlined.ChevronRight,
-                contentDescription = null,
-                modifier = Modifier.size(20.dp),
-                tint = SettingsSecondaryText,
-            )
         }
+        SettingsChevron()
     }
+}
+
+@Composable
+private fun SettingsChevron() {
+    Icon(
+        imageVector = Icons.Outlined.ChevronRight,
+        contentDescription = null,
+        modifier = Modifier.size(22.dp),
+        tint = SettingsChevronColor,
+    )
 }

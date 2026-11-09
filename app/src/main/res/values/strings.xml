@@ -47,6 +47,7 @@
     <string name="settings_notifications">알림</string>
     <string name="settings_display">디스플레이</string>
     <string name="settings_language">언어</string>
+    <string name="settings_language_value">한국어</string>
     <string name="settings_information_section">정보</string>
     <string name="settings_open_source_licenses">오픈소스 라이선스</string>
     <string name="settings_app_info">앱 정보</string>
