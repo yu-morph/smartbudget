@@ -9,10 +9,14 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.AccountBalanceWallet
-import androidx.compose.material.icons.outlined.BarChart
-import androidx.compose.material.icons.outlined.Home
-import androidx.compose.material.icons.outlined.Settings
+import androidx.compose.material.icons.filled.AccountBalanceWallet as FilledAccountBalanceWallet
+import androidx.compose.material.icons.filled.BarChart as FilledBarChart
+import androidx.compose.material.icons.filled.Home as FilledHome
+import androidx.compose.material.icons.filled.Settings as FilledSettings
+import androidx.compose.material.icons.outlined.AccountBalanceWallet as OutlinedAccountBalanceWallet
+import androidx.compose.material.icons.outlined.BarChart as OutlinedBarChart
+import androidx.compose.material.icons.outlined.Home as OutlinedHome
+import androidx.compose.material.icons.outlined.Settings as OutlinedSettings
 import androidx.compose.material3.Icon
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
@@ -36,11 +40,19 @@ import com.yu_morph.smartbudget.ui.theme.SmartBudgetGreen
 
 private val MainNavigationInactiveColor = Color(0xFF737373)
 
-private enum class MainTab(@param:StringRes val label: Int, val icon: ImageVector) {
-    HOME(R.string.home_tab, Icons.Outlined.Home),
-    BUDGET_BOOK(R.string.budget_book_tab, Icons.Outlined.AccountBalanceWallet),
-    ANALYSIS(R.string.analysis_tab, Icons.Outlined.BarChart),
-    SETTINGS(R.string.settings_tab, Icons.Outlined.Settings),
+private enum class MainTab(
+    @param:StringRes val label: Int,
+    val selectedIcon: ImageVector,
+    val unselectedIcon: ImageVector,
+) {
+    HOME(R.string.home_tab, Icons.Filled.FilledHome, Icons.Outlined.OutlinedHome),
+    BUDGET_BOOK(
+        R.string.budget_book_tab,
+        Icons.Filled.FilledAccountBalanceWallet,
+        Icons.Outlined.OutlinedAccountBalanceWallet,
+    ),
+    ANALYSIS(R.string.analysis_tab, Icons.Filled.FilledBarChart, Icons.Outlined.OutlinedBarChart),
+    SETTINGS(R.string.settings_tab, Icons.Filled.FilledSettings, Icons.Outlined.OutlinedSettings),
 }
 
 @Composable
@@ -67,10 +79,16 @@ fun MainScreen(onExit: () -> Unit) {
                     tonalElevation = 0.dp,
                 ) {
                     MainTab.entries.forEach { tab ->
+                        val isSelected = selectedTab == tab
                         NavigationBarItem(
-                            selected = selectedTab == tab,
+                            selected = isSelected,
                             onClick = { selectedTab = tab },
-                            icon = { Icon(tab.icon, contentDescription = stringResource(tab.label)) },
+                            icon = {
+                                Icon(
+                                    imageVector = if (isSelected) tab.selectedIcon else tab.unselectedIcon,
+                                    contentDescription = stringResource(tab.label),
+                                )
+                            },
                             colors =
                                 NavigationBarItemDefaults.colors(
                                     selectedIconColor = SmartBudgetGreen,
