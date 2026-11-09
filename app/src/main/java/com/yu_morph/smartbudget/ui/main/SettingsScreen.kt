@@ -1,5 +1,6 @@
 package com.yu_morph.smartbudget.ui.main
 
+import android.widget.Toast
 import androidx.annotation.StringRes
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -40,6 +41,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.yu_morph.smartbudget.R
 import com.yu_morph.smartbudget.ui.auth.openExampleCustomTab
+import com.yu_morph.smartbudget.ui.auth.openOpenSourceLicensesCustomTab
 import com.yu_morph.smartbudget.ui.theme.SmartBudgetGreen
 
 private val SettingsGradientGray = Color(0xFFF0F1F3)
@@ -127,8 +129,11 @@ internal fun SettingsScreen(
         WithdrawalCard()
         SettingsFooter(
             versionName = state.versionName,
+            buildDateTime = state.buildDateTime,
             onOpenSourceClick = {
-                // 오픈소스 라이선스 화면 연결은 후속 작업에서 구현합니다.
+                if (!openOpenSourceLicensesCustomTab(context)) {
+                    Toast.makeText(context, R.string.settings_license_open_error, Toast.LENGTH_SHORT).show()
+                }
             },
         )
     }
@@ -246,13 +251,13 @@ private fun WithdrawalCard() {
 }
 
 @Composable
-private fun SettingsFooter(versionName: String, onOpenSourceClick: () -> Unit) {
+private fun SettingsFooter(versionName: String, buildDateTime: String, onOpenSourceClick: () -> Unit) {
     Column(
-        modifier = Modifier.fillMaxWidth().padding(horizontal = 4.dp, vertical = 8.dp),
+        modifier = Modifier.fillMaxWidth().padding(start = 4.dp, top = 2.dp, end = 4.dp, bottom = 16.dp),
         verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {
         Text(
-            text = stringResource(R.string.settings_app_version, versionName),
+            text = stringResource(R.string.settings_app_version, versionName, buildDateTime),
             color = SettingsSecondaryText,
             fontSize = 13.sp,
         )

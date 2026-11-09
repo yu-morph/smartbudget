@@ -56,6 +56,7 @@
     <string name="settings_terms_of_service">서비스 이용 약관</string>
     <string name="settings_privacy_policy">개인정보 처리방침</string>
     <string name="settings_withdraw">탈퇴하기</string>
-    <string name="settings_app_version">앱 버전 %1$s</string>
+    <string name="settings_app_version">앱 버전 %1$s · 빌드 일시 %2$s</string>
     <string name="settings_view_open_source_licenses">오픈소스 라이선스 보기</string>
+    <string name="settings_license_open_error">오픈소스 라이선스를 열 수 없습니다.</string>
 </resources>

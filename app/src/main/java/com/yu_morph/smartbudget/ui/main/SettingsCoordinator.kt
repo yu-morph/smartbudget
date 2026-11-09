@@ -10,7 +10,12 @@ import com.yu_morph.smartbudget.data.remote.SmartBudgetApi
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 
-data class SettingsUiState(val displayName: String = "", val userId: String = "", val versionName: String = "")
+data class SettingsUiState(
+    val displayName: String = "",
+    val userId: String = "",
+    val versionName: String = "",
+    val buildDateTime: String = "",
+)
 
 class SettingsCoordinator(context: Context, private val api: SmartBudgetApi, private val scope: CoroutineScope) {
     private val applicationContext = context.applicationContext
@@ -20,6 +25,7 @@ class SettingsCoordinator(context: Context, private val api: SmartBudgetApi, pri
         SettingsUiState(
             userId = userIdentityStore.readUsername().orEmpty(),
             versionName = readVersionName(),
+            buildDateTime = BuildMetadata.BUILD_DATETIME,
         ),
     )
         private set
