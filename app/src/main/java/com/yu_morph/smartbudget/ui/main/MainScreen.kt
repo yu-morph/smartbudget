@@ -55,7 +55,7 @@ private enum class MainTab(
         Icons.Filled.FilledAccountBalanceWallet,
         Icons.Outlined.OutlinedAccountBalanceWallet,
     ),
-    ANALYSIS(R.string.analysis_tab, Icons.Filled.FilledBarChart, OutlinedBarChartIcon),
+    ANALYSIS(R.string.analysis_tab, Icons.Filled.FilledBarChart, Icons.Filled.FilledBarChart),
     SETTINGS(R.string.settings_tab, Icons.Filled.FilledSettings, Icons.Outlined.OutlinedSettings),
 }
 
