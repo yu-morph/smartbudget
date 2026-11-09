@@ -20,13 +20,13 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
-import com.yu_morph.smartbudget.data.remote.SmartBudgetApi
 import com.yu_morph.smartbudget.data.remote.SmartBudgetApiFactory
 import com.yu_morph.smartbudget.ui.auth.AuthCoordinator
 import com.yu_morph.smartbudget.ui.auth.AuthLoadingDialog
 import com.yu_morph.smartbudget.ui.auth.LoginScreen
 import com.yu_morph.smartbudget.ui.auth.SignUpScreen
 import com.yu_morph.smartbudget.ui.main.MainScreen
+import com.yu_morph.smartbudget.ui.main.SettingsCoordinator
 import com.yu_morph.smartbudget.ui.splash.SplashScreen
 
 private enum class AppDestination { SPLASH, LOGIN, SIGN_UP, MAIN }
@@ -40,6 +40,7 @@ fun SmartBudgetApp(onExit: () -> Unit) {
     val scope = rememberCoroutineScope()
     val api = remember(context) { SmartBudgetApiFactory.create(context.applicationContext) }
     val coordinator = remember(context, api, scope) { AuthCoordinator(context, api, scope) }
+    val settingsCoordinator = remember(context, api, scope) { SettingsCoordinator(context, api, scope) }
     DisposableEffect(api) {
         onDispose(api::close)
     }
@@ -49,8 +50,8 @@ fun SmartBudgetApp(onExit: () -> Unit) {
     Box(modifier = Modifier.fillMaxSize()) {
         AuthenticationContent(
             destination = destination,
-            api = api,
             coordinator = coordinator,
+            settingsCoordinator = settingsCoordinator,
             onDestinationChange = { destination = it },
             onExit = onExit,
         )
@@ -61,8 +62,8 @@ fun SmartBudgetApp(onExit: () -> Unit) {
 @Composable
 private fun AuthenticationContent(
     destination: AppDestination,
-    api: SmartBudgetApi,
     coordinator: AuthCoordinator,
+    settingsCoordinator: SettingsCoordinator,
     onDestinationChange: (AppDestination) -> Unit,
     onExit: () -> Unit,
 ) {
@@ -106,7 +107,15 @@ private fun AuthenticationContent(
                 onLogin = { onDestinationChange(AppDestination.LOGIN) },
             )
 
-            AppDestination.MAIN -> MainScreen(api = api, onExit = onExit)
+            AppDestination.MAIN -> MainScreen(
+                settingsState = settingsCoordinator.state,
+                onSettingsLoad = settingsCoordinator::refresh,
+                onLogout = {
+                    coordinator.signOut()
+                    onDestinationChange(AppDestination.LOGIN)
+                },
+                onExit = onExit,
+            )
         }
     }
 }

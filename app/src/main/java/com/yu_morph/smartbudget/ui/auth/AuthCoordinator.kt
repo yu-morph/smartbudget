@@ -31,7 +31,7 @@ class AuthCoordinator(context: Context, private val api: SmartBudgetApi, private
             isSuccessful = { it.data != null },
             onSuccess = onAuthenticated,
             onFailure = { result ->
-                if (result is ApiResult.HttpFailure && result.status == HTTP_UNAUTHORIZED) api.auth.signOut()
+                if (result is ApiResult.HttpFailure && result.status == HTTP_UNAUTHORIZED) signOut()
                 onSignInRequired()
             },
         )
@@ -64,6 +64,11 @@ class AuthCoordinator(context: Context, private val api: SmartBudgetApi, private
                 onSuccess()
             },
         )
+    }
+
+    fun signOut() {
+        api.auth.signOut()
+        userIdentityStore.clear()
     }
 
     private fun <T> executeRequest(

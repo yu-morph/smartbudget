@@ -21,29 +21,23 @@ import androidx.compose.material.icons.outlined.Person
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.yu_morph.smartbudget.R
-import com.yu_morph.smartbudget.data.local.PreferenceStoreFactory
-import com.yu_morph.smartbudget.data.local.readSubjectFromJwt
-import com.yu_morph.smartbudget.data.remote.ApiResult
-import com.yu_morph.smartbudget.data.remote.SmartBudgetApi
+import com.yu_morph.smartbudget.ui.auth.openExampleCustomTab
 import com.yu_morph.smartbudget.ui.theme.SmartBudgetGreen
 
 private val SettingsGradientGray = Color(0xFFF0F1F3)
@@ -79,27 +73,25 @@ private val SettingsGroups =
                 ),
         ),
         SettingsGroup(
-            title = R.string.settings_information_section,
+            title = R.string.settings_legal_section,
             entries =
                 listOf(
-                    SettingsEntry(R.string.settings_open_source_licenses),
-                    SettingsEntry(R.string.settings_app_info),
+                    SettingsEntry(R.string.settings_terms_of_service),
+                    SettingsEntry(R.string.settings_privacy_policy),
                 ),
         ),
     )
 
 @Composable
-internal fun SettingsScreen(api: SmartBudgetApi, bottomContentPadding: Dp) {
-    val context = LocalContext.current
-    val userId = remember(context) {
-        PreferenceStoreFactory.authTokens(context).read()?.accessToken?.let(::readSubjectFromJwt).orEmpty()
-    }
-    var displayName by remember { mutableStateOf("") }
+internal fun SettingsScreen(
+    state: SettingsUiState,
+    bottomContentPadding: Dp,
+    onLoad: () -> Unit,
+    onLogout: () -> Unit,
+) {
+    val context = androidx.compose.ui.platform.LocalContext.current
 
-    LaunchedEffect(api) {
-        val result = api.auth.getAccount()
-        if (result is ApiResult.Success) displayName = result.data?.displayName.orEmpty()
-    }
+    LaunchedEffect(Unit) { onLoad() }
 
     LazyColumn(
         modifier =
@@ -110,23 +102,44 @@ internal fun SettingsScreen(api: SmartBudgetApi, bottomContentPadding: Dp) {
                         listOf(SettingsGradientGray, SettingsGradientLightGray, SettingsGradientGreen),
                     ),
                 ),
-        contentPadding = PaddingValues(start = 20.dp, top = 24.dp, end = 20.dp, bottom = bottomContentPadding),
+        contentPadding = PaddingValues(start = 20.dp, top = 48.dp, end = 20.dp, bottom = bottomContentPadding),
         verticalArrangement = Arrangement.spacedBy(16.dp),
     ) {
         item {
             ProfileHeader(
-                displayName = displayName.ifBlank { stringResource(R.string.settings_profile_default_name) },
-                userId = userId,
+                displayName = state.displayName.ifBlank { stringResource(R.string.settings_profile_default_name) },
+                userId = state.userId,
+                onLogout = onLogout,
             )
         }
         SettingsGroups.forEach { group ->
-            item { SettingsGroupCard(group) }
+            item {
+                SettingsGroupCard(
+                    group = group,
+                    onEntryClick = { entry ->
+                        if (entry.label == R.string.settings_terms_of_service ||
+                            entry.label == R.string.settings_privacy_policy
+                        ) {
+                            openExampleCustomTab(context)
+                        }
+                    },
+                )
+            }
+        }
+        item { WithdrawalCard() }
+        item {
+            SettingsFooter(
+                versionName = state.versionName,
+                onOpenSourceClick = {
+                    // 오픈소스 라이선스 화면 연결은 후속 작업에서 구현합니다.
+                },
+            )
         }
     }
 }
 
 @Composable
-private fun ProfileHeader(displayName: String, userId: String) {
+private fun ProfileHeader(displayName: String, userId: String, onLogout: () -> Unit) {
     Row(
         modifier = Modifier.fillMaxWidth().padding(horizontal = 4.dp, vertical = 16.dp),
         verticalAlignment = Alignment.CenterVertically,
@@ -144,7 +157,7 @@ private fun ProfileHeader(displayName: String, userId: String) {
             )
         }
         Column(
-            modifier = Modifier.padding(start = 18.dp),
+            modifier = Modifier.padding(start = 18.dp).weight(1f),
             verticalArrangement = Arrangement.spacedBy(3.dp),
         ) {
             Text(text = displayName, fontSize = 22.sp, fontWeight = FontWeight.Bold)
@@ -159,11 +172,14 @@ private fun ProfileHeader(displayName: String, userId: String) {
                 fontSize = 14.sp,
             )
         }
+        OutlinedButton(onClick = onLogout, shape = RoundedCornerShape(12.dp)) {
+            Text(text = stringResource(R.string.settings_logout), fontSize = 13.sp)
+        }
     }
 }
 
 @Composable
-private fun SettingsGroupCard(group: SettingsGroup) {
+private fun SettingsGroupCard(group: SettingsGroup, onEntryClick: (SettingsEntry) -> Unit) {
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(24.dp),
@@ -177,20 +193,19 @@ private fun SettingsGroupCard(group: SettingsGroup) {
                 fontSize = 17.sp,
                 fontWeight = FontWeight.Bold,
             )
-            group.entries.forEach { entry -> SettingsRow(entry) }
+            group.entries.forEach { entry -> SettingsRow(entry, onClick = { onEntryClick(entry) }) }
         }
     }
 }
 
 @Composable
-private fun SettingsRow(entry: SettingsEntry) {
+private fun SettingsRow(entry: SettingsEntry, onClick: () -> Unit) {
     Row(
         modifier =
             Modifier
                 .fillMaxWidth()
-                .clickable {
-                    // 각 설정 화면 연결은 후속 작업에서 구현합니다.
-                }.padding(horizontal = 20.dp, vertical = 16.dp),
+                .clickable(onClick = onClick)
+                .padding(horizontal = 20.dp, vertical = 16.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Text(
@@ -210,6 +225,44 @@ private fun SettingsRow(entry: SettingsEntry) {
             )
         }
         SettingsChevron()
+    }
+}
+
+@Composable
+private fun WithdrawalCard() {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(24.dp),
+        colors = CardDefaults.cardColors(containerColor = Color.White),
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
+    ) {
+        SettingsRow(
+            entry = SettingsEntry(R.string.settings_withdraw),
+            onClick = {
+                // 회원 탈퇴 화면 연결은 후속 작업에서 구현합니다.
+            },
+        )
+    }
+}
+
+@Composable
+private fun SettingsFooter(versionName: String, onOpenSourceClick: () -> Unit) {
+    Column(
+        modifier = Modifier.fillMaxWidth().padding(horizontal = 4.dp, vertical = 8.dp),
+        verticalArrangement = Arrangement.spacedBy(8.dp),
+    ) {
+        Text(
+            text = stringResource(R.string.settings_app_version, versionName),
+            color = SettingsSecondaryText,
+            fontSize = 13.sp,
+        )
+        Text(
+            text = stringResource(R.string.settings_view_open_source_licenses),
+            modifier = Modifier.clickable(onClick = onOpenSourceClick),
+            color = SettingsPrimaryText,
+            fontSize = 13.sp,
+            textDecoration = TextDecoration.Underline,
+        )
     }
 }
 
