@@ -28,6 +28,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
@@ -43,6 +44,7 @@ import com.yu_morph.smartbudget.R
 import com.yu_morph.smartbudget.ui.auth.openExampleCustomTab
 import com.yu_morph.smartbudget.ui.auth.openOpenSourceLicensesCustomTab
 import com.yu_morph.smartbudget.ui.theme.SmartBudgetGreen
+import kotlinx.coroutines.launch
 
 private val SettingsGradientGray = Color(0xFFF0F1F3)
 private val SettingsGradientLightGray = Color(0xFFF8F8F7)
@@ -94,6 +96,7 @@ internal fun SettingsScreen(
     onLogout: () -> Unit,
 ) {
     val context = LocalContext.current
+    val coroutineScope = rememberCoroutineScope()
 
     LaunchedEffect(Unit) { onLoad() }
 
@@ -131,8 +134,10 @@ internal fun SettingsScreen(
             versionName = state.versionName,
             buildDateTime = state.buildDateTime,
             onOpenSourceClick = {
-                if (!openOpenSourceLicensesCustomTab(context)) {
-                    Toast.makeText(context, R.string.settings_license_open_error, Toast.LENGTH_SHORT).show()
+                coroutineScope.launch {
+                    if (!openOpenSourceLicensesCustomTab(context)) {
+                        Toast.makeText(context, R.string.settings_license_open_error, Toast.LENGTH_SHORT).show()
+                    }
                 }
             },
         )
