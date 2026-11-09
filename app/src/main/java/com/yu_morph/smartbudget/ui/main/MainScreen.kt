@@ -4,6 +4,10 @@ import android.os.SystemClock
 import android.widget.Toast
 import androidx.activity.compose.BackHandler
 import androidx.annotation.StringRes
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.spring
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -20,6 +24,13 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.AccountBalanceWallet as FilledAccountBalanceWallet
+import androidx.compose.material.icons.filled.BarChart as FilledBarChart
+import androidx.compose.material.icons.filled.Home as FilledHome
+import androidx.compose.material.icons.filled.Settings as FilledSettings
+import androidx.compose.material.icons.outlined.AccountBalanceWallet as OutlinedAccountBalanceWallet
+import androidx.compose.material.icons.outlined.Home as OutlinedHome
+import androidx.compose.material.icons.outlined.Settings as OutlinedSettings
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.FloatingActionButtonDefaults
 import androidx.compose.material3.Icon
@@ -30,6 +41,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -45,17 +57,12 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.yu_morph.smartbudget.R
 import com.yu_morph.smartbudget.ui.theme.SmartBudgetGreen
-import androidx.compose.material.icons.filled.AccountBalanceWallet as FilledAccountBalanceWallet
-import androidx.compose.material.icons.filled.BarChart as FilledBarChart
-import androidx.compose.material.icons.filled.Home as FilledHome
-import androidx.compose.material.icons.filled.Settings as FilledSettings
-import androidx.compose.material.icons.outlined.AccountBalanceWallet as OutlinedAccountBalanceWallet
-import androidx.compose.material.icons.outlined.Home as OutlinedHome
-import androidx.compose.material.icons.outlined.Settings as OutlinedSettings
+import kotlinx.coroutines.launch
 
 private val MainNavigationInactiveColor = Color(0xFF737373)
 private val MainActionGradientStart = Color(0xFF18A874)
 private val MainActionGradientEnd = Color(0xFF087A55)
+private const val MAIN_TAB_PRESSED_SCALE = 0.88f
 
 private enum class MainTab(
     @param:StringRes val label: Int,
@@ -124,9 +131,24 @@ private fun MainNavigationBar(selectedTab: MainTab, onTabSelected: (MainTab) -> 
 
 @Composable
 private fun MainNavigationTab(tab: MainTab, isSelected: Boolean, onTabSelected: (MainTab) -> Unit) {
+    val scale = remember { Animatable(1f) }
+    val animationScope = rememberCoroutineScope()
     Surface(
-        onClick = { onTabSelected(tab) },
-        modifier = Modifier.size(56.dp),
+        onClick = {
+            onTabSelected(tab)
+            animationScope.launch {
+                scale.animateTo(MAIN_TAB_PRESSED_SCALE, animationSpec = tween(durationMillis = 70))
+                scale.animateTo(
+                    targetValue = 1f,
+                    animationSpec =
+                        spring(
+                            dampingRatio = Spring.DampingRatioMediumBouncy,
+                            stiffness = Spring.StiffnessMedium,
+                        ),
+                )
+            }
+        },
+        modifier = Modifier.size(56.dp).graphicsLayer(scaleX = scale.value, scaleY = scale.value),
         shape = RoundedCornerShape(16.dp),
         color = Color.Transparent,
         contentColor = if (isSelected) SmartBudgetGreen else MainNavigationInactiveColor,
