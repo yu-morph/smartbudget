@@ -21,8 +21,8 @@ import androidx.compose.material.icons.filled.BarChart as FilledBarChart
 import androidx.compose.material.icons.filled.Home as FilledHome
 import androidx.compose.material.icons.filled.Settings as FilledSettings
 import androidx.compose.material.icons.outlined.AccountBalanceWallet as OutlinedAccountBalanceWallet
-import androidx.compose.material.icons.outlined.BarChart as OutlinedBarChart
 import androidx.compose.material.icons.outlined.Home as OutlinedHome
+import androidx.compose.material.icons.outlined.InsertChartOutlined as OutlinedInsertChart
 import androidx.compose.material.icons.outlined.Settings as OutlinedSettings
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Scaffold
@@ -56,7 +56,7 @@ private enum class MainTab(
         Icons.Filled.FilledAccountBalanceWallet,
         Icons.Outlined.OutlinedAccountBalanceWallet,
     ),
-    ANALYSIS(R.string.analysis_tab, Icons.Filled.FilledBarChart, Icons.Outlined.OutlinedBarChart),
+    ANALYSIS(R.string.analysis_tab, Icons.Filled.FilledBarChart, Icons.Outlined.OutlinedInsertChart),
     SETTINGS(R.string.settings_tab, Icons.Filled.FilledSettings, Icons.Outlined.OutlinedSettings),
 }
 
