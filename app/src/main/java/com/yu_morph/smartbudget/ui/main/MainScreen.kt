@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -42,6 +43,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
@@ -95,24 +97,28 @@ fun MainScreen(onExit: () -> Unit) {
 
 @Composable
 private fun MainNavigationBar(selectedTab: MainTab, onTabSelected: (MainTab) -> Unit) {
-    Surface(
-        color = Color.White,
-        shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp),
-        shadowElevation = 16.dp,
-    ) {
-        Row(
-            modifier = Modifier.fillMaxWidth().navigationBarsPadding().height(72.dp).padding(horizontal = 12.dp),
-            horizontalArrangement = Arrangement.SpaceEvenly,
-            verticalAlignment = Alignment.CenterVertically,
+    Box(modifier = Modifier.fillMaxWidth()) {
+        Surface(
+            modifier = Modifier.padding(top = 12.dp),
+            color = Color.White,
+            shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp),
+            shadowElevation = 16.dp,
         ) {
-            MainTab.entries.take(2).forEach { tab ->
-                MainNavigationTab(tab, selectedTab == tab, onTabSelected)
-            }
-            MainActionButton()
-            MainTab.entries.drop(2).forEach { tab ->
-                MainNavigationTab(tab, selectedTab == tab, onTabSelected)
+            Row(
+                modifier = Modifier.fillMaxWidth().navigationBarsPadding().height(72.dp).padding(horizontal = 12.dp),
+                horizontalArrangement = Arrangement.SpaceEvenly,
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                MainTab.entries.take(2).forEach { tab ->
+                    MainNavigationTab(tab, selectedTab == tab, onTabSelected)
+                }
+                Spacer(modifier = Modifier.size(58.dp))
+                MainTab.entries.drop(2).forEach { tab ->
+                    MainNavigationTab(tab, selectedTab == tab, onTabSelected)
+                }
             }
         }
+        MainActionButton(modifier = Modifier.align(Alignment.TopCenter))
     }
 }
 
@@ -140,12 +146,12 @@ private fun MainNavigationTab(tab: MainTab, isSelected: Boolean, onTabSelected: 
 }
 
 @Composable
-private fun MainActionButton() {
+private fun MainActionButton(modifier: Modifier = Modifier) {
     FloatingActionButton(
         onClick = {
             // FAB 동작은 후속 작업에서 구현합니다.
         },
-        modifier = Modifier.size(58.dp),
+        modifier = modifier.size(58.dp),
         shape = CircleShape,
         containerColor = Color.Transparent,
         elevation = FloatingActionButtonDefaults.elevation(defaultElevation = 8.dp, pressedElevation = 12.dp),
@@ -163,7 +169,7 @@ private fun MainActionButton() {
             Image(
                 painter = painterResource(R.drawable.ic_launcher_foreground),
                 contentDescription = stringResource(R.string.app_logo_description),
-                modifier = Modifier.fillMaxSize(),
+                modifier = Modifier.fillMaxSize().graphicsLayer(scaleX = 1.1f, scaleY = 1.1f),
             )
         }
     }
