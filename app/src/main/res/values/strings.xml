@@ -39,7 +39,6 @@
     <string name="unknown_error">요청 처리 중 오류가 발생했습니다.</string>
     <string name="exit_confirmation">한 번 더 누르면 앱을 끌 수 있어요.</string>
     <string name="settings_profile_default_name">사용자</string>
-    <string name="settings_user_id">사용자 ID · %1$s</string>
     <string name="settings_user_id_unavailable">사용자 ID 정보 없음</string>
     <string name="settings_account_section">계정</string>
     <string name="settings_edit_profile">개인정보 수정</string>

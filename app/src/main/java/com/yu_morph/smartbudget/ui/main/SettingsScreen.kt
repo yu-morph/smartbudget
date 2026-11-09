@@ -5,23 +5,24 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.outlined.Logout
 import androidx.compose.material.icons.outlined.ChevronRight
 import androidx.compose.material.icons.outlined.Person
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
-import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -30,6 +31,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextDecoration
@@ -89,11 +91,11 @@ internal fun SettingsScreen(
     onLoad: () -> Unit,
     onLogout: () -> Unit,
 ) {
-    val context = androidx.compose.ui.platform.LocalContext.current
+    val context = LocalContext.current
 
     LaunchedEffect(Unit) { onLoad() }
 
-    LazyColumn(
+    Column(
         modifier =
             Modifier
                 .fillMaxSize()
@@ -101,40 +103,34 @@ internal fun SettingsScreen(
                     Brush.linearGradient(
                         listOf(SettingsGradientGray, SettingsGradientLightGray, SettingsGradientGreen),
                     ),
-                ),
-        contentPadding = PaddingValues(start = 20.dp, top = 48.dp, end = 20.dp, bottom = bottomContentPadding),
+                ).verticalScroll(rememberScrollState())
+                .padding(start = 20.dp, top = 48.dp, end = 20.dp, bottom = bottomContentPadding),
         verticalArrangement = Arrangement.spacedBy(16.dp),
     ) {
-        item {
-            ProfileHeader(
-                displayName = state.displayName.ifBlank { stringResource(R.string.settings_profile_default_name) },
-                userId = state.userId,
-                onLogout = onLogout,
-            )
-        }
+        ProfileHeader(
+            displayName = state.displayName.ifBlank { stringResource(R.string.settings_profile_default_name) },
+            userId = state.userId,
+            onLogout = onLogout,
+        )
         SettingsGroups.forEach { group ->
-            item {
-                SettingsGroupCard(
-                    group = group,
-                    onEntryClick = { entry ->
-                        if (entry.label == R.string.settings_terms_of_service ||
-                            entry.label == R.string.settings_privacy_policy
-                        ) {
-                            openExampleCustomTab(context)
-                        }
-                    },
-                )
-            }
-        }
-        item { WithdrawalCard() }
-        item {
-            SettingsFooter(
-                versionName = state.versionName,
-                onOpenSourceClick = {
-                    // 오픈소스 라이선스 화면 연결은 후속 작업에서 구현합니다.
+            SettingsGroupCard(
+                group = group,
+                onEntryClick = { entry ->
+                    if (entry.label == R.string.settings_terms_of_service ||
+                        entry.label == R.string.settings_privacy_policy
+                    ) {
+                        openExampleCustomTab(context)
+                    }
                 },
             )
         }
+        WithdrawalCard()
+        SettingsFooter(
+            versionName = state.versionName,
+            onOpenSourceClick = {
+                // 오픈소스 라이선스 화면 연결은 후속 작업에서 구현합니다.
+            },
+        )
     }
 }
 
@@ -166,14 +162,18 @@ private fun ProfileHeader(displayName: String, userId: String, onLogout: () -> U
                     if (userId.isBlank()) {
                         stringResource(R.string.settings_user_id_unavailable)
                     } else {
-                        stringResource(R.string.settings_user_id, userId)
+                        userId
                     },
                 color = SettingsSecondaryText,
                 fontSize = 14.sp,
             )
         }
-        OutlinedButton(onClick = onLogout, shape = RoundedCornerShape(12.dp)) {
-            Text(text = stringResource(R.string.settings_logout), fontSize = 13.sp)
+        IconButton(onClick = onLogout) {
+            Icon(
+                imageVector = Icons.AutoMirrored.Outlined.Logout,
+                contentDescription = stringResource(R.string.settings_logout),
+                tint = SettingsPrimaryText,
+            )
         }
     }
 }
