@@ -11,10 +11,12 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawingPadding
+import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -35,56 +37,58 @@ fun LoginScreen(onLogin: (String, String) -> Unit, onSignUp: () -> Unit) {
     var username by rememberSaveable { mutableStateOf("") }
     var password by rememberSaveable { mutableStateOf("") }
     val context = LocalContext.current
-    Column(
-        modifier =
-            Modifier
-                .fillMaxSize()
-                .background(MaterialTheme.colorScheme.background)
-                .safeDrawingPadding()
-                .imePadding()
-                .padding(horizontal = 46.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center,
-    ) {
-        BrandSignature(logoSize = 48.dp, textSize = 24)
-        Spacer(Modifier.height(26.dp))
-        Text(stringResource(R.string.login_title), fontSize = 24.sp, fontWeight = FontWeight.SemiBold)
-        Spacer(Modifier.height(28.dp))
-        LoginInputFields(
-            username = username,
-            onUsernameChange = { username = it },
-            password = password,
-            onPasswordChange = { password = it },
-            onDone = { if (username.isNotBlank() && password.isNotBlank()) onLogin(username, password) },
-        )
-        Spacer(Modifier.height(20.dp))
-        PrimaryAuthButton(
-            text = stringResource(R.string.login_action),
-            onClick = { onLogin(username, password) },
-            enabled = username.isNotBlank() && password.isNotBlank(),
-        )
-        Spacer(Modifier.height(4.dp))
+    CompositionLocalProvider(LocalContentColor provides MaterialTheme.colorScheme.onBackground) {
         Column(
-            modifier = Modifier.fillMaxWidth(),
+            modifier =
+                Modifier
+                    .fillMaxSize()
+                    .background(MaterialTheme.colorScheme.background)
+                    .safeDrawingPadding()
+                    .imePadding()
+                    .padding(horizontal = 46.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center,
         ) {
-            TextButton(
-                onClick = onSignUp,
-                modifier = Modifier.height(40.dp),
-                contentPadding = PaddingValues(0.dp),
+            BrandSignature(logoSize = 48.dp, textSize = 24)
+            Spacer(Modifier.height(26.dp))
+            Text(stringResource(R.string.login_title), fontSize = 24.sp, fontWeight = FontWeight.SemiBold)
+            Spacer(Modifier.height(28.dp))
+            LoginInputFields(
+                username = username,
+                onUsernameChange = { username = it },
+                password = password,
+                onPasswordChange = { password = it },
+                onDone = { if (username.isNotBlank() && password.isNotBlank()) onLogin(username, password) },
+            )
+            Spacer(Modifier.height(20.dp))
+            PrimaryAuthButton(
+                text = stringResource(R.string.login_action),
+                onClick = { onLogin(username, password) },
+                enabled = username.isNotBlank() && password.isNotBlank(),
+            )
+            Spacer(Modifier.height(4.dp))
+            Column(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalAlignment = Alignment.CenterHorizontally,
             ) {
-                Text(stringResource(R.string.sign_up_action), color = MaterialTheme.colorScheme.onSurfaceVariant)
-            }
-            TextButton(
-                onClick = { openExampleCustomTab(context) },
-                modifier = Modifier.height(40.dp),
-                contentPadding = PaddingValues(0.dp),
-            ) {
-                Text(
-                    text = stringResource(R.string.forgot_password),
-                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
-                    textDecoration = TextDecoration.Underline,
-                )
+                TextButton(
+                    onClick = onSignUp,
+                    modifier = Modifier.height(40.dp),
+                    contentPadding = PaddingValues(0.dp),
+                ) {
+                    Text(stringResource(R.string.sign_up_action), color = MaterialTheme.colorScheme.onSurfaceVariant)
+                }
+                TextButton(
+                    onClick = { openExampleCustomTab(context) },
+                    modifier = Modifier.height(40.dp),
+                    contentPadding = PaddingValues(0.dp),
+                ) {
+                    Text(
+                        text = stringResource(R.string.forgot_password),
+                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
+                        textDecoration = TextDecoration.Underline,
+                    )
+                }
             }
         }
     }

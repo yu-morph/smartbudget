@@ -24,11 +24,13 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Check
 import androidx.compose.material3.Icon
+import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.ripple
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -55,55 +57,57 @@ fun SignUpScreen(onSignUp: (String, String, String) -> Unit, onLogin: () -> Unit
     var password by rememberSaveable { mutableStateOf("") }
     var passwordConfirm by rememberSaveable { mutableStateOf("") }
     var agreed by rememberSaveable { mutableStateOf(false) }
-    Box(modifier = Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background).safeDrawingPadding()) {
-        Column(
-            modifier =
-                Modifier
-                    .fillMaxSize()
-                    .imePadding()
-                    .verticalScroll(rememberScrollState())
-                    .padding(horizontal = 46.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center,
-        ) {
-            Spacer(Modifier.height(56.dp))
-            BrandSignature(logoSize = 48.dp, textSize = 24)
-            Spacer(Modifier.height(26.dp))
-            Text(stringResource(R.string.sign_up_title), fontSize = 26.sp, fontWeight = FontWeight.Bold)
-            Spacer(Modifier.height(28.dp))
-            SignUpInputFields(
-                displayName = displayName,
-                onDisplayNameChange = { displayName = it },
-                username = username,
-                onUsernameChange = { username = it },
-                password = password,
-                onPasswordChange = { password = it },
-                passwordConfirmation = passwordConfirm,
-                onPasswordConfirmationChange = { passwordConfirm = it },
-            )
-            Spacer(Modifier.height(6.dp))
-            PrivacyAgreementRow(
-                agreed = agreed,
-                onAgreementChange = { agreed = it },
-                onOpenPolicy = onOpenPrivacyPolicy,
-            )
-            Spacer(Modifier.height(8.dp))
-            PrimaryAuthButton(
-                text = stringResource(R.string.sign_up_action),
-                onClick = { onSignUp(displayName, username, password) },
-                enabled = agreed && SignUpValidation.isValid(displayName, username, password, passwordConfirm),
-            )
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Text(stringResource(R.string.already_have_account), fontSize = 13.sp)
-                TextButton(onClick = onLogin) {
-                    Text(
-                        text = stringResource(R.string.login_action),
-                        color = SmartBudgetGreenLight,
-                        textDecoration = TextDecoration.Underline,
-                    )
+    CompositionLocalProvider(LocalContentColor provides MaterialTheme.colorScheme.onBackground) {
+        Box(modifier = Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background).safeDrawingPadding()) {
+            Column(
+                modifier =
+                    Modifier
+                        .fillMaxSize()
+                        .imePadding()
+                        .verticalScroll(rememberScrollState())
+                        .padding(horizontal = 46.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Center,
+            ) {
+                Spacer(Modifier.height(56.dp))
+                BrandSignature(logoSize = 48.dp, textSize = 24)
+                Spacer(Modifier.height(26.dp))
+                Text(stringResource(R.string.sign_up_title), fontSize = 26.sp, fontWeight = FontWeight.Bold)
+                Spacer(Modifier.height(28.dp))
+                SignUpInputFields(
+                    displayName = displayName,
+                    onDisplayNameChange = { displayName = it },
+                    username = username,
+                    onUsernameChange = { username = it },
+                    password = password,
+                    onPasswordChange = { password = it },
+                    passwordConfirmation = passwordConfirm,
+                    onPasswordConfirmationChange = { passwordConfirm = it },
+                )
+                Spacer(Modifier.height(6.dp))
+                PrivacyAgreementRow(
+                    agreed = agreed,
+                    onAgreementChange = { agreed = it },
+                    onOpenPolicy = onOpenPrivacyPolicy,
+                )
+                Spacer(Modifier.height(8.dp))
+                PrimaryAuthButton(
+                    text = stringResource(R.string.sign_up_action),
+                    onClick = { onSignUp(displayName, username, password) },
+                    enabled = agreed && SignUpValidation.isValid(displayName, username, password, passwordConfirm),
+                )
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text(stringResource(R.string.already_have_account), fontSize = 13.sp)
+                    TextButton(onClick = onLogin) {
+                        Text(
+                            text = stringResource(R.string.login_action),
+                            color = SmartBudgetGreenLight,
+                            textDecoration = TextDecoration.Underline,
+                        )
+                    }
                 }
+                Spacer(Modifier.height(56.dp))
             }
-            Spacer(Modifier.height(56.dp))
         }
     }
 }

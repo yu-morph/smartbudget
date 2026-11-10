@@ -4,6 +4,10 @@ import androidx.compose.ui.graphics.Color
 
 val SmartBudgetGreen = Color(0xFF17A673)
 val SmartBudgetGreenLight = Color(0xFF43B58C)
+val SmartBudgetDarkGreen = Color(0xFF002117)
+val SmartBudgetGreenContainer = Color(0xFF00513A)
+val SmartBudgetGreenContainerText = Color(0xFF65DDAF)
+val SmartBudgetDarkSecondary = Color(0xFFA9D5C4)
 
 val Purple80 = Color(0xFFD0BCFF)
 val PurpleGrey80 = Color(0xFFCCC2DC)
