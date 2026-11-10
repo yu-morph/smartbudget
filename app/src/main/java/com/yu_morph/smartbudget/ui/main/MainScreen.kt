@@ -107,10 +107,22 @@ fun MainScreen(
             MainNavigationBar(selectedTab = selectedTab, onTabSelected = { selectedTab = it })
         },
     ) { innerPadding ->
-        // 설정 외 탭의 실제 화면은 후속 작업에서 구현합니다.
         Box(modifier = Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)) {
-            if (selectedTab == MainTab.SETTINGS) {
-                SettingsScreen(
+            when (selectedTab) {
+                MainTab.HOME -> HomeScreen(
+                    bottomPadding = innerPadding.calculateBottomPadding(),
+                    displayName = settingsState.displayName,
+                )
+
+                MainTab.BUDGET_BOOK -> BudgetBookRoute(
+                    bottomPadding = innerPadding.calculateBottomPadding(),
+                )
+
+                MainTab.ANALYSIS -> AnalysisScreen(
+                    bottomPadding = innerPadding.calculateBottomPadding(),
+                )
+
+                MainTab.SETTINGS -> SettingsScreen(
                     state = settingsState,
                     bottomContentPadding = innerPadding.calculateBottomPadding(),
                     onLoad = onSettingsLoad,
@@ -118,8 +130,6 @@ fun MainScreen(
                     onOpenDocument = onOpenDocument,
                     onOpenSettings = onOpenSettings,
                 )
-            } else {
-                Box(modifier = Modifier.fillMaxSize().padding(innerPadding))
             }
         }
     }
