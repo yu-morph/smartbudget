@@ -1,6 +1,7 @@
 package com.yu_morph.smartbudget.ui.auth
 
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.CircularProgressIndicator
@@ -20,13 +21,13 @@ fun AuthLoadingDialog() {
         properties = DialogProperties(dismissOnBackPress = false, dismissOnClickOutside = false),
     ) {
         Surface(
-            modifier = Modifier.size(88.dp),
-            shape = RoundedCornerShape(14.dp),
+            modifier = Modifier.size(64.dp),
+            shape = RoundedCornerShape(12.dp),
             color = MaterialTheme.colorScheme.surface,
             shadowElevation = 8.dp,
         ) {
-            Box(contentAlignment = Alignment.Center) {
-                CircularProgressIndicator(modifier = Modifier.size(32.dp), strokeWidth = 3.dp)
+            Box(modifier = Modifier.padding(16.dp), contentAlignment = Alignment.Center) {
+                CircularProgressIndicator(modifier = Modifier.size(26.dp), strokeWidth = 2.5.dp)
             }
         }
     }
