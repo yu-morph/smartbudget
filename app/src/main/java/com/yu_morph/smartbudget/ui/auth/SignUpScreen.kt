@@ -24,6 +24,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Check
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.ripple
@@ -47,8 +48,6 @@ import com.yu_morph.smartbudget.ui.components.BrandSignature
 import com.yu_morph.smartbudget.ui.theme.SmartBudgetGreen
 import com.yu_morph.smartbudget.ui.theme.SmartBudgetGreenLight
 
-private val SignUpConditionColor = Color(0xFF555555)
-
 @Composable
 fun SignUpScreen(onSignUp: (String, String, String) -> Unit, onLogin: () -> Unit, onOpenPrivacyPolicy: () -> Unit) {
     var displayName by rememberSaveable { mutableStateOf("") }
@@ -56,7 +55,7 @@ fun SignUpScreen(onSignUp: (String, String, String) -> Unit, onLogin: () -> Unit
     var password by rememberSaveable { mutableStateOf("") }
     var passwordConfirm by rememberSaveable { mutableStateOf("") }
     var agreed by rememberSaveable { mutableStateOf(false) }
-    Box(modifier = Modifier.fillMaxSize().safeDrawingPadding()) {
+    Box(modifier = Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background).safeDrawingPadding()) {
         Column(
             modifier =
                 Modifier
@@ -185,7 +184,7 @@ private fun SignUpConditionLabel(text: String) {
     Text(
         text = text,
         modifier = Modifier.fillMaxWidth(),
-        color = SignUpConditionColor,
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
         fontSize = 11.sp,
     )
 }
@@ -250,10 +249,13 @@ private fun RoundedAgreementCheckbox(
             modifier =
                 Modifier
                     .size(20.dp)
-                    .background(if (checked) SmartBudgetGreen else Color.Transparent, RoundedCornerShape(6.dp))
+                    .background(
+                        if (checked) SmartBudgetGreen else Color.Transparent,
+                        RoundedCornerShape(6.dp),
+                    )
                     .border(
                         width = 1.dp,
-                        color = if (checked) SmartBudgetGreen else AuthFieldBorderColor,
+                        color = if (checked) SmartBudgetGreen else MaterialTheme.colorScheme.outlineVariant,
                         shape = RoundedCornerShape(6.dp),
                     ),
             contentAlignment = Alignment.Center,

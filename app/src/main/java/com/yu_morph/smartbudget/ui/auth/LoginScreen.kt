@@ -1,5 +1,6 @@
 package com.yu_morph.smartbudget.ui.auth
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -38,6 +39,7 @@ fun LoginScreen(onLogin: (String, String) -> Unit, onSignUp: () -> Unit) {
         modifier =
             Modifier
                 .fillMaxSize()
+                .background(MaterialTheme.colorScheme.background)
                 .safeDrawingPadding()
                 .imePadding()
                 .padding(horizontal = 46.dp),
