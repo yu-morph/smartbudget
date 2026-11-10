@@ -3,9 +3,10 @@ import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
 import java.util.Locale
 import org.gradle.api.DefaultTask
+import org.gradle.api.artifacts.component.ModuleComponentIdentifier
 import org.gradle.api.file.DirectoryProperty
-import org.gradle.api.file.RegularFileProperty
-import org.gradle.api.tasks.InputFile
+import org.gradle.api.provider.ListProperty
+import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.OutputDirectory
 import org.gradle.api.tasks.TaskAction
 
@@ -46,18 +47,58 @@ abstract class GenerateBuildMetadataTask : DefaultTask() {
 }
 
 abstract class GenerateOpenSourceLicensesTask : DefaultTask() {
-    @get:InputFile
-    abstract val sourceFile: RegularFileProperty
+    @get:Input
+    abstract val runtimeComponents: ListProperty<String>
 
     @get:OutputDirectory
     abstract val outputDirectory: DirectoryProperty
 
     @TaskAction
     fun generate() {
-        val outputFile = outputDirectory.file("open_source_licenses.html").get().asFile
+        outputDirectory.get().asFile.listFiles()?.forEach { it.deleteRecursively() }
+        val outputFile = outputDirectory.file("open_source_licenses.md").get().asFile
         outputFile.parentFile.mkdirs()
-        outputFile.writeText(sourceFile.get().asFile.readText())
+        val entries = runtimeComponents.get().distinct().sorted()
+        outputFile.writeText(
+            buildString {
+                appendLine("# 오픈소스 라이선스")
+                appendLine()
+                appendLine("SmartBudget 앱에 포함되는 런타임 오픈소스 소프트웨어 목록입니다.")
+                appendLine("빌드 및 테스트에만 사용되는 도구는 제외했습니다.")
+                appendLine()
+                entries.forEach { component ->
+                    val group = component.substringBefore(':')
+                    val license = licenseFor(group)
+                    appendLine("## $component")
+                    appendLine()
+                    appendLine("- 라이선스: ${license.name}")
+                    appendLine("- 라이선스 전문: ${license.url}")
+                    appendLine()
+                }
+            },
+        )
     }
+
+    private fun licenseFor(group: String): License = when {
+        group == "com.kizitonwose.calendar" -> License("MIT License", "https://opensource.org/license/mit")
+
+        group == "org.slf4j" -> License("MIT License", "https://www.slf4j.org/license.html")
+
+        group.startsWith("androidx.") ||
+            group == "com.google.code.gson" ||
+            group == "com.google.crypto.tink" ||
+            group == "com.google.guava" ||
+            group == "io.ktor" ||
+            group == "org.jetbrains" ||
+            group == "org.jetbrains.kotlin" ||
+            group == "org.jetbrains.kotlinx" ||
+            group == "org.jspecify" ->
+            License("Apache License 2.0", "https://www.apache.org/licenses/LICENSE-2.0")
+
+        else -> error("라이선스 정보가 등록되지 않은 런타임 종속성 그룹입니다: $group")
+    }
+
+    private data class License(val name: String, val url: String)
 }
 
 val appVersionName = providers.gradleProperty("appVersionName").orElse("1.0")
@@ -73,7 +114,21 @@ val generateBuildMetadata = tasks.register<GenerateBuildMetadataTask>("generateB
 
 val generateOpenSourceLicenses =
     tasks.register<GenerateOpenSourceLicensesTask>("generateOpenSourceLicenses") {
-        sourceFile.set(layout.projectDirectory.file("src/main/licenses/open_source_licenses.html"))
+        runtimeComponents.set(
+            providers.provider {
+                configurations
+                    .getByName("releaseRuntimeClasspath")
+                    .incoming
+                    .artifactView {}
+                    .artifacts
+                    .resolvedArtifacts
+                    .get()
+                    .mapNotNull { artifact ->
+                        val identifier = artifact.id.componentIdentifier as? ModuleComponentIdentifier
+                        identifier?.let { "${it.group}:${it.module}:${it.version}" }
+                    }
+            },
+        )
         outputDirectory.set(layout.buildDirectory.dir("generated/assets/openSourceLicenses"))
     }
 

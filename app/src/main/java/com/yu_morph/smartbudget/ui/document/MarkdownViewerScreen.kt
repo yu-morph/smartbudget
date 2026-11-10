@@ -78,7 +78,7 @@ internal fun MarkdownViewerScreen(document: MarkdownDocument, onBack: () -> Unit
                         )
                     }
                 },
-                colors = TopAppBarDefaults.centerAlignedTopAppBarColors(containerColor = Color.White),
+                colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.White),
             )
         },
     ) { innerPadding ->
