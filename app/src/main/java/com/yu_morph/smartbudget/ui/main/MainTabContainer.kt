@@ -16,9 +16,9 @@ import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 
-private val TabGradientGray = Color(0xFFF0F1F3)
-private val TabGradientLightGray = Color(0xFFF8F8F7)
-private val TabGradientGreen = Color(0xFFF0F8F4)
+private val TabGradientGray = Color(0xFFF1F2F3)
+private val TabGradientLightGray = Color(0xFFF7F7F7)
+private val TabGradientGreen = Color(0xFFF3F6F4)
 
 @Composable
 internal fun MainTabContainer(
