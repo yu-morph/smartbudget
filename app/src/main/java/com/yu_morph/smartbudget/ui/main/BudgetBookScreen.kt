@@ -164,8 +164,20 @@ internal fun BudgetBookDetailScreen(month: YearMonth, onMonthChange: (YearMonth)
             )
         },
     ) { innerPadding ->
-        Box(modifier = Modifier.fillMaxSize().padding(innerPadding)) {
-            MainTabContainer(bottomPadding = 0.dp) {
+        Box(
+            modifier =
+                Modifier
+                    .fillMaxSize()
+                    .background(MaterialTheme.colorScheme.background)
+                    .padding(innerPadding),
+        ) {
+            Column(
+                modifier =
+                    Modifier
+                        .fillMaxSize()
+                        .verticalScroll(rememberScrollState())
+                        .padding(start = 20.dp, top = 20.dp, end = 20.dp),
+            ) {
                 LedgerCard {
                     MonthSelector(month, onMonthChange)
                     Spacer(Modifier.height(14.dp))
