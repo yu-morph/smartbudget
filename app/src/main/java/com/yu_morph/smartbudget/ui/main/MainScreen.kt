@@ -57,6 +57,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.yu_morph.smartbudget.R
+import com.yu_morph.smartbudget.ui.document.MarkdownDocument
 import com.yu_morph.smartbudget.ui.theme.SmartBudgetGreen
 import kotlinx.coroutines.launch
 
@@ -81,7 +82,13 @@ private enum class MainTab(
 }
 
 @Composable
-fun MainScreen(settingsState: SettingsUiState, onSettingsLoad: () -> Unit, onLogout: () -> Unit, onExit: () -> Unit) {
+fun MainScreen(
+    settingsState: SettingsUiState,
+    onSettingsLoad: () -> Unit,
+    onLogout: () -> Unit,
+    onOpenDocument: (MarkdownDocument) -> Unit,
+    onExit: () -> Unit,
+) {
     var selectedTab by rememberSaveable { mutableStateOf(MainTab.HOME) }
     val context = LocalContext.current
     val exitConfirmation = remember { ExitConfirmation() }
@@ -106,6 +113,7 @@ fun MainScreen(settingsState: SettingsUiState, onSettingsLoad: () -> Unit, onLog
                     bottomContentPadding = innerPadding.calculateBottomPadding(),
                     onLoad = onSettingsLoad,
                     onLogout = onLogout,
+                    onOpenDocument = onOpenDocument,
                 )
             } else {
                 Box(modifier = Modifier.fillMaxSize().padding(innerPadding))

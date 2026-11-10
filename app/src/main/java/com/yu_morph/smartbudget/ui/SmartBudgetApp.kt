@@ -25,6 +25,8 @@ import com.yu_morph.smartbudget.ui.auth.AuthCoordinator
 import com.yu_morph.smartbudget.ui.auth.AuthLoadingDialog
 import com.yu_morph.smartbudget.ui.auth.LoginScreen
 import com.yu_morph.smartbudget.ui.auth.SignUpScreen
+import com.yu_morph.smartbudget.ui.document.MarkdownDocument
+import com.yu_morph.smartbudget.ui.document.MarkdownViewerScreen
 import com.yu_morph.smartbudget.ui.main.MainScreen
 import com.yu_morph.smartbudget.ui.main.SettingsCoordinator
 import com.yu_morph.smartbudget.ui.splash.SplashScreen
@@ -36,6 +38,7 @@ private const val MORPH_DURATION_MILLIS = 350
 @Composable
 fun SmartBudgetApp(onExit: () -> Unit) {
     var destination by rememberSaveable { mutableStateOf(AppDestination.SPLASH) }
+    var openDocument by rememberSaveable { mutableStateOf<MarkdownDocument?>(null) }
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
     val api = remember(context) { SmartBudgetApiFactory.create(context.applicationContext) }
@@ -53,9 +56,13 @@ fun SmartBudgetApp(onExit: () -> Unit) {
             coordinator = coordinator,
             settingsCoordinator = settingsCoordinator,
             onDestinationChange = { destination = it },
+            onOpenDocument = { openDocument = it },
             onExit = onExit,
         )
         if (coordinator.isLoading) AuthLoadingDialog()
+        openDocument?.let { document ->
+            MarkdownViewerScreen(document = document, onBack = { openDocument = null })
+        }
     }
 }
 
@@ -65,6 +72,7 @@ private fun AuthenticationContent(
     coordinator: AuthCoordinator,
     settingsCoordinator: SettingsCoordinator,
     onDestinationChange: (AppDestination) -> Unit,
+    onOpenDocument: (MarkdownDocument) -> Unit,
     onExit: () -> Unit,
 ) {
     AnimatedContent(
@@ -105,6 +113,7 @@ private fun AuthenticationContent(
                     }
                 },
                 onLogin = { onDestinationChange(AppDestination.LOGIN) },
+                onOpenPrivacyPolicy = { onOpenDocument(MarkdownDocument.PRIVACY_POLICY) },
             )
 
             AppDestination.MAIN -> MainScreen(
@@ -114,6 +123,7 @@ private fun AuthenticationContent(
                     coordinator.signOut()
                     onDestinationChange(AppDestination.LOGIN)
                 },
+                onOpenDocument = onOpenDocument,
                 onExit = onExit,
             )
         }

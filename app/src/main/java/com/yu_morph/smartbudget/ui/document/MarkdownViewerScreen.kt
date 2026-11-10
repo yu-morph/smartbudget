@@ -1,5 +1,6 @@
 package com.yu_morph.smartbudget.ui.document
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -52,6 +53,8 @@ internal fun MarkdownViewerScreen(document: MarkdownDocument, onBack: () -> Unit
     val context = LocalContext.current
     var content by remember(document) { mutableStateOf<String?>(null) }
     var loadFailed by remember(document) { mutableStateOf(false) }
+
+    BackHandler(onBack = onBack)
 
     LaunchedEffect(document) {
         runCatching {

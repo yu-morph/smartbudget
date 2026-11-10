@@ -36,7 +36,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
@@ -51,13 +50,12 @@ import com.yu_morph.smartbudget.ui.theme.SmartBudgetGreenLight
 private val SignUpConditionColor = Color(0xFF555555)
 
 @Composable
-fun SignUpScreen(onSignUp: (String, String, String) -> Unit, onLogin: () -> Unit) {
+fun SignUpScreen(onSignUp: (String, String, String) -> Unit, onLogin: () -> Unit, onOpenPrivacyPolicy: () -> Unit) {
     var displayName by rememberSaveable { mutableStateOf("") }
     var username by rememberSaveable { mutableStateOf("") }
     var password by rememberSaveable { mutableStateOf("") }
     var passwordConfirm by rememberSaveable { mutableStateOf("") }
     var agreed by rememberSaveable { mutableStateOf(false) }
-    val context = LocalContext.current
     Box(modifier = Modifier.fillMaxSize().safeDrawingPadding()) {
         Column(
             modifier =
@@ -88,7 +86,7 @@ fun SignUpScreen(onSignUp: (String, String, String) -> Unit, onLogin: () -> Unit
             PrivacyAgreementRow(
                 agreed = agreed,
                 onAgreementChange = { agreed = it },
-                onOpenPolicy = { openExampleCustomTab(context) },
+                onOpenPolicy = onOpenPrivacyPolicy,
             )
             Spacer(Modifier.height(8.dp))
             PrimaryAuthButton(
@@ -188,7 +186,7 @@ private fun SignUpConditionLabel(text: String) {
         text = text,
         modifier = Modifier.fillMaxWidth(),
         color = SignUpConditionColor,
-        fontSize = 11.sp
+        fontSize = 11.sp,
     )
 }
 

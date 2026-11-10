@@ -41,8 +41,8 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.yu_morph.smartbudget.R
-import com.yu_morph.smartbudget.ui.auth.openExampleCustomTab
 import com.yu_morph.smartbudget.ui.auth.openOpenSourceLicensesCustomTab
+import com.yu_morph.smartbudget.ui.document.MarkdownDocument
 import com.yu_morph.smartbudget.ui.theme.SmartBudgetGreen
 import kotlinx.coroutines.launch
 
@@ -94,6 +94,7 @@ internal fun SettingsScreen(
     bottomContentPadding: Dp,
     onLoad: () -> Unit,
     onLogout: () -> Unit,
+    onOpenDocument: (MarkdownDocument) -> Unit,
 ) {
     val context = LocalContext.current
     val coroutineScope = rememberCoroutineScope()
@@ -124,7 +125,13 @@ internal fun SettingsScreen(
                     if (entry.label == R.string.settings_terms_of_service ||
                         entry.label == R.string.settings_privacy_policy
                     ) {
-                        openExampleCustomTab(context)
+                        onOpenDocument(
+                            if (entry.label == R.string.settings_terms_of_service) {
+                                MarkdownDocument.TERMS_OF_SERVICE
+                            } else {
+                                MarkdownDocument.PRIVACY_POLICY
+                            },
+                        )
                     }
                 },
             )
