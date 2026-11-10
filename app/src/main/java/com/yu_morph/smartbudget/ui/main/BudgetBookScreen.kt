@@ -4,13 +4,6 @@ package com.yu_morph.smartbudget.ui.main
 
 import androidx.activity.compose.BackHandler
 import androidx.annotation.StringRes
-import androidx.compose.animation.AnimatedContent
-import androidx.compose.animation.core.tween
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.animation.slideInHorizontally
-import androidx.compose.animation.slideOutHorizontally
-import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -40,13 +33,17 @@ import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -71,7 +68,6 @@ import java.time.YearMonth
 private val CalendarIncomeColor = Color(0xFF3FB284)
 private val CalendarExpenseColor = Color(0xFFF1A443)
 private val CalendarTransferColor = Color(0xFF4B88D8)
-private const val LEDGER_TRANSITION_DURATION_MILLIS = 280
 private val SampleTransactions =
     listOf(
         LedgerTransaction(R.string.sample_meal_set, R.string.sample_grocery, "-24,800원"),
@@ -87,34 +83,8 @@ private data class LedgerTransaction(
 )
 
 @Composable
-internal fun BudgetBookRoute(bottomPadding: Dp) {
-    var detailMonth by rememberSaveable { mutableStateOf<String?>(null) }
-    AnimatedContent(
-        targetState = detailMonth,
-        transitionSpec = {
-            if (targetState != null) {
-                (slideInHorizontally(tween(LEDGER_TRANSITION_DURATION_MILLIS)) { it } + fadeIn()) togetherWith
-                    (slideOutHorizontally(tween(LEDGER_TRANSITION_DURATION_MILLIS)) { -it / 4 } + fadeOut())
-            } else {
-                fadeIn() togetherWith
-                    (slideOutHorizontally(tween(LEDGER_TRANSITION_DURATION_MILLIS)) { it } + fadeOut())
-            }
-        },
-        label = "가계부 상세 화면 전환",
-    ) { selectedMonth ->
-        val month = selectedMonth?.let(YearMonth::parse)
-        if (month == null) {
-            BudgetBookOverview(bottomPadding = bottomPadding, onOpenMonth = { detailMonth = it.toString() })
-        } else {
-            BudgetBookDetail(
-                month = month,
-                bottomPadding = bottomPadding,
-                onMonthChange = { detailMonth = it.toString() },
-                onBack = { detailMonth = null },
-            )
-        }
-    }
-}
+internal fun BudgetBookRoute(bottomPadding: Dp, onOpenMonth: (YearMonth) -> Unit) =
+    BudgetBookOverview(bottomPadding = bottomPadding, onOpenMonth = onOpenMonth)
 
 @Composable
 private fun BudgetBookOverview(bottomPadding: Dp, onOpenMonth: (YearMonth) -> Unit) {
@@ -171,64 +141,74 @@ private fun BudgetBookOverview(bottomPadding: Dp, onOpenMonth: (YearMonth) -> Un
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun BudgetBookDetail(
-    month: YearMonth,
-    bottomPadding: Dp,
-    onMonthChange: (YearMonth) -> Unit,
-    onBack: () -> Unit,
-) {
+internal fun BudgetBookDetailScreen(month: YearMonth, onMonthChange: (YearMonth) -> Unit, onBack: () -> Unit) {
     var showEditor by rememberSaveable { mutableStateOf(false) }
     var editingTitle by rememberSaveable { mutableStateOf("") }
     BackHandler(onBack = onBack)
-    Box(modifier = Modifier.fillMaxSize()) {
-        MainTabContainer(bottomPadding = bottomPadding) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                IconButton(onClick = onBack) {
-                    Icon(Icons.AutoMirrored.Rounded.ArrowBack, stringResource(R.string.budget_book_back))
-                }
-                Text(stringResource(R.string.budget_book_detail), fontSize = 24.sp, fontWeight = FontWeight.Bold)
-            }
-            Spacer(Modifier.height(12.dp))
-            LedgerCard {
-                MonthSelector(month, onMonthChange)
-                Spacer(Modifier.height(14.dp))
-                MonthCalendar(month = month, compact = false)
-            }
-            Spacer(Modifier.height(14.dp))
-            LedgerCard {
-                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+    Scaffold(
+        containerColor = MaterialTheme.colorScheme.background,
+        topBar = {
+            TopAppBar(
+                title = {
                     Text(
-                        stringResource(R.string.budget_book_selected_transactions),
+                        text = stringResource(R.string.budget_book_detail),
                         fontSize = 18.sp,
-                        fontWeight = FontWeight.Bold,
+                        fontWeight = FontWeight.SemiBold,
                     )
-                    Text(
-                        stringResource(R.string.budget_book_transaction_count, 4),
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    )
+                },
+                navigationIcon = {
+                    IconButton(onClick = onBack) {
+                        Icon(Icons.AutoMirrored.Rounded.ArrowBack, stringResource(R.string.navigate_back))
+                    }
+                },
+                colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.background),
+            )
+        },
+    ) { innerPadding ->
+        Box(modifier = Modifier.fillMaxSize().padding(innerPadding)) {
+            MainTabContainer(bottomPadding = 0.dp) {
+                LedgerCard {
+                    MonthSelector(month, onMonthChange)
+                    Spacer(Modifier.height(14.dp))
+                    MonthCalendar(month = month, compact = false)
                 }
-                Spacer(Modifier.height(8.dp))
-                SampleTransactions.forEach { transaction ->
-                    val title = stringResource(transaction.title)
-                    TransactionEntry(transaction) {
-                        editingTitle = title
-                        showEditor = true
+                Spacer(Modifier.height(14.dp))
+                LedgerCard {
+                    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                        Text(
+                            stringResource(R.string.budget_book_selected_transactions),
+                            fontSize = 18.sp,
+                            fontWeight = FontWeight.Bold,
+                        )
+                        Text(
+                            stringResource(R.string.budget_book_transaction_count, 4),
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                    }
+                    Spacer(Modifier.height(8.dp))
+                    SampleTransactions.forEach { transaction ->
+                        val title = stringResource(transaction.title)
+                        TransactionEntry(transaction) {
+                            editingTitle = title
+                            showEditor = true
+                        }
                     }
                 }
+                Spacer(Modifier.height(76.dp))
             }
-            Spacer(Modifier.height(76.dp))
-        }
-        FloatingActionButton(
-            onClick = {
-                editingTitle = ""
-                showEditor = true
-            },
-            modifier = Modifier.align(Alignment.BottomEnd).padding(end = 24.dp, bottom = bottomPadding + 20.dp),
-            containerColor = SmartBudgetGreen,
-            contentColor = Color.White,
-        ) {
-            Icon(Icons.Outlined.Add, stringResource(R.string.budget_book_add_transaction))
+            FloatingActionButton(
+                onClick = {
+                    editingTitle = ""
+                    showEditor = true
+                },
+                modifier = Modifier.align(Alignment.BottomEnd).padding(end = 24.dp, bottom = 20.dp),
+                containerColor = SmartBudgetGreen,
+                contentColor = Color.White,
+            ) {
+                Icon(Icons.Outlined.Add, stringResource(R.string.budget_book_add_transaction))
+            }
         }
     }
     if (showEditor) {
@@ -242,7 +222,7 @@ private fun BudgetBookDetail(
 @Composable
 private fun MonthCalendar(month: YearMonth, compact: Boolean) {
     val days = remember(month) { calendarDays(month) }
-    val cellHeight = if (compact) 42.dp else 60.dp
+    val cellHeight = if (compact) 42.dp else 72.dp
     Row(modifier = Modifier.fillMaxWidth()) {
         listOf(
             R.string.weekday_sunday,

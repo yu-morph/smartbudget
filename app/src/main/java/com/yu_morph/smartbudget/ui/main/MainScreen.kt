@@ -66,6 +66,7 @@ import androidx.compose.ui.unit.sp
 import com.yu_morph.smartbudget.R
 import com.yu_morph.smartbudget.ui.document.MarkdownDocument
 import com.yu_morph.smartbudget.ui.theme.SmartBudgetGreen
+import java.time.YearMonth
 import kotlinx.coroutines.launch
 
 private val MainNavigationInactiveColor = Color(0xFF737373)
@@ -98,6 +99,7 @@ fun MainScreen(
     onLogout: () -> Unit,
     onOpenDocument: (MarkdownDocument) -> Unit,
     onOpenSettings: (SettingsDetailDestination) -> Unit,
+    onOpenBudgetBook: (YearMonth) -> Unit,
     onExit: () -> Unit,
 ) {
     var selectedTab by rememberSaveable { mutableStateOf(MainTab.HOME) }
@@ -144,6 +146,7 @@ fun MainScreen(
 
                     MainTab.BUDGET_BOOK -> BudgetBookRoute(
                         bottomPadding = innerPadding.calculateBottomPadding(),
+                        onOpenMonth = onOpenBudgetBook,
                     )
 
                     MainTab.ANALYSIS -> AnalysisScreen(

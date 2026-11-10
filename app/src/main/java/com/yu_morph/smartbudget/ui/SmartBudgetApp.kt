@@ -30,11 +30,13 @@ import com.yu_morph.smartbudget.ui.auth.LoginScreen
 import com.yu_morph.smartbudget.ui.auth.SignUpScreen
 import com.yu_morph.smartbudget.ui.document.MarkdownDocument
 import com.yu_morph.smartbudget.ui.document.MarkdownViewerScreen
+import com.yu_morph.smartbudget.ui.main.BudgetBookDetailScreen
 import com.yu_morph.smartbudget.ui.main.MainScreen
 import com.yu_morph.smartbudget.ui.main.SettingsCoordinator
 import com.yu_morph.smartbudget.ui.main.SettingsDetailDestination
 import com.yu_morph.smartbudget.ui.main.SettingsDetailScreen
 import com.yu_morph.smartbudget.ui.splash.SplashScreen
+import java.time.YearMonth
 
 private enum class AppDestination { SPLASH, LOGIN, SIGN_UP, MAIN }
 
@@ -48,6 +50,7 @@ fun SmartBudgetApp(onDisplayModeChanged: (DisplayMode) -> Unit, onExit: () -> Un
     var destination by rememberSaveable { mutableStateOf(AppDestination.SPLASH) }
     var openDocument by rememberSaveable { mutableStateOf<MarkdownDocument?>(null) }
     var openSettings by rememberSaveable { mutableStateOf<SettingsDetailDestination?>(null) }
+    var openBudgetBookMonth by rememberSaveable { mutableStateOf<String?>(null) }
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
     val api = remember(context) { SmartBudgetApiFactory.create(context.applicationContext) }
@@ -69,6 +72,7 @@ fun SmartBudgetApp(onDisplayModeChanged: (DisplayMode) -> Unit, onExit: () -> Un
             onDestinationChange = { destination = it },
             onOpenDocument = { openDocument = it },
             onOpenSettings = { openSettings = it },
+            onOpenBudgetBook = { openBudgetBookMonth = it.toString() },
             onExit = onExit,
         )
         if (coordinator.isLoading) AuthLoadingDialog()
@@ -117,6 +121,19 @@ fun SmartBudgetApp(onDisplayModeChanged: (DisplayMode) -> Unit, onExit: () -> Un
                 )
             }
         }
+        AnimatedContent(
+            targetState = openBudgetBookMonth,
+            transitionSpec = { detailTransition(targetState != null) },
+            label = "가계부 상세 화면 전환",
+        ) { month ->
+            month?.let {
+                BudgetBookDetailScreen(
+                    month = YearMonth.parse(it),
+                    onMonthChange = { changedMonth -> openBudgetBookMonth = changedMonth.toString() },
+                    onBack = { openBudgetBookMonth = null },
+                )
+            }
+        }
         if (settingsCoordinator.state.isLoading) AuthLoadingDialog()
     }
 }
@@ -149,6 +166,7 @@ private fun AuthenticationContent(
     onDestinationChange: (AppDestination) -> Unit,
     onOpenDocument: (MarkdownDocument) -> Unit,
     onOpenSettings: (SettingsDetailDestination) -> Unit,
+    onOpenBudgetBook: (YearMonth) -> Unit,
     onExit: () -> Unit,
 ) {
     AnimatedContent(
@@ -201,6 +219,7 @@ private fun AuthenticationContent(
                 },
                 onOpenDocument = onOpenDocument,
                 onOpenSettings = onOpenSettings,
+                onOpenBudgetBook = onOpenBudgetBook,
                 onExit = onExit,
             )
         }
