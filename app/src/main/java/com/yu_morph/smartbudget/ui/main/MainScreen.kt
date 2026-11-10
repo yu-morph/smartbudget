@@ -34,6 +34,7 @@ import androidx.compose.material.icons.outlined.Settings as OutlinedSettings
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.FloatingActionButtonDefaults
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -87,6 +88,7 @@ fun MainScreen(
     onSettingsLoad: () -> Unit,
     onLogout: () -> Unit,
     onOpenDocument: (MarkdownDocument) -> Unit,
+    onOpenSettings: (SettingsDetailDestination) -> Unit,
     onExit: () -> Unit,
 ) {
     var selectedTab by rememberSaveable { mutableStateOf(MainTab.HOME) }
@@ -100,13 +102,13 @@ fun MainScreen(
         }
     }
     Scaffold(
-        containerColor = Color.White,
+        containerColor = MaterialTheme.colorScheme.background,
         bottomBar = {
             MainNavigationBar(selectedTab = selectedTab, onTabSelected = { selectedTab = it })
         },
     ) { innerPadding ->
         // 설정 외 탭의 실제 화면은 후속 작업에서 구현합니다.
-        Box(modifier = Modifier.fillMaxSize().background(Color.White)) {
+        Box(modifier = Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)) {
             if (selectedTab == MainTab.SETTINGS) {
                 SettingsScreen(
                     state = settingsState,
@@ -114,6 +116,7 @@ fun MainScreen(
                     onLoad = onSettingsLoad,
                     onLogout = onLogout,
                     onOpenDocument = onOpenDocument,
+                    onOpenSettings = onOpenSettings,
                 )
             } else {
                 Box(modifier = Modifier.fillMaxSize().padding(innerPadding))
@@ -127,7 +130,7 @@ private fun MainNavigationBar(selectedTab: MainTab, onTabSelected: (MainTab) -> 
     Box(modifier = Modifier.fillMaxWidth()) {
         Surface(
             modifier = Modifier.padding(top = 12.dp),
-            color = Color.White,
+            color = MaterialTheme.colorScheme.surface,
             shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp),
             shadowElevation = 16.dp,
         ) {

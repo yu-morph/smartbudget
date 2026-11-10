@@ -23,6 +23,7 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -31,6 +32,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextDecoration
@@ -62,6 +64,7 @@ private val SettingsGroups =
                 listOf(
                     SettingsEntry(R.string.settings_edit_profile),
                     SettingsEntry(R.string.settings_connect_bank),
+                    SettingsEntry(R.string.settings_monthly_budget),
                 ),
         ),
         SettingsGroup(
@@ -90,7 +93,9 @@ internal fun SettingsScreen(
     onLoad: () -> Unit,
     onLogout: () -> Unit,
     onOpenDocument: (MarkdownDocument) -> Unit,
+    onOpenSettings: (SettingsDetailDestination) -> Unit,
 ) {
+    val isDarkTheme = MaterialTheme.colorScheme.background.luminance() < 0.5f
     LaunchedEffect(Unit) { onLoad() }
 
     Column(
@@ -99,7 +104,15 @@ internal fun SettingsScreen(
                 .fillMaxSize()
                 .background(
                     Brush.linearGradient(
-                        listOf(SettingsGradientGray, SettingsGradientLightGray, SettingsGradientGreen),
+                        if (isDarkTheme) {
+                            listOf(
+                                MaterialTheme.colorScheme.background,
+                                MaterialTheme.colorScheme.surface,
+                                MaterialTheme.colorScheme.background,
+                            )
+                        } else {
+                            listOf(SettingsGradientGray, SettingsGradientLightGray, SettingsGradientGreen)
+                        },
                     ),
                 ).verticalScroll(rememberScrollState())
                 .padding(start = 20.dp, top = 48.dp, end = 20.dp, bottom = bottomContentPadding),
@@ -124,11 +137,13 @@ internal fun SettingsScreen(
                                 MarkdownDocument.PRIVACY_POLICY
                             },
                         )
+                    } else {
+                        entry.label.toSettingsDestination()?.let(onOpenSettings)
                     }
                 },
             )
         }
-        WithdrawalCard()
+        WithdrawalCard(onClick = { onOpenSettings(SettingsDetailDestination.WITHDRAWAL) })
         SettingsFooter(
             versionName = state.versionName,
             buildDateTime = state.buildDateTime,
@@ -186,7 +201,7 @@ private fun SettingsGroupCard(group: SettingsGroup, onEntryClick: (SettingsEntry
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(24.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
         elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
     ) {
         Column(modifier = Modifier.padding(top = 14.dp, bottom = 2.dp)) {
@@ -213,7 +228,7 @@ private fun SettingsRow(entry: SettingsEntry, onClick: () -> Unit) {
     ) {
         Text(
             text = stringResource(entry.label),
-            color = SettingsPrimaryText,
+            color = MaterialTheme.colorScheme.onSurface,
             fontSize = 16.sp,
             fontWeight = FontWeight.Medium,
         )
@@ -232,20 +247,27 @@ private fun SettingsRow(entry: SettingsEntry, onClick: () -> Unit) {
 }
 
 @Composable
-private fun WithdrawalCard() {
+private fun WithdrawalCard(onClick: () -> Unit) {
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(24.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
         elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
     ) {
         SettingsRow(
             entry = SettingsEntry(R.string.settings_withdraw),
-            onClick = {
-                // 회원 탈퇴 화면 연결은 후속 작업에서 구현합니다.
-            },
+            onClick = onClick,
         )
     }
+}
+
+private fun Int.toSettingsDestination(): SettingsDetailDestination? = when (this) {
+    R.string.settings_edit_profile -> SettingsDetailDestination.PROFILE
+    R.string.settings_monthly_budget -> SettingsDetailDestination.MONTHLY_BUDGET
+    R.string.settings_language -> SettingsDetailDestination.LANGUAGE
+    R.string.settings_notifications -> SettingsDetailDestination.NOTIFICATIONS
+    R.string.settings_display -> SettingsDetailDestination.DISPLAY
+    else -> null
 }
 
 @Composable

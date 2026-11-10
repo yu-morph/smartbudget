@@ -84,6 +84,54 @@ interface AuthTokenStore {
     fun clear()
 }
 
+enum class DisplayMode { LIGHT, DARK, SYSTEM }
+
+data class AppSettings(
+    val languageTag: String = "ko",
+    val budgetApproachingNotification: Boolean = true,
+    val budgetExceededNotification: Boolean = true,
+    val analysisNotification: Boolean = true,
+    val displayMode: DisplayMode = DisplayMode.SYSTEM,
+)
+
+interface AppSettingsStore {
+    fun read(): AppSettings
+
+    fun write(settings: AppSettings)
+}
+
+class SharedPreferencesAppSettingsStore(private val preferences: SharedPreferences) : AppSettingsStore {
+    override fun read(): AppSettings = AppSettings(
+        languageTag = preferences.getString(KEY_LANGUAGE, "ko").orEmpty().ifBlank { "ko" },
+        budgetApproachingNotification = preferences.getBoolean(KEY_BUDGET_APPROACHING, true),
+        budgetExceededNotification = preferences.getBoolean(KEY_BUDGET_EXCEEDED, true),
+        analysisNotification = preferences.getBoolean(KEY_ANALYSIS, true),
+        displayMode =
+            runCatching {
+                DisplayMode.valueOf(preferences.getString(KEY_DISPLAY_MODE, DisplayMode.SYSTEM.name).orEmpty())
+            }.getOrDefault(DisplayMode.SYSTEM),
+    )
+
+    override fun write(settings: AppSettings) {
+        preferences
+            .edit()
+            .putString(KEY_LANGUAGE, settings.languageTag)
+            .putBoolean(KEY_BUDGET_APPROACHING, settings.budgetApproachingNotification)
+            .putBoolean(KEY_BUDGET_EXCEEDED, settings.budgetExceededNotification)
+            .putBoolean(KEY_ANALYSIS, settings.analysisNotification)
+            .putString(KEY_DISPLAY_MODE, settings.displayMode.name)
+            .apply()
+    }
+
+    private companion object {
+        const val KEY_LANGUAGE = "language"
+        const val KEY_BUDGET_APPROACHING = "budget_approaching_notification"
+        const val KEY_BUDGET_EXCEEDED = "budget_exceeded_notification"
+        const val KEY_ANALYSIS = "analysis_notification"
+        const val KEY_DISPLAY_MODE = "display_mode"
+    }
+}
+
 data class StoredAuthToken(val accessToken: String, val expiresAt: String, val tokenType: String)
 
 fun StoredAuthToken.isValidAt(now: OffsetDateTime = OffsetDateTime.now()): Boolean {
@@ -128,6 +176,7 @@ object PreferenceStoreFactory {
     private const val REMOTE_RESOURCE_FILE = "smartbudget_remote_resources"
     private const val USER_IDENTITY_FILE = "smartbudget_user_identity"
     private const val SECURE_AUTH_FILE = "smartbudget_secure_auth"
+    private const val APP_SETTINGS_FILE = "smartbudget_app_settings"
 
     fun responseCache(context: Context): ApiResponseCache = SharedPreferencesResponseCache(
         context.getSharedPreferences(RESPONSE_CACHE_FILE, Context.MODE_PRIVATE),
@@ -139,6 +188,10 @@ object PreferenceStoreFactory {
 
     fun userIdentity(context: Context): UserIdentityStore = SharedPreferencesUserIdentityStore(
         context.getSharedPreferences(USER_IDENTITY_FILE, Context.MODE_PRIVATE),
+    )
+
+    fun appSettings(context: Context): AppSettingsStore = SharedPreferencesAppSettingsStore(
+        context.getSharedPreferences(APP_SETTINGS_FILE, Context.MODE_PRIVATE),
     )
 
     @Suppress("DEPRECATION")

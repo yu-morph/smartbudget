@@ -20,6 +20,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import com.yu_morph.smartbudget.data.local.DisplayMode
 import com.yu_morph.smartbudget.data.remote.SmartBudgetApiFactory
 import com.yu_morph.smartbudget.ui.auth.AuthCoordinator
 import com.yu_morph.smartbudget.ui.auth.AuthLoadingDialog
@@ -29,6 +30,8 @@ import com.yu_morph.smartbudget.ui.document.MarkdownDocument
 import com.yu_morph.smartbudget.ui.document.MarkdownViewerScreen
 import com.yu_morph.smartbudget.ui.main.MainScreen
 import com.yu_morph.smartbudget.ui.main.SettingsCoordinator
+import com.yu_morph.smartbudget.ui.main.SettingsDetailDestination
+import com.yu_morph.smartbudget.ui.main.SettingsDetailScreen
 import com.yu_morph.smartbudget.ui.splash.SplashScreen
 
 private enum class AppDestination { SPLASH, LOGIN, SIGN_UP, MAIN }
@@ -36,14 +39,18 @@ private enum class AppDestination { SPLASH, LOGIN, SIGN_UP, MAIN }
 private const val MORPH_DURATION_MILLIS = 350
 
 @Composable
-fun SmartBudgetApp(onExit: () -> Unit) {
+@Suppress("LongMethod")
+fun SmartBudgetApp(onDisplayModeChanged: (DisplayMode) -> Unit, onExit: () -> Unit) {
     var destination by rememberSaveable { mutableStateOf(AppDestination.SPLASH) }
     var openDocument by rememberSaveable { mutableStateOf<MarkdownDocument?>(null) }
+    var openSettings by rememberSaveable { mutableStateOf<SettingsDetailDestination?>(null) }
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
     val api = remember(context) { SmartBudgetApiFactory.create(context.applicationContext) }
     val coordinator = remember(context, api, scope) { AuthCoordinator(context, api, scope) }
-    val settingsCoordinator = remember(context, api, scope) { SettingsCoordinator(context, api, scope) }
+    val settingsCoordinator = remember(context, api, scope, onDisplayModeChanged) {
+        SettingsCoordinator(context, api, scope, onDisplayModeChanged)
+    }
     DisposableEffect(api) {
         onDispose(api::close)
     }
@@ -57,12 +64,42 @@ fun SmartBudgetApp(onExit: () -> Unit) {
             settingsCoordinator = settingsCoordinator,
             onDestinationChange = { destination = it },
             onOpenDocument = { openDocument = it },
+            onOpenSettings = { openSettings = it },
             onExit = onExit,
         )
         if (coordinator.isLoading) AuthLoadingDialog()
         openDocument?.let { document ->
             MarkdownViewerScreen(document = document, onBack = { openDocument = null })
         }
+        openSettings?.let { settings ->
+            SettingsDetailScreen(
+                destination = settings,
+                state = settingsCoordinator.state,
+                onBack = { openSettings = null },
+                onUpdateDisplayName = { settingsCoordinator.updateDisplayName(it) { openSettings = null } },
+                onUpdatePassword = { current, new ->
+                    settingsCoordinator.updatePassword(current, new) {
+                        openSettings = null
+                        coordinator.signOut()
+                        destination = AppDestination.LOGIN
+                    }
+                },
+                onLoadBudget = settingsCoordinator::loadMonthlyBudget,
+                onSaveBudget = settingsCoordinator::saveMonthlyBudget,
+                onLanguageSelected = settingsCoordinator::setLanguage,
+                onNotificationChanged = settingsCoordinator::setNotification,
+                onDisplayModeChanged = settingsCoordinator::setDisplayMode,
+                onVerifyWithdrawal = settingsCoordinator::verifyWithdrawalPassword,
+                onDeleteAccount = {
+                    settingsCoordinator.deleteAccount {
+                        openSettings = null
+                        coordinator.signOut()
+                        destination = AppDestination.LOGIN
+                    }
+                },
+            )
+        }
+        if (settingsCoordinator.state.isLoading) AuthLoadingDialog()
     }
 }
 
@@ -73,6 +110,7 @@ private fun AuthenticationContent(
     settingsCoordinator: SettingsCoordinator,
     onDestinationChange: (AppDestination) -> Unit,
     onOpenDocument: (MarkdownDocument) -> Unit,
+    onOpenSettings: (SettingsDetailDestination) -> Unit,
     onExit: () -> Unit,
 ) {
     AnimatedContent(
@@ -124,6 +162,7 @@ private fun AuthenticationContent(
                     onDestinationChange(AppDestination.LOGIN)
                 },
                 onOpenDocument = onOpenDocument,
+                onOpenSettings = onOpenSettings,
                 onExit = onExit,
             )
         }
