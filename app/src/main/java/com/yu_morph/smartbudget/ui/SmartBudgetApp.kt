@@ -7,6 +7,8 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.scaleIn
 import androidx.compose.animation.scaleOut
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
@@ -37,6 +39,8 @@ import com.yu_morph.smartbudget.ui.splash.SplashScreen
 private enum class AppDestination { SPLASH, LOGIN, SIGN_UP, MAIN }
 
 private const val MORPH_DURATION_MILLIS = 350
+private const val DETAIL_TRANSITION_DURATION_MILLIS = 280
+private const val BACKGROUND_PARALLAX_DIVISOR = 4
 
 @Composable
 @Suppress("LongMethod")
@@ -68,40 +72,74 @@ fun SmartBudgetApp(onDisplayModeChanged: (DisplayMode) -> Unit, onExit: () -> Un
             onExit = onExit,
         )
         if (coordinator.isLoading) AuthLoadingDialog()
-        openDocument?.let { document ->
-            MarkdownViewerScreen(document = document, onBack = { openDocument = null })
+        AnimatedContent(
+            targetState = openDocument,
+            transitionSpec = { detailTransition(targetState != null) },
+            label = "문서 화면 전환",
+        ) { document ->
+            document?.let {
+                MarkdownViewerScreen(document = it, onBack = { openDocument = null })
+            }
         }
-        openSettings?.let { settings ->
-            SettingsDetailScreen(
-                destination = settings,
-                state = settingsCoordinator.state,
-                onBack = { openSettings = null },
-                onUpdateDisplayName = { settingsCoordinator.updateDisplayName(it) { openSettings = null } },
-                onUpdatePassword = { current, new ->
-                    settingsCoordinator.updatePassword(current, new) {
-                        openSettings = null
-                        coordinator.signOut()
-                        destination = AppDestination.LOGIN
-                    }
-                },
-                onLoadBudget = settingsCoordinator::loadMonthlyBudget,
-                onSaveBudget = settingsCoordinator::saveMonthlyBudget,
-                onLanguageSelected = settingsCoordinator::setLanguage,
-                onNotificationChanged = settingsCoordinator::setNotification,
-                onDisplayModeChanged = settingsCoordinator::setDisplayMode,
-                onVerifyWithdrawal = settingsCoordinator::verifyWithdrawalPassword,
-                onDeleteAccount = {
-                    settingsCoordinator.deleteAccount {
-                        openSettings = null
-                        coordinator.signOut()
-                        destination = AppDestination.LOGIN
-                    }
-                },
-            )
+        AnimatedContent(
+            targetState = openSettings,
+            transitionSpec = { detailTransition(targetState != null) },
+            label = "설정 상세 화면 전환",
+        ) { settings ->
+            settings?.let {
+                SettingsDetailScreen(
+                    destination = it,
+                    state = settingsCoordinator.state,
+                    onBack = { openSettings = null },
+                    onUpdateDisplayName = { name ->
+                        settingsCoordinator.updateDisplayName(name) { openSettings = null }
+                    },
+                    onUpdatePassword = { current, new ->
+                        settingsCoordinator.updatePassword(current, new) {
+                            openSettings = null
+                            coordinator.signOut()
+                            destination = AppDestination.LOGIN
+                        }
+                    },
+                    onLoadBudget = settingsCoordinator::loadMonthlyBudget,
+                    onSaveBudget = settingsCoordinator::saveMonthlyBudget,
+                    onLanguageSelected = settingsCoordinator::setLanguage,
+                    onNotificationChanged = settingsCoordinator::setNotification,
+                    onDisplayModeChanged = settingsCoordinator::setDisplayMode,
+                    onVerifyWithdrawal = settingsCoordinator::verifyWithdrawalPassword,
+                    onDeleteAccount = {
+                        settingsCoordinator.deleteAccount {
+                            openSettings = null
+                            coordinator.signOut()
+                            destination = AppDestination.LOGIN
+                        }
+                    },
+                )
+            }
         }
         if (settingsCoordinator.state.isLoading) AuthLoadingDialog()
     }
 }
+
+private fun <S> androidx.compose.animation.AnimatedContentTransitionScope<S>.detailTransition(opening: Boolean) =
+    if (opening) {
+        (
+            slideInHorizontally(tween(DETAIL_TRANSITION_DURATION_MILLIS)) { it } +
+                fadeIn(tween(DETAIL_TRANSITION_DURATION_MILLIS))
+            ) togetherWith
+            (
+                slideOutHorizontally(tween(DETAIL_TRANSITION_DURATION_MILLIS)) {
+                    -it / BACKGROUND_PARALLAX_DIVISOR
+                } +
+                    fadeOut(tween(DETAIL_TRANSITION_DURATION_MILLIS))
+                )
+    } else {
+        fadeIn(tween(DETAIL_TRANSITION_DURATION_MILLIS)) togetherWith
+            (
+                slideOutHorizontally(tween(DETAIL_TRANSITION_DURATION_MILLIS)) { it } +
+                    fadeOut(tween(DETAIL_TRANSITION_DURATION_MILLIS))
+                )
+    }
 
 @Composable
 private fun AuthenticationContent(

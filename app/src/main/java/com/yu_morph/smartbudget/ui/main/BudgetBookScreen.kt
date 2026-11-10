@@ -4,6 +4,13 @@ package com.yu_morph.smartbudget.ui.main
 
 import androidx.activity.compose.BackHandler
 import androidx.annotation.StringRes
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideOutHorizontally
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -64,6 +71,7 @@ import java.time.YearMonth
 private val CalendarIncomeColor = Color(0xFF3FB284)
 private val CalendarExpenseColor = Color(0xFFF1A443)
 private val CalendarTransferColor = Color(0xFF4B88D8)
+private const val LEDGER_TRANSITION_DURATION_MILLIS = 280
 private val SampleTransactions =
     listOf(
         LedgerTransaction(R.string.sample_meal_set, R.string.sample_grocery, "-24,800원"),
@@ -81,16 +89,30 @@ private data class LedgerTransaction(
 @Composable
 internal fun BudgetBookRoute(bottomPadding: Dp) {
     var detailMonth by rememberSaveable { mutableStateOf<String?>(null) }
-    val month = detailMonth?.let(YearMonth::parse)
-    if (month == null) {
-        BudgetBookOverview(bottomPadding = bottomPadding, onOpenMonth = { detailMonth = it.toString() })
-    } else {
-        BudgetBookDetail(
-            month = month,
-            bottomPadding = bottomPadding,
-            onMonthChange = { detailMonth = it.toString() },
-            onBack = { detailMonth = null },
-        )
+    AnimatedContent(
+        targetState = detailMonth,
+        transitionSpec = {
+            if (targetState != null) {
+                (slideInHorizontally(tween(LEDGER_TRANSITION_DURATION_MILLIS)) { it } + fadeIn()) togetherWith
+                    (slideOutHorizontally(tween(LEDGER_TRANSITION_DURATION_MILLIS)) { -it / 4 } + fadeOut())
+            } else {
+                fadeIn() togetherWith
+                    (slideOutHorizontally(tween(LEDGER_TRANSITION_DURATION_MILLIS)) { it } + fadeOut())
+            }
+        },
+        label = "가계부 상세 화면 전환",
+    ) { selectedMonth ->
+        val month = selectedMonth?.let(YearMonth::parse)
+        if (month == null) {
+            BudgetBookOverview(bottomPadding = bottomPadding, onOpenMonth = { detailMonth = it.toString() })
+        } else {
+            BudgetBookDetail(
+                month = month,
+                bottomPadding = bottomPadding,
+                onMonthChange = { detailMonth = it.toString() },
+                onBack = { detailMonth = null },
+            )
+        }
     }
 }
 

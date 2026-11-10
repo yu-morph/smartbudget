@@ -4,10 +4,16 @@ import android.os.SystemClock
 import android.widget.Toast
 import androidx.activity.compose.BackHandler
 import androidx.annotation.StringRes
+import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideOutHorizontally
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -66,6 +72,8 @@ private val MainNavigationInactiveColor = Color(0xFF737373)
 private val MainActionGradientStart = Color(0xFF18A874)
 private val MainActionGradientEnd = Color(0xFF087A55)
 private const val MAIN_TAB_PRESSED_SCALE = 0.88f
+private const val TAB_TRANSITION_DURATION_MILLIS = 260
+private const val TAB_SLIDE_DISTANCE_DIVISOR = 5
 
 private enum class MainTab(
     @param:StringRes val label: Int,
@@ -83,6 +91,7 @@ private enum class MainTab(
 }
 
 @Composable
+@Suppress("LongMethod")
 fun MainScreen(
     settingsState: SettingsUiState,
     onSettingsLoad: () -> Unit,
@@ -108,28 +117,48 @@ fun MainScreen(
         },
     ) { innerPadding ->
         Box(modifier = Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)) {
-            when (selectedTab) {
-                MainTab.HOME -> HomeScreen(
-                    bottomPadding = innerPadding.calculateBottomPadding(),
-                    displayName = settingsState.displayName,
-                )
+            AnimatedContent(
+                targetState = selectedTab,
+                transitionSpec = {
+                    val direction = if (targetState.ordinal >= initialState.ordinal) 1 else -1
+                    (
+                        slideInHorizontally(tween(TAB_TRANSITION_DURATION_MILLIS)) {
+                            it * direction / TAB_SLIDE_DISTANCE_DIVISOR
+                        } +
+                            fadeIn(tween(TAB_TRANSITION_DURATION_MILLIS))
+                        ) togetherWith
+                        (
+                            slideOutHorizontally(tween(TAB_TRANSITION_DURATION_MILLIS)) {
+                                -it * direction / TAB_SLIDE_DISTANCE_DIVISOR
+                            } +
+                                fadeOut(tween(TAB_TRANSITION_DURATION_MILLIS))
+                            )
+                },
+                label = "메인 탭 화면 전환",
+            ) { currentTab ->
+                when (currentTab) {
+                    MainTab.HOME -> HomeScreen(
+                        bottomPadding = innerPadding.calculateBottomPadding(),
+                        displayName = settingsState.displayName,
+                    )
 
-                MainTab.BUDGET_BOOK -> BudgetBookRoute(
-                    bottomPadding = innerPadding.calculateBottomPadding(),
-                )
+                    MainTab.BUDGET_BOOK -> BudgetBookRoute(
+                        bottomPadding = innerPadding.calculateBottomPadding(),
+                    )
 
-                MainTab.ANALYSIS -> AnalysisScreen(
-                    bottomPadding = innerPadding.calculateBottomPadding(),
-                )
+                    MainTab.ANALYSIS -> AnalysisScreen(
+                        bottomPadding = innerPadding.calculateBottomPadding(),
+                    )
 
-                MainTab.SETTINGS -> SettingsScreen(
-                    state = settingsState,
-                    bottomContentPadding = innerPadding.calculateBottomPadding(),
-                    onLoad = onSettingsLoad,
-                    onLogout = onLogout,
-                    onOpenDocument = onOpenDocument,
-                    onOpenSettings = onOpenSettings,
-                )
+                    MainTab.SETTINGS -> SettingsScreen(
+                        state = settingsState,
+                        bottomContentPadding = innerPadding.calculateBottomPadding(),
+                        onLoad = onSettingsLoad,
+                        onLogout = onLogout,
+                        onOpenDocument = onOpenDocument,
+                        onOpenSettings = onOpenSettings,
+                    )
+                }
             }
         }
     }
