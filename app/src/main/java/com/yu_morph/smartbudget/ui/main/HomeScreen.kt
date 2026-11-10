@@ -47,20 +47,8 @@ private val ExpenseRed = Color(0xFFEA5A5A)
 private val IncomeBlue = Color(0xFF4B88D8)
 
 @Composable
-internal fun HomeScreen(bottomPadding: Dp, displayName: String) {
-    val name = displayName.ifBlank { stringResource(R.string.settings_profile_default_name) }
+internal fun HomeScreen(bottomPadding: Dp) {
     MainTabContainer(bottomPadding = bottomPadding) {
-        Text(
-            text = stringResource(R.string.home_greeting, name),
-            fontSize = 24.sp,
-            fontWeight = FontWeight.Bold,
-        )
-        Text(
-            text = stringResource(R.string.home_greeting_subtitle),
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            fontSize = 15.sp,
-        )
-        Spacer(Modifier.height(20.dp))
         MonthlyOverviewCard()
         Spacer(Modifier.height(14.dp))
         Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {

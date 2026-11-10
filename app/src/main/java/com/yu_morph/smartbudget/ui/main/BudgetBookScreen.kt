@@ -90,9 +90,6 @@ internal fun BudgetBookRoute(bottomPadding: Dp, onOpenMonth: (YearMonth) -> Unit
 private fun BudgetBookOverview(bottomPadding: Dp, onOpenMonth: (YearMonth) -> Unit) {
     val currentMonth = YearMonth.now()
     MainTabContainer(bottomPadding = bottomPadding) {
-        Text(stringResource(R.string.budget_book_title), fontSize = 26.sp, fontWeight = FontWeight.Bold)
-        Text(stringResource(R.string.budget_book_subtitle), color = MaterialTheme.colorScheme.onSurfaceVariant)
-        Spacer(Modifier.height(18.dp))
         LedgerCard(
             modifier = Modifier.clickable { onOpenMonth(currentMonth) },
         ) {

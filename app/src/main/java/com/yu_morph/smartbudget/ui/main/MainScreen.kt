@@ -139,10 +139,7 @@ fun MainScreen(
                 label = "메인 탭 화면 전환",
             ) { currentTab ->
                 when (currentTab) {
-                    MainTab.HOME -> HomeScreen(
-                        bottomPadding = innerPadding.calculateBottomPadding(),
-                        displayName = settingsState.displayName,
-                    )
+                    MainTab.HOME -> HomeScreen(bottomPadding = innerPadding.calculateBottomPadding())
 
                     MainTab.BUDGET_BOOK -> BudgetBookRoute(
                         bottomPadding = innerPadding.calculateBottomPadding(),

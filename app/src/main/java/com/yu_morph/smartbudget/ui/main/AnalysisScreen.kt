@@ -46,9 +46,6 @@ private val AnalysisOrange = Color(0xFFF0A04B)
 @Composable
 internal fun AnalysisScreen(bottomPadding: Dp) {
     MainTabContainer(bottomPadding = bottomPadding) {
-        Text(stringResource(R.string.analysis_title), fontSize = 26.sp, fontWeight = FontWeight.Bold)
-        Text(stringResource(R.string.analysis_subtitle), color = MaterialTheme.colorScheme.onSurfaceVariant)
-        Spacer(Modifier.height(18.dp))
         AnalysisInsightCard()
         Spacer(Modifier.height(14.dp))
         CategoryCard()
