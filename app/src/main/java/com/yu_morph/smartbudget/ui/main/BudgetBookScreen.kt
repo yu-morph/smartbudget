@@ -87,6 +87,8 @@ import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.yu_morph.smartbudget.R
+import com.yu_morph.smartbudget.data.ocr.FakeReceiptOcrRepository
+import com.yu_morph.smartbudget.data.ocr.ReceiptOcrRepository
 import com.yu_morph.smartbudget.data.remote.model.CreateTransactionRequest
 import com.yu_morph.smartbudget.data.remote.model.TransactionData
 import com.yu_morph.smartbudget.data.remote.model.TransactionType
@@ -263,6 +265,8 @@ internal fun BudgetBookDetailScreen(
     onDeleteTransaction: (Int, () -> Unit) -> Unit,
     onMonthChange: (YearMonth) -> Unit,
     onBack: () -> Unit,
+    // OCR API가 구현되면 실제 구현을 주입한다. 그 전까지는 고정 더미 결과를 사용한다.
+    receiptOcrRepository: ReceiptOcrRepository = remember { FakeReceiptOcrRepository() },
 ) {
     var selectedDateText by rememberSaveable { mutableStateOf<String?>(null) }
     var showMonthPicker by rememberSaveable { mutableStateOf(false) }
@@ -386,6 +390,7 @@ internal fun BudgetBookDetailScreen(
                     onUpdateTransaction(transaction.id, value.toUpdateRequest(selectedDate), onSuccess)
                 } ?: onCreateTransaction(value.toCreateRequest(selectedDate), onSuccess)
             },
+            onRecognizeReceipt = receiptOcrRepository::recognize,
         )
     }
     deletingTransaction?.let { transaction ->
