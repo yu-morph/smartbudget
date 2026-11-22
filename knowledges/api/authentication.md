@@ -1,12 +1,12 @@
 # 사용자 관리 및 인증 API
 
-FastAPI, PyJWT, SQLAlchemy와 파일 SQLite 서버에 적용할 v1 목표 계약입니다. 웹과 안드로이드가 같은 JSON API를 사용합니다. 실행 설정은 [server.md](server.md)를 참고합니다. 현재 서버가 실제로 제공하는 요청·응답 스키마는 실행 중 `/docs`와 `/openapi.json`에서 확인합니다.
+FastAPI, PyJWT, SQLAlchemy와 파일 SQLite 서버에 적용할 v1 목표 계약입니다. 웹과 안드로이드가 같은 JSON API를 사용합니다. 실행 설정은 [server.md](server.md)를 참고합니다. 현재 서버가 실제로 제공하는 요청·응답 스키마는 실행 중 `/knowledges/api`와 `/knowledges/api/openapi.json`에서 확인합니다.
 
 전체 API 구현 목표와 계약의 기준은 [openapi.json](openapi.json)입니다. 이 문서는 인증 정책의 세부 설명을 보충하며, 내용이 충돌하면 OpenAPI를 따릅니다.
 
 ## 현재 구현 범위
 
-2026-09-24 현재 Python 서버는 공통 응답 code, 로그인·갱신의 토큰 만료 정보, Bearer 기반 본인 조회·PATCH·DELETE와 현재 비밀번호 확인을 제공합니다. 계정 삭제는 현재 `User`와 같은 username의 `LoginAttempt`만 한 쓰기 트랜잭션에서 삭제합니다. 거래·월별 예산·소비 분석 리포트 모델과 라우트 스텁은 등록됐지만 실제 기능과 계정 삭제 연동은 아직 구현되지 않았습니다. 각 기능 로직을 구현할 때 사용자 소유 행의 삭제 정책과 계정 삭제 통합 테스트를 함께 추가해야 합니다.
+Python 서버는 공통 응답 code, 로그인·갱신의 토큰 만료 정보, Bearer 기반 본인 조회·PATCH·DELETE와 현재 비밀번호 확인을 제공합니다. 계정 삭제는 계정과 로그인 제한 상태, 사용자 소유 거래·월별 예산·리포트 및 중복 방지·예약 상태를 한 트랜잭션에서 삭제합니다.
 
 ## 공통 계약
 
@@ -99,9 +99,9 @@ POST·PUT·PATCH는 `Content-Type: application/json`을 사용합니다. 알 수
 
 ### DELETE /api/v1/auth/account
 
-`Authorization: Bearer <JWT>` 헤더로 인증한 본인의 `User`와 같은 username의 `LoginAttempt`를 한 쓰기 트랜잭션에서 삭제합니다. query와 요청 본문은 허용하지 않습니다. 성공하면 성공 코드 200과 data:null을 반환하며 기존 JWT는 더 이상 사용할 수 없습니다. 인증에 실패하면 오류 코드 401, DB 오류가 발생하면 오류 코드 503을 반환합니다.
+`Authorization: Bearer <JWT>` 헤더로 인증한 본인의 `User`와 같은 username의 `LoginAttempt`, 사용자 소유 거래·월별 예산·리포트 및 중복 방지·예약 상태를 한 쓰기 트랜잭션에서 삭제합니다. query와 요청 본문은 허용하지 않습니다. 성공하면 성공 코드 200과 data:null을 반환하며 기존 JWT는 더 이상 사용할 수 없습니다. 인증에 실패하면 오류 코드 401, DB 오류가 발생하면 오류 코드 503을 반환합니다.
 
-거래·월별 예산·소비 분석 리포트 모델은 등록됐지만 현재 계정 삭제 트랜잭션에는 포함되지 않습니다. 각 기능 로직을 구현할 때 사용자 소유 행의 삭제 정책과 계정 삭제 통합 테스트를 함께 추가해야 합니다.
+이전 버전에서 남은 소유자 없는 데이터는 자동 삭제하지 않습니다. 앱 시작 시 기존 계정과 소유 데이터의 ID 최댓값을 별도 카운터에 저장하며, 계정 삭제 후에도 그 ID를 재사용하지 않습니다.
 
 ## 토큰 수명과 보안
 
