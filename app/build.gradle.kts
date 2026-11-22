@@ -117,10 +117,17 @@ abstract class GenerateOpenSourceLicensesTask : DefaultTask() {
 
         group == "org.slf4j" -> License("mit", "MIT License", "mit.txt")
 
+        group == "org.checkerframework" -> License("mit", "MIT License", "mit.txt")
+
         group.startsWith("androidx.") ||
+            group == "com.google.auto.value" ||
+            group == "com.google.code.findbugs" ||
             group == "com.google.code.gson" ||
             group == "com.google.crypto.tink" ||
+            group == "com.google.dagger" ||
+            group == "com.google.errorprone" ||
             group == "com.google.guava" ||
+            group == "com.google.j2objc" ||
             group == "com.google.accompanist" ||
             group == "com.caverock" ||
             group == "com.squareup.okio" ||
@@ -129,6 +136,8 @@ abstract class GenerateOpenSourceLicensesTask : DefaultTask() {
             group == "org.jetbrains" ||
             group == "org.jetbrains.kotlin" ||
             group == "org.jetbrains.kotlinx" ||
+            group == "jakarta.inject" ||
+            group == "javax.inject" ||
             group == "org.jspecify" ->
             License("apache-2.0", "Apache License 2.0", "apache-2.0.txt")
 
@@ -137,6 +146,9 @@ abstract class GenerateOpenSourceLicensesTask : DefaultTask() {
 
     private fun copyrightOwnerFor(group: String): String = when {
         group.startsWith("androidx.") -> "The Android Open Source Project"
+        group == "com.google.code.findbugs" -> "JSR-305 전문가 그룹 및 FindBugs 기여자"
+        group == "com.google.dagger" -> "The Dagger Authors"
+        group == "jakarta.inject" || group == "javax.inject" -> "JSR-330 전문가 그룹"
         group.startsWith("com.google.") -> "Google LLC"
         group == "com.kizitonwose.calendar" -> "Kizito Nwose 및 기여자"
         group == "com.github.blongho" -> "Bernard Longho 및 기여자"
@@ -147,6 +159,7 @@ abstract class GenerateOpenSourceLicensesTask : DefaultTask() {
         group == "org.jetbrains" || group.startsWith("org.jetbrains.") -> "JetBrains s.r.o. 및 기여자"
         group == "org.jspecify" -> "JSpecify 기여자"
         group == "org.slf4j" -> "QOS.ch 및 SLF4J 기여자"
+        group == "org.checkerframework" -> "Checker Framework 개발자"
         else -> error("저작권자 정보가 등록되지 않은 런타임 종속성 그룹입니다: $group")
     }
 
@@ -295,6 +308,9 @@ dependencies {
     implementation(libs.ktor.client.content.negotiation)
     implementation(libs.ktor.client.core)
     implementation(libs.ktor.serialization.kotlinx.json)
+    implementation(libs.androidx.camera.camera2)
+    implementation(libs.androidx.camera.lifecycle)
+    implementation(libs.androidx.camera.view)
     testImplementation(libs.junit)
     testImplementation(libs.ktor.client.mock)
     androidTestImplementation(platform(libs.androidx.compose.bom))
