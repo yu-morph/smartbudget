@@ -223,6 +223,8 @@
     <string name="budget_book_editor_save">저장하기</string>
     <string name="budget_book_editor_select_category">카테고리 선택</string>
     <string name="receipt_ocr_failed">영수증을 읽지 못했어요. 직접 입력해 주세요.</string>
+    <string name="receipt_ocr_failed_authentication">로그인이 만료되었어요. 다시 로그인해 주세요.</string>
+    <string name="receipt_ocr_failed_server">영수증 분석 중 문제가 생겼어요. 잠시 후 다시 시도해 주세요.</string>
     <string name="receipt_analyzing_title">영수증을 분석하고 있어요</string>
     <string name="receipt_analyzing_message">잠시만 기다려주세요</string>
     <string name="receipt_ocr_open">영수증 촬영으로 입력하기</string>

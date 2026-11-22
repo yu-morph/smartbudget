@@ -26,6 +26,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import com.yu_morph.smartbudget.R
 import com.yu_morph.smartbudget.data.local.DisplayMode
+import com.yu_morph.smartbudget.data.ocr.RemoteReceiptOcrRepository
 import com.yu_morph.smartbudget.data.remote.SmartBudgetApiFactory
 import com.yu_morph.smartbudget.ui.auth.AuthCoordinator
 import com.yu_morph.smartbudget.ui.auth.AuthLoadingDialog
@@ -71,6 +72,7 @@ fun SmartBudgetApp(onDisplayModeChanged: (DisplayMode) -> Unit, onLanguageChange
     val budgetBookCoordinator = remember(context, api, scope) { BudgetBookCoordinator(context, api, scope) }
     val homeDashboardCoordinator = remember(context, api, scope) { HomeDashboardCoordinator(context, api, scope) }
     val homeNewsCoordinator = remember(context, scope) { HomeNewsCoordinator(context, scope) }
+    val receiptOcrRepository = remember(api) { RemoteReceiptOcrRepository(api.ocr) }
     DisposableEffect(api) {
         onDispose(api::close)
     }
@@ -170,6 +172,7 @@ fun SmartBudgetApp(onDisplayModeChanged: (DisplayMode) -> Unit, onLanguageChange
                         onDeleteTransaction = budgetBookCoordinator::deleteTransaction,
                         onMonthChange = { changedMonth -> openBudgetBookMonth = changedMonth.toString() },
                         onBack = { openBudgetBookMonth = null },
+                        receiptOcrRepository = receiptOcrRepository,
                     )
                 }
             }

@@ -51,7 +51,7 @@ object SmartBudgetApiFactory {
             monthlyBudgets = MonthlyBudgetApi(executor),
             mockTransactions = MockTransactionApi(client, json, MOCK_TRANSACTION_BASE_URL),
             reports = ReportApi(executor),
-            ocr = OcrApi(),
+            ocr = OcrApi(executor),
             remoteResources = PreferenceStoreFactory.remoteResources(context),
             client = client,
         )

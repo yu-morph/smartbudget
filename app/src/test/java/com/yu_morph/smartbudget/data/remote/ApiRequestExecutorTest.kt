@@ -5,15 +5,20 @@ import com.yu_morph.smartbudget.data.local.AuthTokenStore
 import com.yu_morph.smartbudget.data.local.StoredAuthToken
 import com.yu_morph.smartbudget.data.remote.api.AuthApi
 import com.yu_morph.smartbudget.data.remote.api.OcrApi
+import com.yu_morph.smartbudget.data.remote.api.OcrUploadFile
 import com.yu_morph.smartbudget.data.remote.api.ReportApi
+import com.yu_morph.smartbudget.data.remote.model.OcrFileStatus
 import com.yu_morph.smartbudget.data.remote.model.PatchValue
 import com.yu_morph.smartbudget.data.remote.model.RequestReportRequest
 import com.yu_morph.smartbudget.data.remote.model.UpdateTransactionRequest
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.mock.MockEngine
 import io.ktor.client.engine.mock.respond
+import io.ktor.client.plugins.HttpTimeout
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
+import io.ktor.http.ContentType
 import io.ktor.http.HttpHeaders
+import io.ktor.http.HttpMethod
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.headersOf
 import io.ktor.serialization.kotlinx.json.json
@@ -23,6 +28,7 @@ import kotlinx.serialization.json.JsonNull
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
+import org.junit.Assert.assertThrows
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
@@ -134,10 +140,48 @@ class ApiRequestExecutorTest {
 
         val reportResult =
             ReportApi(executor).requestReport(RequestReportRequest("monthly", "2026-11-01"))
-        val ocrResult = OcrApi().recognize(emptyList())
 
         assertTrue(reportResult is ApiResult.NotImplemented)
-        assertTrue(ocrResult is ApiResult.NotImplemented)
+    }
+
+    @Test
+    fun `영수증 OCR은 인증 토큰과 multipart 파일로 요청하고 결과를 해석한다`() = runBlocking {
+        var path: String? = null
+        var method: HttpMethod? = null
+        var authorization: String? = null
+        var bodyContentType: ContentType? = null
+        val stores = TestStores(token = TEST_TOKEN)
+        val executor =
+            executor(stores) { request ->
+                path = request.url.encodedPath
+                method = request.method
+                authorization = request.headers[HttpHeaders.Authorization]
+                bodyContentType = request.body.contentType
+                respond(OCR_RESPONSE, headers = jsonHeaders())
+            }
+
+        val result =
+            OcrApi(executor).recognize(listOf(OcrUploadFile("receipt.jpg", "image/jpeg", byteArrayOf(1, 2, 3))))
+
+        assertEquals("/api/v1/proxy/ocr", path)
+        assertEquals(HttpMethod.Post, method)
+        assertEquals("Bearer access-token", authorization)
+        assertTrue(bodyContentType?.match(ContentType.MultiPart.FormData) == true)
+        assertTrue(result is ApiResult.Success)
+        val ocr = (result as ApiResult.Success).data?.single()
+        assertEquals(OcrFileStatus.SUCCESS, ocr?.status)
+        assertEquals("대박수산", ocr?.storeName)
+        assertEquals(listOf("광어회", "매운탕추가"), ocr?.items)
+        assertEquals(40_500, ocr?.amount)
+    }
+
+    @Test
+    fun `영수증 OCR은 파일이 없으면 네트워크 요청 없이 거부한다`() {
+        val executor = executor(TestStores()) { error("네트워크 요청이 발생하면 안 됩니다") }
+
+        assertThrows(IllegalArgumentException::class.java) {
+            runBlocking { OcrApi(executor).recognize(emptyList()) }
+        }
     }
 
     @Test
@@ -164,6 +208,8 @@ class ApiRequestExecutorTest {
             HttpClient(MockEngine(handler)) {
                 expectSuccess = false
                 install(ContentNegotiation) { json(json) }
+                // 운영 클라이언트와 같이 요청별 대기 시간 설정을 허용한다.
+                install(HttpTimeout)
             }
         return ApiRequestExecutor("https://example.test", client, stores, stores, json)
     }
@@ -201,6 +247,8 @@ class ApiRequestExecutorTest {
             """{"status":200,"code":"OK","message":"success","data":{"token":"new-token","expires_at":"2026-11-10T00:00:00+09:00","token_type":"Bearer"}}"""
         const val VERSION_RESPONSE =
             """{"status":200,"code":"OK","message":"success","data":{"version":"1.2.3","channel":"development","build_timestamp":"2026-11-08T00:00:00+09:00"}}"""
+        const val OCR_RESPONSE =
+            """{"status":200,"code":"SUCCESS","message":"success","data":[{"file_name":"receipt.jpg","status":"success","error_message":null,"items":["광어회","매운탕추가"],"file_index":0,"store_name":"대박수산","date":"2026-09-12","time":"16:50:11","amount":40500}]}"""
         const val ERROR_RESPONSE =
             """{"status":429,"code":"SIGN_IN_RATE_LIMITED","message":"retry","data":null}"""
     }

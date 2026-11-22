@@ -69,6 +69,8 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import com.yu_morph.smartbudget.R
+import com.yu_morph.smartbudget.data.ocr.ReceiptOcrException
+import com.yu_morph.smartbudget.data.ocr.ReceiptOcrFailureReason
 import com.yu_morph.smartbudget.data.ocr.ReceiptOcrResult
 import com.yu_morph.smartbudget.data.remote.model.CreateTransactionRequest
 import com.yu_morph.smartbudget.data.remote.model.PatchValue
@@ -87,18 +89,25 @@ import kotlinx.coroutines.launch
 private val EditorErrorColor = Color(0xFFD94A4A)
 private const val MAX_AMOUNT_DIGITS = 9
 
+/** OpenAPI 거래 필드의 최대 길이. */
+private const val MAX_STORE_NAME_LENGTH = 200
+private const val MAX_NOTE_LENGTH = 2_000
+private const val RECEIPT_ITEM_SEPARATOR = ", "
+
 internal data class TransactionEditorValue(
     val type: TransactionType,
     val category: String,
     val storeName: String,
     val note: String,
     val amount: Int,
+    // 영수증 OCR 결과를 사용해 입력한 거래는 OCR 출처로 저장한다.
+    val source: TransactionSource = TransactionSource.MANUAL,
 )
 
 internal fun TransactionEditorValue.toCreateRequest(date: LocalDate) = CreateTransactionRequest(
     date = date.toString(),
     type = type,
-    source = TransactionSource.MANUAL,
+    source = source,
     category = category,
     storeName = storeName.ifBlank { null },
     note = note.ifBlank { null },
@@ -114,11 +123,12 @@ internal fun TransactionEditorValue.toUpdateRequest(date: LocalDate) = UpdateTra
     amount = amount,
 )
 
-/** 영수증 OCR 결과를 반영한 뒤의 입력 필드 값. */
-internal data class ReceiptFilledFields(
+/** 영수증 OCR 결과로 채울 수 있는 입력 필드 값. */
+internal data class ReceiptEditableFields(
     val type: TransactionType,
     val category: String,
     val storeName: String,
+    val note: String,
     val amountText: String,
 )
 
@@ -126,25 +136,27 @@ internal data class ReceiptFilledFields(
  * 영수증 OCR 결과를 현재 입력값에 반영한다.
  *
  * 영수증은 지출이므로 거래 유형을 지출로 바꾸고, 수입 카테고리가 선택되어 있었다면 기본 지출 카테고리로 되돌린다.
- * 인식하지 못한 필드(`null`)는 사용자가 입력한 기존 값을 유지한다.
+ * 인식한 품목은 쉼표로 이어 메모에 넣는다. 인식하지 못한 필드(`null`, 빈 품목)는 사용자가 입력한 기존 값을 유지한다.
+ * 매장명과 메모는 서버의 최대 길이를 넘지 않도록 자른다.
  */
-internal fun applyReceiptOcrResult(
-    result: ReceiptOcrResult,
-    currentType: TransactionType,
-    currentCategory: String,
-    currentStoreName: String,
-    currentAmountText: String,
-): ReceiptFilledFields = ReceiptFilledFields(
-    type = TransactionType.EXPENSE,
-    category =
-        if (currentType == TransactionType.EXPENSE) {
-            currentCategory
-        } else {
-            expenseTransactionCategoryCodes.first()
-        },
-    storeName = result.storeName?.takeIf(String::isNotBlank) ?: currentStoreName,
-    amountText = result.amount?.takeIf { it > 0 }?.toString() ?: currentAmountText,
-)
+internal fun applyReceiptOcrResult(result: ReceiptOcrResult, current: ReceiptEditableFields): ReceiptEditableFields =
+    ReceiptEditableFields(
+        type = TransactionType.EXPENSE,
+        category =
+            if (current.type == TransactionType.EXPENSE) {
+                current.category
+            } else {
+                expenseTransactionCategoryCodes.first()
+            },
+        storeName = result.storeName?.takeIf(String::isNotBlank)?.take(MAX_STORE_NAME_LENGTH) ?: current.storeName,
+        note =
+            result.items
+                .takeIf { it.isNotEmpty() }
+                ?.joinToString(RECEIPT_ITEM_SEPARATOR)
+                ?.take(MAX_NOTE_LENGTH)
+                ?: current.note,
+        amountText = result.amount?.takeIf { it > 0 }?.toString() ?: current.amountText,
+    )
 
 /** 금액 숫자 문자열에 세 자리마다 쉼표를 넣는다. */
 internal fun formatThousands(digits: String): String = buildString {
@@ -182,11 +194,12 @@ internal fun TransactionEditorDialog(
     var showCamera by rememberSaveable { mutableStateOf(false) }
     var ocrStatus by remember { mutableStateOf(ReceiptOcrStatus.IDLE) }
     var ocrJob by remember { mutableStateOf<Job?>(null) }
+    var ocrFailureReason by remember { mutableStateOf<ReceiptOcrFailureReason?>(null) }
+    var usedReceiptOcr by rememberSaveable(transaction?.id) { mutableStateOf(false) }
     val scope = rememberCoroutineScope()
     val amount = amountText.toIntOrNull()
     val isBusy = isSaving || ocrStatus == ReceiptOcrStatus.PROCESSING
-    val categories =
-        if (type == TransactionType.INCOME) incomeTransactionCategoryCodes else expenseTransactionCategoryCodes
+    val categories = categoryCodesFor(type)
 
     Dialog(
         onDismissRequest = { if (!isBusy) onDismiss() },
@@ -217,15 +230,10 @@ internal fun TransactionEditorDialog(
                     TransactionTypeSelector(type = type, enabled = !isBusy) { selectedType ->
                         if (selectedType != type) {
                             type = selectedType
-                            category =
-                                if (selectedType == TransactionType.INCOME) {
-                                    incomeTransactionCategoryCodes.first()
-                                } else {
-                                    expenseTransactionCategoryCodes.first()
-                                }
+                            category = categoryCodesFor(selectedType).first()
                         }
                     }
-                    ReceiptOcrStatusBanner(ocrStatus)
+                    ReceiptOcrStatusBanner(ocrStatus, ocrFailureReason)
                     EditorField(label = stringResource(R.string.budget_book_editor_category)) {
                         CategoryField(
                             category = category,
@@ -244,16 +252,7 @@ internal fun TransactionEditorDialog(
                             )
                         }
                     }
-                    EditorField(
-                        label =
-                            stringResource(
-                                if (type == TransactionType.INCOME) {
-                                    R.string.budget_book_editor_income_source
-                                } else {
-                                    R.string.budget_book_editor_store_name
-                                },
-                            ),
-                    ) {
+                    EditorField(label = stringResource(storeNameLabelFor(type))) {
                         EditorTextField(value = storeName, onValueChange = { storeName = it }, enabled = !isBusy)
                     }
                     EditorField(label = stringResource(R.string.budget_book_editor_note)) {
@@ -281,6 +280,7 @@ internal fun TransactionEditorDialog(
                                     storeName = storeName,
                                     note = note,
                                     amount = checkNotNull(amount),
+                                    source = transactionSourceFor(usedReceiptOcr),
                                 ),
                             )
                         },
@@ -303,13 +303,21 @@ internal fun TransactionEditorDialog(
                         if (!isActive) return@launch
                         result
                             .onSuccess { ocrResult ->
-                                val filled = applyReceiptOcrResult(ocrResult, type, category, storeName, amountText)
+                                val filled =
+                                    applyReceiptOcrResult(
+                                        ocrResult,
+                                        ReceiptEditableFields(type, category, storeName, note, amountText),
+                                    )
                                 type = filled.type
                                 category = filled.category
                                 storeName = filled.storeName
+                                note = filled.note
                                 amountText = filled.amountText
+                                usedReceiptOcr = true
                                 ocrStatus = ReceiptOcrStatus.APPLIED
-                            }.onFailure {
+                            }.onFailure { error ->
+                                ocrFailureReason = (error as? ReceiptOcrException)?.reason
+                                    ?: ReceiptOcrFailureReason.SERVER
                                 ocrStatus = ReceiptOcrStatus.FAILED
                             }
                     }
@@ -327,6 +335,21 @@ internal fun TransactionEditorDialog(
         )
     }
 }
+
+/** 거래 유형에 맞는 카테고리 코드 목록. */
+private fun categoryCodesFor(type: TransactionType): List<String> =
+    if (type == TransactionType.INCOME) incomeTransactionCategoryCodes else expenseTransactionCategoryCodes
+
+/** 거래 유형에 맞는 매장명(수입 출처) 입력칸 라벨. */
+private fun storeNameLabelFor(type: TransactionType): Int = if (type == TransactionType.INCOME) {
+    R.string.budget_book_editor_income_source
+} else {
+    R.string.budget_book_editor_store_name
+}
+
+/** 영수증 OCR 결과를 사용했는지에 따른 거래 출처. */
+private fun transactionSourceFor(usedReceiptOcr: Boolean): TransactionSource =
+    if (usedReceiptOcr) TransactionSource.OCR else TransactionSource.MANUAL
 
 @Composable
 private fun EditorHeader(isEditing: Boolean, isBusy: Boolean, onCameraClick: () -> Unit, onClose: () -> Unit) {
@@ -417,7 +440,7 @@ private fun TransactionTypeSelector(type: TransactionType, enabled: Boolean, onS
 }
 
 @Composable
-private fun ReceiptOcrStatusBanner(status: ReceiptOcrStatus) {
+private fun ReceiptOcrStatusBanner(status: ReceiptOcrStatus, failureReason: ReceiptOcrFailureReason?) {
     val (message, color) =
         when (status) {
             ReceiptOcrStatus.IDLE -> return
@@ -427,7 +450,7 @@ private fun ReceiptOcrStatusBanner(status: ReceiptOcrStatus) {
 
             ReceiptOcrStatus.APPLIED -> stringResource(R.string.receipt_ocr_applied) to SmartBudgetGreen
 
-            ReceiptOcrStatus.FAILED -> stringResource(R.string.receipt_ocr_failed) to EditorErrorColor
+            ReceiptOcrStatus.FAILED -> stringResource(failureReason.messageRes()) to EditorErrorColor
         }
     Row(
         modifier =
@@ -449,6 +472,14 @@ private fun ReceiptOcrStatusBanner(status: ReceiptOcrStatus) {
         }
         Text(message, color = color, fontSize = 13.sp)
     }
+}
+
+/** OCR 실패 유형에 맞는 안내 문구를 고른다. */
+private fun ReceiptOcrFailureReason?.messageRes(): Int = when (this) {
+    ReceiptOcrFailureReason.NETWORK -> R.string.network_error
+    ReceiptOcrFailureReason.AUTHENTICATION -> R.string.receipt_ocr_failed_authentication
+    ReceiptOcrFailureReason.UNRECOGNIZED -> R.string.receipt_ocr_failed
+    ReceiptOcrFailureReason.SERVER, null -> R.string.receipt_ocr_failed_server
 }
 
 /** 시안의 "작은 회색 라벨 + 둥근 입력칸" 형태를 만든다. */
