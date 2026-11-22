@@ -91,6 +91,7 @@ private const val GUIDE_WIDTH_RATIO = 0.78f
 private const val GUIDE_ASPECT_RATIO = 1.45f
 private const val GUIDE_MAX_HEIGHT_RATIO = 0.6f
 private const val JPEG_QUALITY = 90
+private const val MAX_UPLOAD_EDGE_PX = 2_560
 
 /**
  * 영수증을 촬영하는 전체 화면 다이얼로그.
@@ -443,7 +444,22 @@ private fun ImageProxy.toUprightBitmap(): Bitmap {
     return Bitmap.createBitmap(source, 0, 0, source.width, source.height, matrix, true)
 }
 
-private fun Bitmap.toJpegBytes(): ByteArray = ByteArrayOutputStream().use { stream ->
-    compress(Bitmap.CompressFormat.JPEG, JPEG_QUALITY, stream)
-    stream.toByteArray()
+/**
+ * OCR 업로드용 JPEG으로 변환한다.
+ *
+ * 서버의 파일당 10,000,000바이트 제한을 넘지 않고 업로드 시간을 줄이도록 긴 변을 [MAX_UPLOAD_EDGE_PX] 이하로 줄인다.
+ */
+private fun Bitmap.toJpegBytes(): ByteArray {
+    val longEdge = maxOf(width, height)
+    val scaled =
+        if (longEdge > MAX_UPLOAD_EDGE_PX) {
+            val ratio = MAX_UPLOAD_EDGE_PX.toFloat() / longEdge
+            Bitmap.createScaledBitmap(this, (width * ratio).toInt(), (height * ratio).toInt(), true)
+        } else {
+            this
+        }
+    return ByteArrayOutputStream().use { stream ->
+        scaled.compress(Bitmap.CompressFormat.JPEG, JPEG_QUALITY, stream)
+        stream.toByteArray()
+    }
 }
