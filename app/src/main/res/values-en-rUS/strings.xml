@@ -262,4 +262,31 @@
     <string name="sample_report_food" formatted="false">Dining down 8%</string>
     <string name="sample_report_fixed">Fixed-cost share increased</string>
     <string name="sample_report_goal">Budget goal achieved</string>
+    <string name="budget_book_editor_add_title">Add Expense · Income</string>
+    <string name="budget_book_editor_edit_title">Edit Expense · Income</string>
+    <string name="budget_book_editor_store_name">Store</string>
+    <string name="budget_book_editor_income_source">Income source</string>
+    <string name="budget_book_editor_save">Save</string>
+    <string name="budget_book_editor_select_category">Select category</string>
+    <string name="receipt_ocr_open">Fill in from a receipt photo</string>
+    <string name="receipt_ocr_processing">Reading the receipt…</string>
+    <string name="receipt_ocr_applied">Receipt details were filled in. Please check them before saving.</string>
+    <string name="receipt_ocr_failed">Couldn\'t read the receipt. Please enter the details manually.</string>
+    <string name="receipt_ocr_failed_authentication">Your session has expired. Please sign in again.</string>
+    <string name="receipt_ocr_failed_server">Something went wrong while analyzing the receipt. Please try again later.</string>
+    <string name="receipt_analyzing_title">Analyzing your receipt</string>
+    <string name="receipt_analyzing_message">Please wait a moment</string>
+    <string name="receipt_capture_title">Scan receipt</string>
+    <string name="receipt_capture_guide">Fit the whole receipt inside the guide.</string>
+    <string name="receipt_capture_shutter">Take receipt photo</string>
+    <string name="receipt_capture_close">Close receipt camera</string>
+    <string name="receipt_capture_failed">Couldn\'t take the photo. Please try again.</string>
+    <string name="receipt_review_title">Check photo</string>
+    <string name="receipt_review_message">Make sure the text on the receipt is clearly visible.</string>
+    <string name="receipt_review_image">Captured receipt photo</string>
+    <string name="receipt_review_retake">Retake</string>
+    <string name="receipt_review_use">Use photo</string>
+    <string name="receipt_permission_title">Camera permission needed</string>
+    <string name="receipt_permission_message">Allow camera access to scan receipts.</string>
+    <string name="receipt_permission_retry">Allow permission</string>
 </resources>
