@@ -4,6 +4,7 @@ package com.yu_morph.smartbudget.ui.main
 
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -17,6 +18,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.Add
 import androidx.compose.material.icons.outlined.AutoAwesome
 import androidx.compose.material.icons.outlined.ChevronRight
 import androidx.compose.material3.Card
@@ -24,7 +26,13 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
@@ -45,15 +53,91 @@ private val AnalysisOrange = Color(0xFFF0A04B)
 
 @Composable
 internal fun AnalysisScreen(bottomPadding: Dp) {
+    var flow by rememberSaveable { mutableStateOf<AnalysisFlowStep?>(null) }
+    var survey by remember { mutableStateOf(AnalysisSurvey()) }
+    var requestAfterSurvey by rememberSaveable { mutableStateOf(false) }
+    var selectedYear by rememberSaveable { mutableStateOf(2026) }
+    var selectedMonth by rememberSaveable { mutableStateOf(10) }
+    if (flow != null) {
+        AnalysisFlowScreen(
+            bottomPadding = bottomPadding,
+            initialSurvey = survey,
+            initialStep = flow ?: AnalysisFlowStep.SURVEY,
+            initialYear = selectedYear,
+            initialMonth = selectedMonth,
+            continueAfterSurvey = requestAfterSurvey,
+            onBack = { flow = null },
+            onSurveySaved = {
+                survey = it
+            },
+        )
+        return
+    }
     MainTabContainer(bottomPadding = bottomPadding) {
-        AnalysisInsightCard()
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Text(stringResource(R.string.analysis_title), fontSize = 24.sp, fontWeight = FontWeight.Bold)
+            TextButton(onClick = { requestAfterSurvey = true; flow = AnalysisFlowStep.SURVEY }) {
+                Icon(Icons.Outlined.Add, contentDescription = null, tint = SmartBudgetGreen)
+                Text(stringResource(R.string.analysis_new_report), color = SmartBudgetGreen)
+            }
+        }
+        Spacer(Modifier.height(12.dp))
+        SurveySummaryCard(survey = survey, onClick = { requestAfterSurvey = false; flow = AnalysisFlowStep.SURVEY })
         Spacer(Modifier.height(14.dp))
-        CategoryCard()
-        Spacer(Modifier.height(14.dp))
-        TrendCard()
-        Spacer(Modifier.height(14.dp))
-        PreviousReportsCard()
+        PreviousReportsCard(onReportClick = { reportMonth ->
+            selectedYear = 2026
+            selectedMonth = reportMonth
+            flow = AnalysisFlowStep.RESULT
+        })
         Spacer(Modifier.height(16.dp))
+    }
+}
+
+@Composable
+private fun SurveySummaryCard(survey: AnalysisSurvey, onClick: () -> Unit) {
+    AnalysisCard(modifier = Modifier.clickable(onClick = onClick)) {
+        Text(
+            stringResource(R.string.analysis_survey_summary_title),
+            fontSize = 18.sp,
+            fontWeight = FontWeight.Bold,
+        )
+        Spacer(Modifier.height(6.dp))
+        Text(
+            stringResource(R.string.analysis_survey_summary_description),
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            fontSize = 14.sp,
+            lineHeight = 20.sp,
+        )
+        Spacer(Modifier.height(16.dp))
+        SurveySummaryRow(
+            label = stringResource(R.string.analysis_survey_goal_label),
+            value = if (survey.managementDirection == "maintain") {
+                stringResource(R.string.analysis_survey_direction_maintain)
+            } else {
+                stringResource(R.string.analysis_survey_direction_save)
+            },
+        )
+        Spacer(Modifier.height(10.dp))
+        SurveySummaryRow(
+            label = stringResource(R.string.analysis_survey_focus_label),
+            value = survey.interest.ifBlank { stringResource(R.string.analysis_survey_focus_value) },
+        )
+    }
+}
+
+@Composable
+private fun SurveySummaryRow(label: String, value: String) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Text(label, color = MaterialTheme.colorScheme.onSurfaceVariant, fontSize = 14.sp)
+        Text(value, fontWeight = FontWeight.SemiBold, fontSize = 14.sp)
     }
 }
 
@@ -156,7 +240,7 @@ private fun TrendChart(modifier: Modifier = Modifier) {
 }
 
 @Composable
-private fun PreviousReportsCard() {
+private fun PreviousReportsCard(onReportClick: (Int) -> Unit) {
     AnalysisCard {
         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
             Text(stringResource(R.string.analysis_previous), fontSize = 18.sp, fontWeight = FontWeight.Bold)
@@ -167,16 +251,22 @@ private fun PreviousReportsCard() {
             )
         }
         Spacer(Modifier.height(8.dp))
-        ReportRow(stringResource(R.string.sample_report_october), stringResource(R.string.sample_report_food), "-3%")
-        ReportRow(stringResource(R.string.sample_report_september), stringResource(R.string.sample_report_fixed), "+2%")
-        ReportRow(stringResource(R.string.sample_report_august), stringResource(R.string.sample_report_goal), "-6%")
+        ReportRow(stringResource(R.string.sample_report_october), stringResource(R.string.sample_report_food), "-3%") {
+            onReportClick(10)
+        }
+        ReportRow(stringResource(R.string.sample_report_september), stringResource(R.string.sample_report_fixed), "+2%") {
+            onReportClick(9)
+        }
+        ReportRow(stringResource(R.string.sample_report_august), stringResource(R.string.sample_report_goal), "-6%") {
+            onReportClick(8)
+        }
     }
 }
 
 @Composable
-private fun ReportRow(month: String, description: String, change: String) {
+private fun ReportRow(month: String, description: String, change: String, onClick: () -> Unit) {
     Row(
-        modifier = Modifier.fillMaxWidth().padding(vertical = 11.dp),
+        modifier = Modifier.fillMaxWidth().clickable(onClick = onClick).padding(vertical = 11.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Box(
@@ -205,11 +295,12 @@ private fun CategoryLegend(color: Color, label: String, value: String) {
 
 @Composable
 private fun AnalysisCard(
+    modifier: Modifier = Modifier,
     containerColor: Color = MaterialTheme.colorScheme.surface,
     content: @Composable ColumnScope.() -> Unit,
 ) {
     Card(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = modifier.fillMaxWidth(),
         shape = RoundedCornerShape(24.dp),
         colors = CardDefaults.cardColors(containerColor = containerColor),
         elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
