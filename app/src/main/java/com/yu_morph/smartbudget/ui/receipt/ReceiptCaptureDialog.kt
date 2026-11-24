@@ -402,7 +402,7 @@ private fun ReviewStep(bitmap: Bitmap, isEncoding: Boolean, onRetake: () -> Unit
                 Modifier
                     .weight(1f)
                     .fillMaxWidth()
-                    .background(MaterialTheme.colorScheme.surfaceVariant, RoundedCornerShape(18.dp))
+                    .background(Color.Black, RoundedCornerShape(18.dp))
                     .clip(RoundedCornerShape(18.dp)),
             contentScale = ContentScale.Fit,
         )

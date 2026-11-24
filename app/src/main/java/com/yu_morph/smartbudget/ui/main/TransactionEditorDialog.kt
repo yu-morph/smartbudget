@@ -544,7 +544,10 @@ private fun EditorTextField(
         enabled = enabled,
         singleLine = true,
         textStyle = TextStyle(fontSize = 15.sp, fontWeight = FontWeight.Medium),
-        placeholder = placeholder?.let { { Text(it, color = MaterialTheme.colorScheme.onSurfaceVariant) } },
+        placeholder =
+            placeholder?.let {
+                { Text(it, color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.46f)) }
+            },
         suffix = suffix?.let { { Text(it, color = MaterialTheme.colorScheme.onSurfaceVariant, fontSize = 14.sp) } },
         visualTransformation = visualTransformation,
         keyboardOptions = KeyboardOptions(keyboardType = keyboardType),
