@@ -145,6 +145,12 @@
     <string name="settings_budget_approaching_notification">Budget limit approaching</string>
     <string name="settings_budget_exceeded_notification">Budget limit exceeded</string>
     <string name="settings_analysis_notification">Spending analysis</string>
+    <string name="budget_notification_channel_name">Budget alerts</string>
+    <string name="budget_notification_channel_description">Alerts for monthly budget usage and limit overruns.</string>
+    <string name="budget_approaching_notification_title">You’re nearing your budget limit</string>
+    <string name="budget_approaching_notification_message">You’ve used %1$d%% of this month’s budget. Used ₩%2$s / Budget ₩%3$s</string>
+    <string name="budget_exceeded_notification_title">You’ve exceeded your budget</string>
+    <string name="budget_exceeded_notification_message">You’ve used %1$d%% of this month’s budget. Review your spending.</string>
     <string name="settings_theme">Display theme</string>
     <string name="settings_theme_light">Light mode</string>
     <string name="settings_theme_dark">Dark mode</string>

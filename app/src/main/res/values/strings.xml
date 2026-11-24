@@ -145,6 +145,12 @@
     <string name="settings_budget_approaching_notification">예산 한도 도달 임박 알림</string>
     <string name="settings_budget_exceeded_notification">예산 한도 초과 알림</string>
     <string name="settings_analysis_notification">소비 분석 알림</string>
+    <string name="budget_notification_channel_name">예산 알림</string>
+    <string name="budget_notification_channel_description">이번 달 예산 사용률과 한도 초과를 알려드립니다.</string>
+    <string name="budget_approaching_notification_title">예산 한도에 가까워졌어요</string>
+    <string name="budget_approaching_notification_message">이번 달 예산의 %1$d%%를 사용했어요. 사용 %2$s원 / 예산 %3$s원</string>
+    <string name="budget_exceeded_notification_title">예산 한도를 초과했어요</string>
+    <string name="budget_exceeded_notification_message">이번 달 예산의 %1$d%%를 사용했어요. 지출을 점검해 보세요.</string>
     <string name="settings_theme">화면 테마</string>
     <string name="settings_theme_light">라이트 모드</string>
     <string name="settings_theme_dark">다크 모드</string>

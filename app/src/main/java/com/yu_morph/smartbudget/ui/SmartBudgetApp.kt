@@ -1,6 +1,10 @@
 package com.yu_morph.smartbudget.ui
 
+import android.Manifest
+import android.os.Build
 import androidx.activity.compose.BackHandler
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
@@ -16,6 +20,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -28,6 +33,8 @@ import com.yu_morph.smartbudget.R
 import com.yu_morph.smartbudget.data.local.DisplayMode
 import com.yu_morph.smartbudget.data.ocr.RemoteReceiptOcrRepository
 import com.yu_morph.smartbudget.data.remote.SmartBudgetApiFactory
+import com.yu_morph.smartbudget.notification.BudgetNotificationCoordinator
+import com.yu_morph.smartbudget.notification.hasNotificationPermission
 import com.yu_morph.smartbudget.ui.auth.AuthCoordinator
 import com.yu_morph.smartbudget.ui.auth.AuthLoadingDialog
 import com.yu_morph.smartbudget.ui.auth.LoginScreen
@@ -40,6 +47,7 @@ import com.yu_morph.smartbudget.ui.main.HomeDashboardCoordinator
 import com.yu_morph.smartbudget.ui.main.HomeNewsCoordinator
 import com.yu_morph.smartbudget.ui.main.MainScreen
 import com.yu_morph.smartbudget.ui.main.MainTab
+import com.yu_morph.smartbudget.ui.main.NotificationSetting
 import com.yu_morph.smartbudget.ui.main.SettingsCoordinator
 import com.yu_morph.smartbudget.ui.main.SettingsDetailDestination
 import com.yu_morph.smartbudget.ui.main.SettingsDetailScreen
@@ -65,14 +73,18 @@ fun SmartBudgetApp(onDisplayModeChanged: (DisplayMode) -> Unit, onLanguageChange
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
     val api = remember(context) { SmartBudgetApiFactory.create(context.applicationContext) }
+    val budgetNotifications = remember(context, api) { BudgetNotificationCoordinator(context, api) }
     val coordinator = remember(context, api, scope) { AuthCoordinator(context, api, scope) }
-    val settingsCoordinator = remember(context, api, scope, onDisplayModeChanged) {
-        SettingsCoordinator(context, api, scope, onDisplayModeChanged, onLanguageChanged)
+    val settingsCoordinator = remember(context, api, scope, budgetNotifications, onDisplayModeChanged) {
+        SettingsCoordinator(context, api, scope, budgetNotifications, onDisplayModeChanged, onLanguageChanged)
     }
-    val budgetBookCoordinator = remember(context, api, scope) { BudgetBookCoordinator(context, api, scope) }
+    val budgetBookCoordinator = remember(context, api, scope, budgetNotifications) {
+        BudgetBookCoordinator(context, api, scope, budgetNotifications)
+    }
     val homeDashboardCoordinator = remember(context, api, scope) { HomeDashboardCoordinator(context, api, scope) }
     val homeNewsCoordinator = remember(context, scope) { HomeNewsCoordinator(context, scope) }
     val receiptOcrRepository = remember(api) { RemoteReceiptOcrRepository(api.ocr) }
+    val onNotificationChanged = rememberNotificationChangeHandler(destination, settingsCoordinator)
     DisposableEffect(api) {
         onDispose(api::close)
     }
@@ -149,7 +161,7 @@ fun SmartBudgetApp(onDisplayModeChanged: (DisplayMode) -> Unit, onLanguageChange
                             settingsCoordinator.syncBankTransactions { openSettings = null }
                         },
                         onLanguageSelected = settingsCoordinator::setLanguage,
-                        onNotificationChanged = settingsCoordinator::setNotification,
+                        onNotificationChanged = onNotificationChanged,
                         onDisplayModeChanged = settingsCoordinator::setDisplayMode,
                         onDeleteAccount = {
                             settingsCoordinator.deleteAccount {
@@ -180,6 +192,57 @@ fun SmartBudgetApp(onDisplayModeChanged: (DisplayMode) -> Unit, onLanguageChange
         if (coordinator.isLoading) AuthLoadingDialog()
         if (settingsCoordinator.state.isLoading) AuthLoadingDialog()
     }
+}
+
+@Composable
+private fun rememberNotificationChangeHandler(
+    destination: AppDestination,
+    settingsCoordinator: SettingsCoordinator,
+): (NotificationSetting, Boolean) -> Unit {
+    val context = LocalContext.current
+    var pendingNotificationType by remember { mutableStateOf<NotificationSetting?>(null) }
+    var permissionRequested by rememberSaveable { mutableStateOf(false) }
+    val permissionLauncher =
+        rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
+            if (granted) pendingNotificationType?.let { settingsCoordinator.setNotification(it, true) }
+            pendingNotificationType = null
+        }
+    val budgetNotificationEnabled =
+        settingsCoordinator.state.appSettings.budgetApproachingNotification ||
+            settingsCoordinator.state.appSettings.budgetExceededNotification
+
+    LaunchedEffect(destination, budgetNotificationEnabled) {
+        if (shouldRequestNotificationPermission(destination, budgetNotificationEnabled, permissionRequested, context)) {
+            permissionRequested = true
+            permissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+        }
+    }
+
+    return { type, enabled ->
+        if (
+            enabled &&
+            Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
+            !hasNotificationPermission(context)
+        ) {
+            pendingNotificationType = type
+            permissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+        } else {
+            settingsCoordinator.setNotification(type, enabled)
+        }
+    }
+}
+
+private fun shouldRequestNotificationPermission(
+    destination: AppDestination,
+    budgetNotificationEnabled: Boolean,
+    permissionRequested: Boolean,
+    context: android.content.Context,
+): Boolean {
+    var shouldRequest =
+        Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU && destination == AppDestination.MAIN
+    shouldRequest = shouldRequest && budgetNotificationEnabled
+    shouldRequest = shouldRequest && !permissionRequested
+    return shouldRequest && !hasNotificationPermission(context)
 }
 
 private inline fun afterProfileSaved(passwordChanged: Boolean, onPasswordChanged: () -> Unit) {

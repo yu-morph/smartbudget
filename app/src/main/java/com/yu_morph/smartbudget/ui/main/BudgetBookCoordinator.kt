@@ -11,6 +11,7 @@ import com.yu_morph.smartbudget.data.remote.api.TransactionListQuery
 import com.yu_morph.smartbudget.data.remote.model.CreateTransactionRequest
 import com.yu_morph.smartbudget.data.remote.model.TransactionData
 import com.yu_morph.smartbudget.data.remote.model.UpdateTransactionRequest
+import com.yu_morph.smartbudget.notification.BudgetNotificationCoordinator
 import com.yu_morph.smartbudget.ui.showAppToast
 import java.time.LocalDate
 import java.time.YearMonth
@@ -35,7 +36,12 @@ data class BudgetBookUiState(
     val isMutating: Boolean = false,
 )
 
-class BudgetBookCoordinator(context: Context, private val api: SmartBudgetApi, private val scope: CoroutineScope) {
+class BudgetBookCoordinator(
+    context: Context,
+    private val api: SmartBudgetApi,
+    private val scope: CoroutineScope,
+    private val budgetNotifications: BudgetNotificationCoordinator,
+) {
     private val applicationContext = context.applicationContext
     private var loadJob: Job? = null
     private var overviewLoadJob: Job? = null
@@ -138,6 +144,7 @@ class BudgetBookCoordinator(context: Context, private val api: SmartBudgetApi, p
                 when (val result = request()) {
                     is ApiResult.Success -> {
                         onSuccess()
+                        scope.launch { budgetNotifications.evaluateAfterLedgerUpdate() }
                         state.month?.let(::loadMonth)
                         loadOverview(overviewState.referenceMonth ?: YearMonth.now())
                     }

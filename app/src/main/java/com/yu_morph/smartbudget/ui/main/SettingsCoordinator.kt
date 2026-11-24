@@ -17,6 +17,7 @@ import com.yu_morph.smartbudget.data.remote.model.ReplaceMonthlyBudgetRequest
 import com.yu_morph.smartbudget.data.remote.model.TransactionSource
 import com.yu_morph.smartbudget.data.remote.model.TransactionType
 import com.yu_morph.smartbudget.data.remote.model.UpdateAccountRequest
+import com.yu_morph.smartbudget.notification.BudgetNotificationCoordinator
 import com.yu_morph.smartbudget.ui.showAppToast
 import java.time.YearMonth
 import java.util.UUID
@@ -53,6 +54,7 @@ class SettingsCoordinator(
     context: Context,
     private val api: SmartBudgetApi,
     private val scope: CoroutineScope,
+    private val budgetNotifications: BudgetNotificationCoordinator,
     private val onDisplayModeChanged: (DisplayMode) -> Unit,
     private val onLanguageChanged: () -> Unit,
 ) {
@@ -293,6 +295,7 @@ class SettingsCoordinator(
                 if (requests.isNotEmpty() && !createTransactionsWithRetry(requests)) return@launch
                 applicationContext.showAppToast(R.string.settings_bank_sync_success, requests.size)
                 onSuccess()
+                scope.launch { budgetNotifications.evaluateAfterLedgerUpdate() }
             } catch (_: Exception) {
                 showToast(R.string.unknown_error)
             } finally {
