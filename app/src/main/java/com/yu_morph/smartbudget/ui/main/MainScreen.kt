@@ -1,3 +1,5 @@
+@file:Suppress("MagicNumber")
+
 package com.yu_morph.smartbudget.ui.main
 
 import android.os.SystemClock
@@ -5,6 +7,7 @@ import androidx.activity.compose.BackHandler
 import androidx.annotation.StringRes
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
@@ -13,6 +16,7 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.animation.togetherWith
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -24,6 +28,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBarsPadding
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
@@ -44,8 +49,12 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
@@ -53,17 +62,21 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.zIndex
 import com.yu_morph.smartbudget.R
 import com.yu_morph.smartbudget.data.remote.news.NewsArticle
 import com.yu_morph.smartbudget.ui.document.MarkdownDocument
 import com.yu_morph.smartbudget.ui.showAppToast
 import com.yu_morph.smartbudget.ui.theme.SmartBudgetGreen
 import java.time.YearMonth
+import kotlin.math.PI
+import kotlin.math.sin
 import kotlinx.coroutines.launch
 
 private val MainNavigationInactiveColor = Color(0xFF737373)
@@ -72,6 +85,16 @@ private val MainActionGradientEnd = Color(0xFF087A55)
 private const val MAIN_TAB_PRESSED_SCALE = 0.88f
 private const val TAB_TRANSITION_DURATION_MILLIS = 260
 private const val TAB_SLIDE_DISTANCE_DIVISOR = 5
+private const val CELEBRATION_DURATION_MILLIS = 1100
+
+private data class ConfettiParticle(
+    val horizontalFraction: Float,
+    val launchVelocity: Float,
+    val gravity: Float,
+    val drift: Float,
+    val size: Float,
+    val color: Color,
+)
 
 internal enum class MainTab(
     @param:StringRes val label: Int,
@@ -186,9 +209,10 @@ internal fun MainScreen(
 
 @Composable
 private fun MainNavigationBar(selectedTab: MainTab, onTabSelected: (MainTab) -> Unit) {
+    var celebrationId by remember { mutableIntStateOf(0) }
     Box(modifier = Modifier.fillMaxWidth()) {
         Surface(
-            modifier = Modifier.padding(top = 12.dp),
+            modifier = Modifier.padding(top = 12.dp).zIndex(1f),
             color = MaterialTheme.colorScheme.surface,
             shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp),
             shadowElevation = 16.dp,
@@ -207,7 +231,16 @@ private fun MainNavigationBar(selectedTab: MainTab, onTabSelected: (MainTab) -> 
                 }
             }
         }
-        MainActionButton(modifier = Modifier.align(Alignment.TopCenter))
+        if (celebrationId > 0) {
+            FabCelebration(
+                celebrationId = celebrationId,
+                modifier = Modifier.align(Alignment.TopCenter),
+            )
+        }
+        MainActionButton(
+            onClick = { celebrationId += 1 },
+            modifier = Modifier.align(Alignment.TopCenter).zIndex(2f),
+        )
     }
 }
 
@@ -255,9 +288,9 @@ private fun MainNavigationTab(tab: MainTab, isSelected: Boolean, onTabSelected: 
 }
 
 @Composable
-private fun MainActionButton(modifier: Modifier = Modifier) {
+private fun MainActionButton(onClick: () -> Unit, modifier: Modifier = Modifier) {
     FloatingActionButton(
-        onClick = {},
+        onClick = onClick,
         modifier = modifier.size(58.dp),
         shape = CircleShape,
         containerColor = Color.Transparent,
@@ -279,5 +312,88 @@ private fun MainActionButton(modifier: Modifier = Modifier) {
                 modifier = Modifier.fillMaxSize().graphicsLayer(scaleX = 1.1f, scaleY = 1.1f),
             )
         }
+    }
+}
+
+@Composable
+private fun FabCelebration(celebrationId: Int, modifier: Modifier = Modifier) {
+    val progress = remember { Animatable(0f) }
+    val density = LocalDensity.current.density
+    val robotResources =
+        remember {
+            intArrayOf(
+                R.drawable.fab_robot_jump_1,
+                R.drawable.fab_robot_jump_2,
+                R.drawable.fab_robot_jump_3,
+                R.drawable.fab_robot_jump_4,
+            )
+        }
+    val particles = remember(celebrationId) { createConfettiParticles(celebrationId) }
+    LaunchedEffect(celebrationId) {
+        progress.snapTo(0f)
+        progress.animateTo(1f, animationSpec = tween(CELEBRATION_DURATION_MILLIS, easing = LinearEasing))
+    }
+    val time = progress.value
+    val verticalOffset = 160f - 1_080f * time + 1_080f * time * time
+    val entranceAlpha = (time / 0.08f).coerceIn(0f, 1f)
+    val exitAlpha = if (time < 0.82f) 1f else ((1f - time) / 0.18f).coerceIn(0f, 1f)
+    val visibility = minOf(entranceAlpha, exitAlpha)
+    val scale = 0.72f + 0.28f * sin(PI.toFloat() * time).coerceAtLeast(0f)
+    Box(modifier = modifier.size(1.dp)) {
+        ConfettiBurst(
+            progress = time,
+            particles = particles,
+            modifier = Modifier.size(width = 340.dp, height = 210.dp).offset(x = (-170).dp, y = (-150).dp),
+        )
+        Image(
+            painter = painterResource(robotResources[(celebrationId - 1) % robotResources.size]),
+            contentDescription = null,
+            modifier =
+                Modifier
+                    .size(132.dp)
+                    .offset(x = (-66).dp, y = (-88).dp)
+                    .graphicsLayer(
+                        translationY = verticalOffset * density,
+                        scaleX = scale,
+                        scaleY = scale,
+                        alpha = visibility,
+                    ),
+        )
+    }
+}
+
+@Composable
+private fun ConfettiBurst(progress: Float, particles: List<ConfettiParticle>, modifier: Modifier = Modifier) {
+    Canvas(modifier = modifier) {
+        particles.forEachIndexed { index, particle ->
+            val delayedTime = ((progress - index * 0.006f) / 0.78f).coerceIn(0f, 1f)
+            if (delayedTime <= 0f) return@forEachIndexed
+            val originX = size.width * 0.5f
+            val originY = size.height * 0.92f
+            val x =
+                originX + (particle.horizontalFraction - 0.5f) * size.width * delayedTime + particle.drift * delayedTime
+            val y = originY - particle.launchVelocity * delayedTime + particle.gravity * delayedTime * delayedTime
+            val alpha = (1f - delayedTime).coerceIn(0f, 1f)
+            drawCircle(
+                color = particle.color.copy(alpha = alpha),
+                radius = particle.size.dp.toPx(),
+                center = androidx.compose.ui.geometry.Offset(x, y),
+            )
+        }
+    }
+}
+
+private fun createConfettiParticles(seed: Int): List<ConfettiParticle> {
+    val colors = listOf(SmartBudgetGreen, Color(0xFFFFC857), Color(0xFF56B4E9), Color(0xFFFF6B6B), Color.White)
+    return List(28) { index ->
+        val mixed = ((seed * 37 + index * 61) % 101) / 100f
+        ConfettiParticle(
+            horizontalFraction = mixed,
+            launchVelocity = 150f + (index % 7) * 11f,
+            gravity = 108f + (index % 5) * 9f,
+            drift = ((index % 3) - 1) * 24f,
+            size = 2.2f + (index % 3),
+            color = colors[index % colors.size],
+        )
     }
 }
