@@ -33,7 +33,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
-import androidx.compose.foundation.progressSemantics
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -244,7 +243,7 @@ private fun BudgetBookOverview(
             ) {
                 Text(
                     stringResource(R.string.budget_book_monthly_statistics),
-                    modifier = Modifier.weight(1f),
+                    modifier = Modifier.weight(1f).padding(start = 8.dp),
                     fontSize = 18.sp,
                     fontWeight = FontWeight.Bold,
                 )
@@ -1081,7 +1080,7 @@ private fun PreviousMonthNavigation(
 private fun MonthlyStatisticsCardContent(stats: MonthlyLedgerStats, budgetAmount: Int?, onClick: () -> Unit) {
     val languageTag = LocalConfiguration.current.locales[0].toLanguageTag()
     Column(
-        modifier = Modifier.fillMaxWidth().padding(top = 10.dp),
+        modifier = Modifier.fillMaxWidth().padding(top = 2.dp),
         verticalArrangement = Arrangement.spacedBy(10.dp),
     ) {
         Row(
@@ -1107,12 +1106,12 @@ private fun MonthlyStatisticsCardContent(stats: MonthlyLedgerStats, budgetAmount
                 modifier = Modifier.weight(1f),
             )
         }
-        HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f))
-        MonthlyMetrics(stats)
-        HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f))
+        HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.2f))
         PreviousMonthBudgetStatus(budgetAmount = budgetAmount, usedAmount = stats.amounts.expense)
+        HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.2f))
+        MonthlyMetrics(stats)
         if (stats.largestExpenseCategories.isNotEmpty()) {
-            HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f))
+            HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.2f))
             CategoryStatisticsTags(
                 title = stringResource(R.string.budget_book_largest_expense_categories),
                 tags =
@@ -1128,26 +1127,27 @@ private fun MonthlyStatisticsCardContent(stats: MonthlyLedgerStats, budgetAmount
                     },
             )
         }
+        HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.2f))
         Button(
             onClick = onClick,
-            modifier = Modifier.align(Alignment.CenterHorizontally).height(36.dp),
+            modifier = Modifier.align(Alignment.End).height(36.dp),
             shape = RoundedCornerShape(10.dp),
-            contentPadding = PaddingValues(horizontal = 12.dp, vertical = 4.dp),
+            contentPadding = PaddingValues(horizontal = 2.dp, vertical = 4.dp),
             colors =
                 ButtonDefaults.buttonColors(
-                    containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.45f),
-                    contentColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                    containerColor = MaterialTheme.colorScheme.surface,
+                    contentColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f),
                 ),
         ) {
             Text(
                 stringResource(R.string.budget_book_view_ledger),
                 fontSize = 12.sp,
-                fontWeight = FontWeight.SemiBold,
+                fontWeight = FontWeight.Medium,
             )
             Icon(
                 Icons.Outlined.ChevronRight,
                 contentDescription = null,
-                modifier = Modifier.size(16.dp),
+                modifier = Modifier.size(14.dp),
             )
         }
     }
@@ -1158,7 +1158,7 @@ private fun PreviousMonthBudgetStatus(budgetAmount: Int?, usedAmount: Int) {
     val progress = budgetUsageProgress(budgetAmount, usedAmount)
     val progressColor = progress?.let(::budgetUsageColor) ?: MaterialTheme.colorScheme.outlineVariant
     Column(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier.fillMaxWidth().padding(bottom = 4.dp),
         verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {
         Row(
@@ -1166,7 +1166,7 @@ private fun PreviousMonthBudgetStatus(budgetAmount: Int?, usedAmount: Int) {
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+            Column{
                 Text(
                     text =
                         budgetAmount?.let {
@@ -1179,6 +1179,7 @@ private fun PreviousMonthBudgetStatus(budgetAmount: Int?, usedAmount: Int) {
                     stringResource(R.string.budget_book_used_amount, usedAmount.withComma()),
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     fontSize = 11.sp,
+                    lineHeight = 11.sp,
                 )
             }
             BudgetUsageIndicator(
@@ -1211,7 +1212,7 @@ private fun MonthlyMetrics(stats: MonthlyLedgerStats) {
             ratio < 200 -> CalendarWarningColor
             else -> CalendarIncomeColor
         }
-    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+    Row(modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp), horizontalArrangement = Arrangement.spacedBy(16.dp)) {
         MonthlyMetric(
             modifier = Modifier.weight(1f),
             label = stringResource(R.string.budget_book_income_expense_ratio),
@@ -1294,7 +1295,7 @@ private fun MonthlyMetric(
 private fun CategoryStatisticsTags(title: String, tags: List<CategoryStatTag>) {
     Column(verticalArrangement = Arrangement.spacedBy(5.dp)) {
         Text(title, color = MaterialTheme.colorScheme.onSurfaceVariant, fontSize = 11.sp)
-        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+        Row(modifier = Modifier.fillMaxWidth().padding(bottom = 4.dp), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
             tags.forEach { tag ->
                 val category = transactionCategoryUi(tag.category)
                 Surface(

@@ -51,12 +51,12 @@ import coil3.compose.AsyncImage
 import com.yu_morph.smartbudget.R
 import com.yu_morph.smartbudget.data.remote.news.NewsArticle
 import com.yu_morph.smartbudget.ui.theme.SmartBudgetGreen
+import kotlinx.coroutines.delay
 import java.time.Instant
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.util.Locale
 import kotlin.math.roundToInt
-import kotlinx.coroutines.delay
 
 @Composable
 internal fun NewsCard(
@@ -79,8 +79,8 @@ internal fun NewsCard(
             )
             HorizontalDivider(
                 modifier = Modifier.fillMaxWidth(),
-                thickness = HomeSectionDividerThickness,
-                color = homeSectionDividerColor(),
+                thickness = 0.5.dp,
+                color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.45f),
             )
             EconomyNewsSection(
                 state = state,
@@ -214,7 +214,7 @@ private fun EconomyNewsSection(
             visibleArticles.forEachIndexed { index, article ->
                 EconomyArticleRow(article = article, onClick = { onArticleClick(article) })
                 if (index != visibleArticles.lastIndex) {
-                    HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f))
+                    HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.2f))
                 }
             }
         }
