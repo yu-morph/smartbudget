@@ -38,7 +38,7 @@ class BudgetBookOverviewTest {
     }
 
     @Test
-    fun `이전 월 통계는 지출 카테고리를 순위별로 집계한다`() {
+    fun `이전 월 통계는 지출 금액이 큰 카테고리를 순위별로 집계한다`() {
         val transactions =
             listOf(
                 transaction(id = 1, type = TransactionType.INCOME, amount = 100_000),
@@ -54,7 +54,6 @@ class BudgetBookOverviewTest {
 
         assertEquals(85, stats.expenseRatioPercent)
         assertEquals(25_000, stats.expenseChange)
-        assertEquals(CategoryOccurrenceStat("food", 2), stats.frequentExpenseCategories.first())
         assertEquals(CategoryAmountStat("transport", 50_000), stats.largestExpenseCategories.first())
     }
 

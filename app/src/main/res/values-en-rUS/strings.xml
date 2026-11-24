@@ -184,9 +184,7 @@
     <string name="budget_book_expense">Expense</string>
     <string name="budget_book_fixed_cost">Fixed cost</string>
     <string name="budget_book_previous_months">Previous monthly ledgers</string>
-    <string name="budget_book_frequent_expense_categories">Frequent expenses</string>
     <string name="budget_book_largest_expense_categories">Top expense amounts</string>
-    <string name="budget_book_category_occurrences">%1$d times</string>
     <string name="budget_book_income_expense_ratio">Expenses to income</string>
     <string name="budget_book_no_income_ratio">No income</string>
     <string name="budget_book_expense_change">Expense change</string>

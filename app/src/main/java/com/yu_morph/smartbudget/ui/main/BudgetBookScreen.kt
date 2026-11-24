@@ -109,13 +109,10 @@ private const val MONTH_TRANSITION_DURATION_MILLIS = 240
 
 internal data class MonthlyTransactionAmounts(val income: Int, val expense: Int)
 
-internal data class CategoryOccurrenceStat(val category: String, val count: Int)
-
 internal data class CategoryAmountStat(val category: String, val amount: Int)
 
 internal data class MonthlyLedgerStats(
     val amounts: MonthlyTransactionAmounts,
-    val frequentExpenseCategories: List<CategoryOccurrenceStat>,
     val largestExpenseCategories: List<CategoryAmountStat>,
     val expenseRatioPercent: Int?,
     val expenseChange: Int,
@@ -136,13 +133,6 @@ internal fun monthlyLedgerStats(
     val amounts = monthlyTransactionAmounts(transactions)
     val previousAmounts = monthlyTransactionAmounts(previousMonthTransactions)
     val expenses = transactions.filter { it.type == TransactionType.EXPENSE }
-    val frequentCategories =
-        expenses
-            .groupingBy(TransactionData::category)
-            .eachCount()
-            .map { (category, count) -> CategoryOccurrenceStat(category, count) }
-            .sortedWith(compareByDescending<CategoryOccurrenceStat> { it.count }.thenBy { it.category })
-            .take(3)
     val largestCategories =
         expenses
             .groupBy(TransactionData::category)
@@ -151,7 +141,6 @@ internal fun monthlyLedgerStats(
             .take(3)
     return MonthlyLedgerStats(
         amounts = amounts,
-        frequentExpenseCategories = frequentCategories,
         largestExpenseCategories = largestCategories,
         expenseRatioPercent =
             amounts.income.takeIf { it > 0 }?.let { income ->
@@ -1058,18 +1047,6 @@ private fun PreviousMonthRow(month: YearMonth, stats: MonthlyLedgerStats, onClic
             )
         }
         MonthlyMetrics(stats)
-        if (stats.frequentExpenseCategories.isNotEmpty()) {
-            CategoryStatisticsTags(
-                title = stringResource(R.string.budget_book_frequent_expense_categories),
-                tags =
-                    stats.frequentExpenseCategories.map { stat ->
-                        CategoryStatTag(
-                            category = stat.category,
-                            value = stringResource(R.string.budget_book_category_occurrences, stat.count),
-                        )
-                    },
-            )
-        }
         if (stats.largestExpenseCategories.isNotEmpty()) {
             CategoryStatisticsTags(
                 title = stringResource(R.string.budget_book_largest_expense_categories),
