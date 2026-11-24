@@ -76,12 +76,9 @@ internal data class AnalysisSurvey(
     val interest: String = "",
 )
 
-private data class AnalysisRequestInput(
-    val year: Int,
-    val month: Int,
-    val survey: AnalysisSurvey,
-)
+private data class AnalysisRequestInput(val year: Int, val month: Int, val survey: AnalysisSurvey)
 
+@Suppress("LongMethod", "CyclomaticComplexMethod")
 @Composable
 internal fun AnalysisFlowScreen(
     bottomPadding: Dp,
@@ -110,13 +107,16 @@ internal fun AnalysisFlowScreen(
     BackHandler {
         step = when (step) {
             AnalysisFlowStep.REQUEST -> AnalysisFlowStep.SURVEY
+
             AnalysisFlowStep.LOADING -> AnalysisFlowStep.REQUEST
+
             AnalysisFlowStep.RESULT -> if (initialStep == AnalysisFlowStep.RESULT) {
                 onBack()
                 AnalysisFlowStep.RESULT
             } else {
                 AnalysisFlowStep.REQUEST
             }
+
             AnalysisFlowStep.SURVEY -> {
                 onBack()
                 AnalysisFlowStep.SURVEY
@@ -158,11 +158,15 @@ internal fun AnalysisFlowScreen(
                 }
             },
         )
+
         AnalysisFlowStep.REQUEST -> AnalysisRequestScreen(
             bottomPadding = bottomPadding,
             year = year,
             month = month,
-            onYearMonthChange = { newYear, newMonth -> year = newYear; month = newMonth },
+            onYearMonthChange = { newYear, newMonth ->
+                year = newYear
+                month = newMonth
+            },
             onBack = { step = AnalysisFlowStep.SURVEY },
             onStart = {
                 submittedRequest =
@@ -176,7 +180,9 @@ internal fun AnalysisFlowScreen(
                 step = AnalysisFlowStep.LOADING
             },
         )
+
         AnalysisFlowStep.LOADING -> AnalysisLoadingScreen(bottomPadding)
+
         AnalysisFlowStep.RESULT -> AnalysisResultScreen(
             bottomPadding = bottomPadding,
             year = submittedRequest?.year ?: year,
@@ -189,6 +195,7 @@ internal fun AnalysisFlowScreen(
     }
 }
 
+@Suppress("LongMethod")
 @Composable
 private fun SurveyScreen(
     bottomPadding: Dp,
@@ -207,7 +214,9 @@ private fun SurveyScreen(
 ) {
     MainTabContainer(bottomPadding) {
         Row(verticalAlignment = Alignment.CenterVertically) {
-            IconButton(onClick = onBack) { Icon(Icons.Outlined.ArrowBack, contentDescription = stringResource(R.string.navigate_back)) }
+            IconButton(onClick = onBack) {
+                Icon(Icons.Outlined.ArrowBack, contentDescription = stringResource(R.string.navigate_back))
+            }
             Text(stringResource(R.string.analysis_custom_title), fontSize = 20.sp, fontWeight = FontWeight.Bold)
         }
         Text(stringResource(R.string.analysis_survey_heading), fontSize = 24.sp, fontWeight = FontWeight.Bold)
@@ -220,9 +229,19 @@ private fun SurveyScreen(
             values = listOf("male", "female"),
             onSelect = onGenderChange,
         )
-        SurveyField(R.string.analysis_survey_birth_date, survey.birthDate, onBirthDateChange, R.string.analysis_survey_birth_hint)
+        SurveyField(
+            R.string.analysis_survey_birth_date,
+            survey.birthDate,
+            onBirthDateChange,
+            R.string.analysis_survey_birth_hint,
+        )
         SurveyField(R.string.analysis_survey_job, survey.job, onJobChange, R.string.analysis_survey_job_hint)
-        SurveyField(R.string.analysis_survey_workplace, survey.workplace, onWorkplaceChange, R.string.analysis_survey_workplace_hint)
+        SurveyField(
+            R.string.analysis_survey_workplace,
+            survey.workplace,
+            onWorkplaceChange,
+            R.string.analysis_survey_workplace_hint,
+        )
         EducationField(survey.education, onEducationChange)
         SurveyLabel(R.string.analysis_survey_loan)
         ChoiceRow(
@@ -232,8 +251,13 @@ private fun SurveyScreen(
             onSelect = { onLoanChange(it == "yes") },
         )
         if (survey.hasLoan) {
-            SurveyField(R.string.analysis_survey_loan_details, survey.loanDetails, onLoanDetailsChange,
-                R.string.analysis_survey_loan_hint, keyboardType = KeyboardType.Number)
+            SurveyField(
+                R.string.analysis_survey_loan_details,
+                survey.loanDetails,
+                onLoanDetailsChange,
+                R.string.analysis_survey_loan_hint,
+                keyboardType = KeyboardType.Number,
+            )
         }
         SurveyLabel(R.string.analysis_survey_direction)
         ChoiceRow(
@@ -242,8 +266,13 @@ private fun SurveyScreen(
             values = listOf("save", "maintain"),
             onSelect = onDirectionChange,
         )
-        SurveyField(R.string.analysis_survey_interest, survey.interest, onInterestChange,
-            R.string.analysis_survey_interest_hint, minLines = 3)
+        SurveyField(
+            R.string.analysis_survey_interest,
+            survey.interest,
+            onInterestChange,
+            R.string.analysis_survey_interest_hint,
+            minLines = 3,
+        )
         Spacer(Modifier.height(12.dp))
         PrimaryAuthButton(text = stringResource(R.string.analysis_survey_save_button), onClick = onSave)
         Spacer(Modifier.height(8.dp))
@@ -286,13 +315,22 @@ private fun ChoiceRow(labels: List<Int>, values: List<String>, selected: String,
             Box(
                 modifier = Modifier.weight(1f).height(48.dp)
                     .clip(RoundedCornerShape(14.dp))
-                    .background(if (isSelected) SmartBudgetGreen.copy(alpha = 0.12f) else MaterialTheme.colorScheme.surface)
-                    .border(1.dp, if (isSelected) SmartBudgetGreen else MaterialTheme.colorScheme.outlineVariant, RoundedCornerShape(14.dp))
+                    .background(
+                        if (isSelected) SmartBudgetGreen.copy(alpha = 0.12f) else MaterialTheme.colorScheme.surface,
+                    )
+                    .border(
+                        1.dp,
+                        if (isSelected) SmartBudgetGreen else MaterialTheme.colorScheme.outlineVariant,
+                        RoundedCornerShape(14.dp),
+                    )
                     .clickable { onSelect(values[index]) },
                 contentAlignment = Alignment.Center,
             ) {
-                Text(stringResource(label), color = if (isSelected) SmartBudgetGreen else MaterialTheme.colorScheme.onSurface,
-                    fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal)
+                Text(
+                    stringResource(label),
+                    color = if (isSelected) SmartBudgetGreen else MaterialTheme.colorScheme.onSurface,
+                    fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
+                )
             }
         }
     }
@@ -324,7 +362,8 @@ private fun EducationField(value: String, onChange: (String) -> Unit) {
                     stringResource(R.string.analysis_education_other),
                 ).forEach { item ->
                     DropdownMenuItem(text = { Text(item) }, onClick = {
-                        onChange(item); expanded = false
+                        onChange(item)
+                        expanded = false
                     })
                 }
             }
@@ -332,6 +371,7 @@ private fun EducationField(value: String, onChange: (String) -> Unit) {
     }
 }
 
+@Suppress("LongMethod")
 @Composable
 private fun AnalysisRequestScreen(
     bottomPadding: Dp,
@@ -342,26 +382,63 @@ private fun AnalysisRequestScreen(
     onStart: () -> Unit,
 ) {
     MainTabContainer(bottomPadding) {
-        IconButton(onClick = onBack) { Icon(Icons.Outlined.ArrowBack, contentDescription = stringResource(R.string.navigate_back)) }
+        IconButton(onClick = onBack) {
+            Icon(Icons.Outlined.ArrowBack, contentDescription = stringResource(R.string.navigate_back))
+        }
         Text(stringResource(R.string.analysis_request_title), fontSize = 26.sp, fontWeight = FontWeight.Bold)
         Text(stringResource(R.string.analysis_request_subtitle), color = MaterialTheme.colorScheme.onSurfaceVariant)
         Spacer(Modifier.height(32.dp))
-        Image(painterResource(R.drawable.home_greeting_robot), contentDescription = null,
-            modifier = Modifier.fillMaxWidth().height(220.dp))
+        Image(
+            painterResource(R.drawable.home_greeting_robot),
+            contentDescription = null,
+            modifier = Modifier.fillMaxWidth().height(220.dp),
+        )
         Spacer(Modifier.height(24.dp))
         Text(stringResource(R.string.analysis_request_month), fontWeight = FontWeight.Bold, fontSize = 18.sp)
         Card(colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)) {
-            Row(modifier = Modifier.fillMaxWidth().padding(12.dp), verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.SpaceBetween) {
-                IconButton(onClick = { onYearMonthChange(if (month == 1) year - 1 else year, if (month == 1) 12 else month - 1) }) {
-                    Icon(Icons.Outlined.ChevronLeft, contentDescription = stringResource(R.string.analysis_previous_month))
+            Row(
+                modifier = Modifier.fillMaxWidth().padding(12.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween,
+            ) {
+                IconButton(onClick = {
+                    onYearMonthChange(
+                        if (month ==
+                            1
+                        ) {
+                            year - 1
+                        } else {
+                            year
+                        },
+                        if (month == 1) 12 else month - 1,
+                    )
+                }) {
+                    Icon(
+                        Icons.Outlined.ChevronLeft,
+                        contentDescription = stringResource(R.string.analysis_previous_month),
+                    )
                 }
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Icon(Icons.Outlined.CalendarMonth, contentDescription = null, tint = SmartBudgetGreen)
-                    Text(stringResource(R.string.year_month, year, month), modifier = Modifier.padding(start = 10.dp),
-                        fontSize = 20.sp, fontWeight = FontWeight.Bold)
+                    Text(
+                        stringResource(R.string.year_month, year, month),
+                        modifier = Modifier.padding(start = 10.dp),
+                        fontSize = 20.sp,
+                        fontWeight = FontWeight.Bold,
+                    )
                 }
-                IconButton(onClick = { onYearMonthChange(if (month == 12) year + 1 else year, if (month == 12) 1 else month + 1) }) {
+                IconButton(onClick = {
+                    onYearMonthChange(
+                        if (month ==
+                            12
+                        ) {
+                            year + 1
+                        } else {
+                            year
+                        },
+                        if (month == 12) 1 else month + 1,
+                    )
+                }) {
                     Icon(Icons.Outlined.ChevronRight, contentDescription = stringResource(R.string.analysis_next_month))
                 }
             }
@@ -379,62 +456,120 @@ private fun AnalysisLoadingScreen(bottomPadding: Dp) {
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         Image(painterResource(R.drawable.bank_sync_robot), contentDescription = null, modifier = Modifier.size(220.dp))
-        Text(stringResource(R.string.analysis_loading_title), modifier = Modifier.padding(top = 22.dp),
-            fontSize = 24.sp, fontWeight = FontWeight.Bold)
-        Text(stringResource(R.string.analysis_loading_subtitle), modifier = Modifier.padding(top = 8.dp),
-            color = MaterialTheme.colorScheme.onSurfaceVariant)
+        Text(
+            stringResource(R.string.analysis_loading_title),
+            modifier = Modifier.padding(top = 22.dp),
+            fontSize = 24.sp,
+            fontWeight = FontWeight.Bold,
+        )
+        Text(
+            stringResource(R.string.analysis_loading_subtitle),
+            modifier = Modifier.padding(top = 8.dp),
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
         LinearProgressIndicator(
             modifier = Modifier.padding(top = 24.dp).fillMaxWidth(0.72f).height(6.dp).clip(CircleShape),
             color = SmartBudgetGreen,
             trackColor = SmartBudgetGreen.copy(alpha = 0.16f),
         )
-        Text(stringResource(R.string.analysis_loading_wait), modifier = Modifier.padding(top = 18.dp),
-            color = MaterialTheme.colorScheme.onSurfaceVariant)
+        Text(
+            stringResource(R.string.analysis_loading_wait),
+            modifier = Modifier.padding(top = 18.dp),
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
     }
 }
 
+@Suppress("LongMethod")
 @Composable
 private fun AnalysisResultScreen(bottomPadding: Dp, year: Int, month: Int, interest: String, onBack: () -> Unit) {
     MainTabContainer(bottomPadding) {
         Row(verticalAlignment = Alignment.CenterVertically) {
-            IconButton(onClick = onBack) { Icon(Icons.Outlined.ArrowBack, contentDescription = stringResource(R.string.navigate_back)) }
-            Text(stringResource(R.string.analysis_result_title, year, month), fontSize = 20.sp, fontWeight = FontWeight.Bold)
+            IconButton(onClick = onBack) {
+                Icon(Icons.Outlined.ArrowBack, contentDescription = stringResource(R.string.navigate_back))
+            }
+            Text(
+                stringResource(R.string.analysis_result_title, year, month),
+                fontSize = 20.sp,
+                fontWeight = FontWeight.Bold,
+            )
         }
         ResultCard(R.string.analysis_result_ai_title) {
             Row(horizontalArrangement = Arrangement.SpaceBetween, modifier = Modifier.fillMaxWidth()) {
-                Text(stringResource(R.string.analysis_result_ai_body), modifier = Modifier.weight(1f), lineHeight = 22.sp)
+                Text(
+                    stringResource(R.string.analysis_result_ai_body),
+                    modifier = Modifier.weight(1f),
+                    lineHeight = 22.sp,
+                )
                 Icon(Icons.Outlined.Lightbulb, contentDescription = null, tint = SmartBudgetGreen)
             }
         }
         ResultCard(R.string.analysis_result_total_title) {
             Text(stringResource(R.string.analysis_result_total), fontSize = 28.sp, fontWeight = FontWeight.Bold)
-            Text(stringResource(R.string.analysis_result_change), color = Color(0xFFE2533F), fontWeight = FontWeight.Bold)
+            Text(
+                stringResource(R.string.analysis_result_change),
+                color = Color(0xFFE2533F),
+                fontWeight = FontWeight.Bold,
+            )
         }
         ResultCard(R.string.analysis_result_categories_title) {
-            ResultLine(R.string.analysis_result_food_category, R.string.analysis_result_food_count, R.string.analysis_result_food_note)
-            ResultLine(R.string.analysis_result_transport_category, R.string.analysis_result_transport_count, R.string.analysis_result_transport_note)
-            ResultLine(R.string.analysis_result_living_category, R.string.analysis_result_living_count, R.string.analysis_result_living_note)
+            ResultLine(
+                R.string.analysis_result_food_category,
+                R.string.analysis_result_food_count,
+                R.string.analysis_result_food_note,
+            )
+            ResultLine(
+                R.string.analysis_result_transport_category,
+                R.string.analysis_result_transport_count,
+                R.string.analysis_result_transport_note,
+            )
+            ResultLine(
+                R.string.analysis_result_living_category,
+                R.string.analysis_result_living_count,
+                R.string.analysis_result_living_note,
+            )
         }
         ResultCard(R.string.analysis_result_health_title) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 HealthScore(modifier = Modifier.size(116.dp))
                 Column(Modifier.padding(start = 20.dp)) {
-                    Text(stringResource(R.string.analysis_result_health_grade), color = SmartBudgetGreen, fontWeight = FontWeight.Bold)
-                    Text(stringResource(R.string.analysis_result_health_body), modifier = Modifier.padding(top = 8.dp), lineHeight = 20.sp)
+                    Text(
+                        stringResource(R.string.analysis_result_health_grade),
+                        color = SmartBudgetGreen,
+                        fontWeight = FontWeight.Bold,
+                    )
+                    Text(
+                        stringResource(R.string.analysis_result_health_body),
+                        modifier = Modifier.padding(top = 8.dp),
+                        lineHeight = 20.sp,
+                    )
                 }
             }
         }
         ResultCard(R.string.analysis_result_weekday_title) {
             WeekdayChart()
-            Text(stringResource(R.string.analysis_result_weekday_note), modifier = Modifier.padding(top = 12.dp),
-                color = SmartBudgetGreen, lineHeight = 20.sp)
+            Text(
+                stringResource(R.string.analysis_result_weekday_note),
+                modifier = Modifier.padding(top = 12.dp),
+                color = SmartBudgetGreen,
+                lineHeight = 20.sp,
+            )
         }
-        AdviceCard(R.string.analysis_result_save_advice, listOf(
-            R.string.analysis_result_save_1, R.string.analysis_result_save_2, R.string.analysis_result_save_3,
-        ))
-        AdviceCard(R.string.analysis_result_maintain_advice, listOf(
-            R.string.analysis_result_maintain_1, R.string.analysis_result_maintain_2,
-        ))
+        AdviceCard(
+            R.string.analysis_result_save_advice,
+            listOf(
+                R.string.analysis_result_save_1,
+                R.string.analysis_result_save_2,
+                R.string.analysis_result_save_3,
+            ),
+        )
+        AdviceCard(
+            R.string.analysis_result_maintain_advice,
+            listOf(
+                R.string.analysis_result_maintain_1,
+                R.string.analysis_result_maintain_2,
+            ),
+        )
         ResultCard(R.string.analysis_result_interest_title) {
             Text(
                 if (interest.isBlank()) {
@@ -445,79 +580,9 @@ private fun AnalysisResultScreen(bottomPadding: Dp, year: Int, month: Int, inter
                 lineHeight = 21.sp,
             )
         }
-        ResultCard(R.string.analysis_result_news_title) { Text(stringResource(R.string.analysis_result_news_body), lineHeight = 21.sp) }
+        ResultCard(R.string.analysis_result_news_title) {
+            Text(stringResource(R.string.analysis_result_news_body), lineHeight = 21.sp)
+        }
         Spacer(Modifier.height(16.dp))
-    }
-}
-
-@Composable
-private fun ResultCard(title: Int, content: @Composable () -> Unit) {
-    Card(modifier = Modifier.fillMaxWidth().padding(bottom = 14.dp),
-        shape = RoundedCornerShape(22.dp), colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)) {
-        Column(Modifier.fillMaxWidth().padding(18.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-            Text(stringResource(title), fontSize = 18.sp, fontWeight = FontWeight.Bold)
-            content()
-        }
-    }
-}
-
-@Composable
-private fun ResultLine(category: Int, count: Int, note: Int) {
-    Row(Modifier.fillMaxWidth().padding(vertical = 8.dp), verticalAlignment = Alignment.CenterVertically) {
-        Text(stringResource(category), fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f))
-        Text(stringResource(count), color = SmartBudgetGreen, fontWeight = FontWeight.Bold)
-        Text(stringResource(note), modifier = Modifier.weight(1.5f).padding(start = 12.dp),
-            color = MaterialTheme.colorScheme.onSurfaceVariant, fontSize = 13.sp)
-    }
-}
-
-@Composable
-private fun HealthScore(modifier: Modifier) {
-    Box(modifier, contentAlignment = Alignment.Center) {
-        Canvas(Modifier.fillMaxSize().padding(6.dp)) {
-            drawArc(Color(0xFFDCE5E9), -90f, 360f, false, style = Stroke(14.dp.toPx()))
-            drawArc(SmartBudgetGreen, -90f, 280.8f, false, style = Stroke(14.dp.toPx(), cap = StrokeCap.Round))
-        }
-        Text(stringResource(R.string.analysis_result_health_score), fontSize = 30.sp, fontWeight = FontWeight.Bold)
-    }
-}
-
-@Composable
-private fun WeekdayChart() {
-    val values = listOf(0.55f, 0.50f, 0.61f, 0.66f, 0.95f, 0.86f, 0.81f)
-    val weekdayResources = listOf(
-        R.string.weekday_monday,
-        R.string.weekday_tuesday,
-        R.string.weekday_wednesday,
-        R.string.weekday_thursday,
-        R.string.weekday_friday,
-        R.string.weekday_saturday,
-        R.string.weekday_sunday,
-    )
-    Row(Modifier.fillMaxWidth().height(136.dp), horizontalArrangement = Arrangement.spacedBy(8.dp),
-        verticalAlignment = Alignment.Bottom) {
-        values.forEachIndexed { index, value ->
-            Column(Modifier.weight(1f), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Bottom) {
-                Box(Modifier.fillMaxWidth().height((94 * value).dp).clip(RoundedCornerShape(topStart = 6.dp, topEnd = 6.dp))
-                    .background(if (index == 4) SmartBudgetGreen else SmartBudgetGreen.copy(alpha = 0.25f)))
-                Text(stringResource(weekdayResources[index]), modifier = Modifier.padding(top = 6.dp),
-                    fontSize = 11.sp, color = if (index == 4) SmartBudgetGreen else MaterialTheme.colorScheme.onSurfaceVariant)
-            }
-        }
-    }
-}
-
-@Composable
-private fun AdviceCard(title: Int, advice: List<Int>) {
-    ResultCard(title) {
-        advice.forEach { item ->
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Box(Modifier.size(22.dp).background(SmartBudgetGreen, CircleShape), contentAlignment = Alignment.Center) {
-                    Text("✓", color = Color.White, fontWeight = FontWeight.Bold)
-                }
-                Text(stringResource(item), modifier = Modifier.padding(start = 10.dp), lineHeight = 20.sp)
-            }
-        }
     }
 }

@@ -47,8 +47,8 @@ import androidx.compose.ui.unit.sp
 import com.yu_morph.smartbudget.R
 import com.yu_morph.smartbudget.ui.theme.SmartBudgetGreen
 
-private val AnalysisSlate = Color(0xFF667386)
-private val AnalysisBlue = Color(0xFF8CA2B8)
+internal val AnalysisSlate = Color(0xFF667386)
+internal val AnalysisBlue = Color(0xFF8CA2B8)
 private val AnalysisOrange = Color(0xFFF0A04B)
 
 @Composable
@@ -80,13 +80,19 @@ internal fun AnalysisScreen(bottomPadding: Dp) {
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Text(stringResource(R.string.analysis_title), fontSize = 24.sp, fontWeight = FontWeight.Bold)
-            TextButton(onClick = { requestAfterSurvey = true; flow = AnalysisFlowStep.SURVEY }) {
+            TextButton(onClick = {
+                requestAfterSurvey = true
+                flow = AnalysisFlowStep.SURVEY
+            }) {
                 Icon(Icons.Outlined.Add, contentDescription = null, tint = SmartBudgetGreen)
                 Text(stringResource(R.string.analysis_new_report), color = SmartBudgetGreen)
             }
         }
         Spacer(Modifier.height(12.dp))
-        SurveySummaryCard(survey = survey, onClick = { requestAfterSurvey = false; flow = AnalysisFlowStep.SURVEY })
+        SurveySummaryCard(survey = survey, onClick = {
+            requestAfterSurvey = false
+            flow = AnalysisFlowStep.SURVEY
+        })
         Spacer(Modifier.height(14.dp))
         PreviousReportsCard(onReportClick = { reportMonth ->
             selectedYear = 2026
@@ -189,16 +195,6 @@ private fun CategoryCard() {
 }
 
 @Composable
-private fun DonutChart(modifier: Modifier = Modifier) {
-    Canvas(modifier) {
-        val stroke = Stroke(width = 22.dp.toPx(), cap = StrokeCap.Butt)
-        drawArc(SmartBudgetGreen, -90f, 162f, false, style = stroke)
-        drawArc(AnalysisSlate, 72f, 108f, false, style = stroke)
-        drawArc(AnalysisBlue, 180f, 90f, false, style = stroke)
-    }
-}
-
-@Composable
 private fun TrendCard() {
     AnalysisCard {
         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
@@ -221,25 +217,6 @@ private fun TrendCard() {
 }
 
 @Composable
-private fun TrendChart(modifier: Modifier = Modifier) {
-    val gridColor = MaterialTheme.colorScheme.outlineVariant
-    Canvas(modifier) {
-        repeat(4) { index ->
-            val y = size.height * index / 3f
-            drawLine(gridColor, Offset(0f, y), Offset(size.width, y), strokeWidth = 1.dp.toPx())
-        }
-        val values = listOf(0.62f, 0.48f, 0.56f, 0.35f, 0.44f, 0.22f)
-        val points = values.mapIndexed { index, value ->
-            Offset(size.width * index / (values.size - 1), size.height * value)
-        }
-        points.zipWithNext().forEach { (start, end) ->
-            drawLine(SmartBudgetGreen, start, end, strokeWidth = 3.dp.toPx(), cap = StrokeCap.Round)
-        }
-        points.forEach { drawCircle(SmartBudgetGreen, radius = 5.dp.toPx(), center = it) }
-    }
-}
-
-@Composable
 private fun PreviousReportsCard(onReportClick: (Int) -> Unit) {
     AnalysisCard {
         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
@@ -254,7 +231,11 @@ private fun PreviousReportsCard(onReportClick: (Int) -> Unit) {
         ReportRow(stringResource(R.string.sample_report_october), stringResource(R.string.sample_report_food), "-3%") {
             onReportClick(10)
         }
-        ReportRow(stringResource(R.string.sample_report_september), stringResource(R.string.sample_report_fixed), "+2%") {
+        ReportRow(
+            stringResource(R.string.sample_report_september),
+            stringResource(R.string.sample_report_fixed),
+            "+2%",
+        ) {
             onReportClick(9)
         }
         ReportRow(stringResource(R.string.sample_report_august), stringResource(R.string.sample_report_goal), "-6%") {
