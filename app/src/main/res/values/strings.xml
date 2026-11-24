@@ -185,6 +185,8 @@
     <string name="budget_book_expense">지출</string>
     <string name="budget_book_fixed_cost">고정비</string>
     <string name="budget_book_previous_months">이전 월 가계부</string>
+    <string name="budget_book_monthly_statistics">월별 통계</string>
+    <string name="budget_book_view_ledger">가계부 보기</string>
     <string name="budget_book_largest_expense_categories">지출 금액 상위</string>
     <string name="budget_book_income_expense_ratio">수입 대비 지출</string>
     <string name="budget_book_no_income_ratio">수입 없음</string>

@@ -45,9 +45,9 @@ class BudgetBookCoordinator(context: Context, private val api: SmartBudgetApi, p
     var overviewState by mutableStateOf(BudgetBookOverviewUiState())
         private set
 
-    fun loadOverview(referenceMonth: YearMonth = YearMonth.now().minusMonths(1)) {
-        val latestPreviousMonth = YearMonth.now().minusMonths(1)
-        val selectedMonth = referenceMonth.coerceAtMost(latestPreviousMonth)
+    fun loadOverview(referenceMonth: YearMonth = YearMonth.now()) {
+        val latestMonth = YearMonth.now()
+        val selectedMonth = referenceMonth.coerceAtMost(latestMonth)
         overviewLoadJob?.cancel()
         overviewLoadJob = scope.launch {
             overviewState =
@@ -58,12 +58,14 @@ class BudgetBookCoordinator(context: Context, private val api: SmartBudgetApi, p
                 )
             try {
                 val currentMonth = YearMonth.now()
-                val currentTransactions =
-                    overviewState.transactionsByMonth[currentMonth]
-                        ?: loadAllTransactions(currentMonth.atDay(1), currentMonth.atEndOfMonth())
-                        ?: return@launch
                 val historyTransactions =
                     loadAllTransactions(selectedMonth.minusMonths(1).atDay(1), selectedMonth.atEndOfMonth())
+                        ?: return@launch
+                val historyByMonth = groupTransactionsByMonth(historyTransactions)
+                val currentTransactions =
+                    historyByMonth[currentMonth]
+                        ?: overviewState.transactionsByMonth[currentMonth]
+                        ?: loadAllTransactions(currentMonth.atDay(1), currentMonth.atEndOfMonth())
                         ?: return@launch
                 val budgetAmount = loadMonthlyBudget(selectedMonth)
                 overviewState =
@@ -71,7 +73,7 @@ class BudgetBookCoordinator(context: Context, private val api: SmartBudgetApi, p
                         referenceMonth = selectedMonth,
                         transactionsByMonth =
                             groupTransactionsByMonth(currentTransactions) +
-                                groupTransactionsByMonth(historyTransactions),
+                                historyByMonth,
                         selectedBudgetAmount = budgetAmount,
                     )
             } catch (exception: CancellationException) {
@@ -137,7 +139,7 @@ class BudgetBookCoordinator(context: Context, private val api: SmartBudgetApi, p
                     is ApiResult.Success -> {
                         onSuccess()
                         state.month?.let(::loadMonth)
-                        loadOverview(overviewState.referenceMonth ?: YearMonth.now().minusMonths(1))
+                        loadOverview(overviewState.referenceMonth ?: YearMonth.now())
                     }
 
                     else -> showFailure(result)

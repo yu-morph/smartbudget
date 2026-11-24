@@ -10,6 +10,7 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.animation.togetherWith
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -44,6 +45,7 @@ import androidx.compose.material.icons.outlined.ChevronRight
 import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material.icons.outlined.Edit
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
@@ -53,6 +55,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -158,12 +161,12 @@ internal fun BudgetBookRoute(
     onLoad: (YearMonth) -> Unit,
     onOpenMonth: (YearMonth) -> Unit,
 ) {
-    val latestPreviousMonth = remember { YearMonth.now().minusMonths(1) }
-    LaunchedEffect(Unit) { onLoad(latestPreviousMonth) }
+    val latestMonth = remember { YearMonth.now() }
+    LaunchedEffect(Unit) { onLoad(latestMonth) }
     BudgetBookOverview(
         bottomPadding = bottomPadding,
         state = state,
-        latestPreviousMonth = latestPreviousMonth,
+        latestMonth = latestMonth,
         onPreviousMonthChange = onLoad,
         onOpenMonth = onOpenMonth,
     )
@@ -173,7 +176,7 @@ internal fun BudgetBookRoute(
 private fun BudgetBookOverview(
     bottomPadding: Dp,
     state: BudgetBookOverviewUiState,
-    latestPreviousMonth: YearMonth,
+    latestMonth: YearMonth,
     onPreviousMonthChange: (YearMonth) -> Unit,
     onOpenMonth: (YearMonth) -> Unit,
 ) {
@@ -181,7 +184,7 @@ private fun BudgetBookOverview(
     val currentTransactions = state.transactionsByMonth[currentMonth].orEmpty()
     val currentTransactionsByDate =
         remember(currentTransactions) { currentTransactions.groupBy { LocalDate.parse(it.date) } }
-    val displayedPreviousMonth = state.referenceMonth?.coerceAtMost(latestPreviousMonth) ?: latestPreviousMonth
+    val displayedPreviousMonth = state.referenceMonth?.coerceAtMost(latestMonth) ?: latestMonth
     val previousTransactions = state.transactionsByMonth[displayedPreviousMonth].orEmpty()
     val previousStats =
         monthlyLedgerStats(
@@ -241,20 +244,20 @@ private fun BudgetBookOverview(
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 Text(
-                    stringResource(R.string.budget_book_previous_months),
+                    stringResource(R.string.budget_book_monthly_statistics),
                     modifier = Modifier.weight(1f),
                     fontSize = 18.sp,
                     fontWeight = FontWeight.Bold,
                 )
                 PreviousMonthNavigation(
                     month = displayedPreviousMonth,
-                    latestMonth = latestPreviousMonth,
+                    latestMonth = latestMonth,
                     onPrevious = { onPreviousMonthChange(displayedPreviousMonth.minusMonths(1)) },
                     onNext = { onPreviousMonthChange(displayedPreviousMonth.plusMonths(1)) },
                 )
             }
             Spacer(Modifier.height(10.dp))
-            PreviousMonthRow(
+            MonthlyStatisticsCardContent(
                 stats = previousStats,
                 budgetAmount = state.selectedBudgetAmount,
                 onClick = { onOpenMonth(displayedPreviousMonth) },
@@ -1064,7 +1067,7 @@ private fun PreviousMonthNavigation(
         IconButton(
             onClick = onNext,
             modifier = Modifier.size(36.dp),
-            enabled = isNextPreviousMonthAvailable(month, latestMonth),
+            enabled = isNextStatisticsMonthAvailable(month, latestMonth),
         ) {
             Icon(
                 Icons.Outlined.ChevronRight,
@@ -1076,20 +1079,15 @@ private fun PreviousMonthNavigation(
 }
 
 @Composable
-private fun PreviousMonthRow(stats: MonthlyLedgerStats, budgetAmount: Int?, onClick: () -> Unit) {
+private fun MonthlyStatisticsCardContent(stats: MonthlyLedgerStats, budgetAmount: Int?, onClick: () -> Unit) {
     val languageTag = LocalConfiguration.current.locales[0].toLanguageTag()
     Column(
-        modifier =
-            Modifier
-                .fillMaxWidth()
-                .clip(RoundedCornerShape(4.dp))
-                .clickable(onClick = onClick)
-                .padding(vertical = 14.dp),
+        modifier = Modifier.fillMaxWidth().padding(top = 10.dp),
         verticalArrangement = Arrangement.spacedBy(10.dp),
     ) {
-        Row(
+        Column(
             modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp),
-            horizontalArrangement = Arrangement.spacedBy(20.dp),
+            verticalArrangement = Arrangement.spacedBy(5.dp),
         ) {
             Text(
                 stringResource(R.string.budget_book_income_amount, stats.amounts.income.withComma()),
@@ -1104,7 +1102,9 @@ private fun PreviousMonthRow(stats: MonthlyLedgerStats, budgetAmount: Int?, onCl
                 fontWeight = FontWeight.Bold,
             )
         }
+        HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.45f))
         MonthlyMetrics(stats)
+        HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.45f))
         PreviousMonthBudgetStatus(budgetAmount = budgetAmount, usedAmount = stats.amounts.expense)
         if (stats.largestExpenseCategories.isNotEmpty()) {
             CategoryStatisticsTags(
@@ -1122,6 +1122,27 @@ private fun PreviousMonthRow(stats: MonthlyLedgerStats, budgetAmount: Int?, onCl
                     },
             )
         }
+        OutlinedButton(
+            onClick = onClick,
+            modifier = Modifier.fillMaxWidth().height(44.dp),
+            shape = RoundedCornerShape(12.dp),
+            border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.7f)),
+            colors =
+                ButtonDefaults.outlinedButtonColors(
+                    contentColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.75f),
+                ),
+        ) {
+            Text(
+                stringResource(R.string.budget_book_view_ledger),
+                fontSize = 13.sp,
+                fontWeight = FontWeight.SemiBold,
+            )
+            Icon(
+                Icons.Outlined.ChevronRight,
+                contentDescription = null,
+                modifier = Modifier.size(18.dp),
+            )
+        }
     }
 }
 
@@ -1130,67 +1151,61 @@ private fun PreviousMonthBudgetStatus(budgetAmount: Int?, usedAmount: Int) {
     val progress = budgetUsageProgress(budgetAmount, usedAmount)
     val boundedProgress = progress?.coerceIn(0f, 1f) ?: 0f
     val progressColor = progress?.let(::budgetUsageColor) ?: MaterialTheme.colorScheme.outlineVariant
-    Surface(
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(14.dp),
-        color = overviewCalendarBackground(),
+    Column(
+        modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp, vertical = 4.dp),
+        verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {
-        Column(
-            modifier = Modifier.padding(horizontal = 14.dp, vertical = 12.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp),
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically,
         ) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                    Text(
-                        text =
-                            budgetAmount?.let {
-                                stringResource(R.string.budget_book_budget_amount, it.withComma())
-                            } ?: stringResource(R.string.budget_book_budget_not_set),
-                        fontSize = 13.sp,
-                        fontWeight = FontWeight.SemiBold,
-                    )
-                    Text(
-                        stringResource(R.string.budget_book_used_amount, usedAmount.withComma()),
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        fontSize = 11.sp,
-                    )
-                }
+            Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
                 Text(
                     text =
-                        progress?.let {
-                            stringResource(R.string.home_budget_usage_percent, (it * 100f).roundToInt())
-                        } ?: stringResource(R.string.budget_book_budget_usage_unavailable),
-                    fontSize = 12.sp,
-                    fontWeight = FontWeight.Bold,
+                        budgetAmount?.let {
+                            stringResource(R.string.budget_book_budget_amount, it.withComma())
+                        } ?: stringResource(R.string.budget_book_budget_not_set),
+                    fontSize = 13.sp,
+                    fontWeight = FontWeight.SemiBold,
+                )
+                Text(
+                    stringResource(R.string.budget_book_used_amount, usedAmount.withComma()),
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    fontSize = 11.sp,
                 )
             }
-            Box(
-                modifier =
+            Text(
+                text =
+                    progress?.let {
+                        stringResource(R.string.home_budget_usage_percent, (it * 100f).roundToInt())
+                    } ?: stringResource(R.string.budget_book_budget_usage_unavailable),
+                fontSize = 12.sp,
+                fontWeight = FontWeight.Bold,
+            )
+        }
+        Box(
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .height(6.dp)
+                    .clip(CircleShape)
+                    .background(MaterialTheme.colorScheme.surfaceVariant)
+                    .progressSemantics(boundedProgress),
+        ) {
+            if (boundedProgress > 0f) {
+                Box(
                     Modifier
-                        .fillMaxWidth()
-                        .height(6.dp)
-                        .clip(CircleShape)
-                        .background(MaterialTheme.colorScheme.surfaceVariant)
-                        .progressSemantics(boundedProgress),
-            ) {
-                if (boundedProgress > 0f) {
-                    Box(
-                        Modifier
-                            .fillMaxWidth(boundedProgress)
-                            .fillMaxHeight()
-                            .background(progressColor, CircleShape),
-                    )
-                }
+                        .fillMaxWidth(boundedProgress)
+                        .fillMaxHeight()
+                        .background(progressColor, CircleShape),
+                )
             }
         }
     }
 }
 
-internal fun isNextPreviousMonthAvailable(month: YearMonth, latestMonth: YearMonth): Boolean = month < latestMonth
+internal fun isNextStatisticsMonthAvailable(month: YearMonth, latestMonth: YearMonth): Boolean = month < latestMonth
 
 internal fun budgetUsageProgress(budgetAmount: Int?, usedAmount: Int): Float? =
     budgetAmount?.takeIf { it > 0 }?.let { usedAmount.toFloat() / it }
@@ -1242,47 +1257,43 @@ private fun MonthlyMetric(
     valueTextAlign: TextAlign = TextAlign.Start,
     alignValueToBottom: Boolean = false,
 ) {
-    Surface(
-        modifier = modifier.height(70.dp),
-        shape = RoundedCornerShape(14.dp),
-        color = overviewCalendarBackground(),
+    Column(
+        modifier = modifier.height(70.dp).padding(horizontal = 8.dp, vertical = 4.dp),
     ) {
-        Column(modifier = Modifier.padding(14.dp)) {
-            Text(
-                label,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                fontSize = 11.sp,
-                lineHeight = 11.sp,
-            )
-            Spacer(Modifier.height(2.dp))
-            if (alignValueToBottom) Spacer(Modifier.weight(1f))
-            Text(
-                value,
-                modifier = Modifier.fillMaxWidth(),
-                color = valueColor,
-                fontSize = 14.sp,
-                lineHeight = 14.sp,
-                fontWeight = FontWeight.Bold,
-                textAlign = valueTextAlign,
-            )
-            progress?.let {
-                Spacer(Modifier.height(5.dp))
+        Text(
+            label,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            fontSize = 11.sp,
+            lineHeight = 11.sp,
+        )
+        Spacer(Modifier.height(2.dp))
+        if (alignValueToBottom) Spacer(Modifier.weight(1f))
+        Text(
+            value,
+            modifier = Modifier.fillMaxWidth(),
+            color = valueColor,
+            fontSize = 14.sp,
+            lineHeight = 14.sp,
+            fontWeight = FontWeight.Bold,
+            textAlign = valueTextAlign,
+        )
+        progress?.let {
+            Spacer(Modifier.height(5.dp))
+            Box(
+                modifier =
+                    Modifier
+                        .fillMaxWidth()
+                        .height(5.dp)
+                        .clip(CircleShape)
+                        .background(MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.45f)),
+            ) {
                 Box(
                     modifier =
                         Modifier
-                            .fillMaxWidth()
-                            .height(5.dp)
-                            .clip(CircleShape)
-                            .background(MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.45f)),
-                ) {
-                    Box(
-                        modifier =
-                            Modifier
-                                .fillMaxWidth(it)
-                                .fillMaxHeight()
-                                .background(progressColor, CircleShape),
-                    )
-                }
+                            .fillMaxWidth(it)
+                            .fillMaxHeight()
+                            .background(progressColor, CircleShape),
+                )
             }
         }
     }

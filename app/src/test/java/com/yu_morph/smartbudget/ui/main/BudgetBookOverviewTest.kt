@@ -12,11 +12,11 @@ import org.junit.Test
 
 class BudgetBookOverviewTest {
     @Test
-    fun `이전 월 탐색은 최신 이전 달까지만 다음 이동을 허용한다`() {
-        val latestMonth = YearMonth.of(2026, 10)
+    fun `월별 통계 탐색은 이번 달까지만 다음 이동을 허용한다`() {
+        val latestMonth = YearMonth.of(2026, 11)
 
-        assertTrue(isNextPreviousMonthAvailable(YearMonth.of(2025, 6), latestMonth))
-        assertFalse(isNextPreviousMonthAvailable(latestMonth, latestMonth))
+        assertTrue(isNextStatisticsMonthAvailable(YearMonth.of(2025, 6), latestMonth))
+        assertFalse(isNextStatisticsMonthAvailable(latestMonth, latestMonth))
     }
 
     @Test
