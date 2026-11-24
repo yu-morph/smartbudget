@@ -21,6 +21,7 @@ import com.yu_morph.smartbudget.notification.BudgetNotificationCoordinator
 import com.yu_morph.smartbudget.ui.showAppToast
 import java.time.YearMonth
 import java.util.UUID
+import kotlin.time.TimeSource
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -31,6 +32,7 @@ private const val BANK_SYNC_START_DATE = "2025-01-01"
 private const val BANK_SYNC_END_DATE = "2026-12-31"
 private const val BANK_SYNC_MAX_ATTEMPTS = 3
 private const val BANK_SYNC_RETRY_DELAY_MILLIS = 250L
+private const val BANK_SYNC_MINIMUM_LOADING_MILLIS = 5_000L
 private const val HTTP_SERVICE_UNAVAILABLE = 503
 private const val IDEMPOTENCY_REQUEST_IN_PROGRESS = "IDEMPOTENCY_REQUEST_IN_PROGRESS"
 
@@ -266,6 +268,7 @@ class SettingsCoordinator(
         if (state.isBankSyncing) return
         scope.launch {
             state = state.copy(isBankSyncing = true)
+            val loadingStartedAt = TimeSource.Monotonic.markNow()
             try {
                 val result = api.mockTransactions.list(
                     startDate = BANK_SYNC_START_DATE,
@@ -293,6 +296,7 @@ class SettingsCoordinator(
                     }
                 if (!deleteTransactionsInSyncRange()) return@launch
                 if (requests.isNotEmpty() && !createTransactionsWithRetry(requests)) return@launch
+                delay(remainingBankSyncLoadingMillis(loadingStartedAt.elapsedNow().inWholeMilliseconds))
                 applicationContext.showAppToast(R.string.settings_bank_sync_success, requests.size)
                 onSuccess()
                 scope.launch { budgetNotifications.evaluateAfterLedgerUpdate() }
@@ -433,3 +437,6 @@ internal fun ApiResult<*>.isTransientBankSyncFailure(): Boolean = this is ApiRes
         this is ApiResult.HttpFailure &&
             (status == HTTP_SERVICE_UNAVAILABLE || code == IDEMPOTENCY_REQUEST_IN_PROGRESS)
         )
+
+internal fun remainingBankSyncLoadingMillis(elapsedMillis: Long): Long =
+    (BANK_SYNC_MINIMUM_LOADING_MILLIS - elapsedMillis.coerceAtLeast(0L)).coerceAtLeast(0L)
