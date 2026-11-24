@@ -63,6 +63,15 @@ data class CreateTransactionRequest(
     val time: String? = null,
 )
 
+@Serializable
+data class BatchCreateTransactionsRequest(val items: List<CreateTransactionRequest>)
+
+@Serializable
+data class BatchDeleteTransactionsData(
+    @SerialName("deleted_count") val deletedCount: Int,
+    @SerialName("next_cursor") val nextCursor: String? = null,
+)
+
 sealed interface PatchValue<out T> {
     data object Omitted : PatchValue<Nothing>
     data class Present<T>(val value: T?) : PatchValue<T>

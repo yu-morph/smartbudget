@@ -2,8 +2,12 @@ package com.yu_morph.smartbudget.data.local
 
 import android.content.Context
 import android.content.SharedPreferences
+import android.net.Uri
+import android.util.Base64
 import androidx.security.crypto.EncryptedSharedPreferences
 import androidx.security.crypto.MasterKey
+import java.io.ByteArrayOutputStream
+import java.io.File
 import java.time.OffsetDateTime
 
 interface ApiResponseCache {
@@ -63,24 +67,78 @@ interface UserIdentityStore {
 interface ProfileImageStore {
     fun readUri(): String?
 
-    fun writeUri(uri: String)
+    fun writeBase64(encodedImage: String?): String?
+
+    fun encodeUri(uri: String): String?
 
     fun clear()
 }
 
-class SharedPreferencesProfileImageStore(private val preferences: SharedPreferences) : ProfileImageStore {
-    override fun readUri(): String? = preferences.getString(KEY_IMAGE_URI, null)
+class FileProfileImageStore(private val context: Context) : ProfileImageStore {
+    private val imageFile = File(context.filesDir, PROFILE_IMAGE_NAME)
 
-    override fun writeUri(uri: String) {
-        preferences.edit().putString(KEY_IMAGE_URI, uri).apply()
+    override fun readUri(): String? = imageFile.takeIf(File::isFile)?.versionedUri()
+
+    override fun writeBase64(encodedImage: String?): String? = when {
+        encodedImage.isNullOrBlank() -> {
+            clear()
+            null
+        }
+
+        else -> {
+            val bytes = runCatching { Base64.decode(encodedImage, Base64.DEFAULT) }.getOrNull()
+            if (bytes == null || bytes.isEmpty() || bytes.size > MAX_PROFILE_IMAGE_BYTES) {
+                readUri()
+            } else {
+                storeImage(bytes)
+            }
+        }
     }
+
+    private fun storeImage(bytes: ByteArray): String? {
+        val temporaryFile = File(context.filesDir, "$PROFILE_IMAGE_NAME.tmp")
+        return runCatching {
+            temporaryFile.writeBytes(bytes)
+            if (!temporaryFile.renameTo(imageFile)) {
+                temporaryFile.copyTo(imageFile, overwrite = true)
+                temporaryFile.delete()
+            }
+            imageFile.versionedUri()
+        }.getOrElse {
+            temporaryFile.delete()
+            readUri()
+        }
+    }
+
+    override fun encodeUri(uri: String): String? = runCatching {
+        val bytes = context.contentResolver.openInputStream(Uri.parse(uri))?.use { input ->
+            val output = ByteArrayOutputStream()
+            val buffer = ByteArray(DEFAULT_BUFFER_SIZE)
+            var total = 0
+            while (true) {
+                val count = input.read(buffer)
+                if (count < 0) break
+                total += count
+                if (total > MAX_PROFILE_IMAGE_BYTES) return null
+                output.write(buffer, 0, count)
+            }
+            output.toByteArray()
+        } ?: return null
+        if (bytes.isEmpty() || bytes.size > MAX_PROFILE_IMAGE_BYTES) return null
+        Base64.encodeToString(bytes, Base64.NO_WRAP)
+    }.getOrNull()
 
     override fun clear() {
-        preferences.edit().clear().apply()
+        imageFile.delete()
+        File(context.filesDir, "$PROFILE_IMAGE_NAME.tmp").delete()
     }
 
+    private fun File.versionedUri(): String =
+        Uri.fromFile(this).buildUpon().fragment(lastModified().toString()).build().toString()
+
     private companion object {
-        const val KEY_IMAGE_URI = "profile_image_uri"
+        const val PROFILE_IMAGE_NAME = "profile_image.png"
+        const val MAX_PROFILE_IMAGE_BYTES = 5 * 1024 * 1024
     }
 }
 
@@ -199,7 +257,6 @@ object PreferenceStoreFactory {
     private const val RESPONSE_CACHE_FILE = "smartbudget_response_cache"
     private const val REMOTE_RESOURCE_FILE = "smartbudget_remote_resources"
     private const val USER_IDENTITY_FILE = "smartbudget_user_identity"
-    private const val PROFILE_IMAGE_FILE = "smartbudget_profile_image"
     private const val SECURE_AUTH_FILE = "smartbudget_secure_auth"
     private const val APP_SETTINGS_FILE = "smartbudget_app_settings"
 
@@ -215,9 +272,7 @@ object PreferenceStoreFactory {
         context.getSharedPreferences(USER_IDENTITY_FILE, Context.MODE_PRIVATE),
     )
 
-    fun profileImage(context: Context): ProfileImageStore = SharedPreferencesProfileImageStore(
-        context.getSharedPreferences(PROFILE_IMAGE_FILE, Context.MODE_PRIVATE),
-    )
+    fun profileImage(context: Context): ProfileImageStore = FileProfileImageStore(context.applicationContext)
 
     fun appSettings(context: Context): AppSettingsStore = SharedPreferencesAppSettingsStore(
         context.getSharedPreferences(APP_SETTINGS_FILE, Context.MODE_PRIVATE),

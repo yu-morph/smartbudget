@@ -8,6 +8,7 @@ import com.yu_morph.smartbudget.R
 import com.yu_morph.smartbudget.data.local.PreferenceStoreFactory
 import com.yu_morph.smartbudget.data.remote.ApiResult
 import com.yu_morph.smartbudget.data.remote.SmartBudgetApi
+import com.yu_morph.smartbudget.data.remote.model.AccountData
 import com.yu_morph.smartbudget.data.remote.model.SignInRequest
 import com.yu_morph.smartbudget.data.remote.model.SignUpRequest
 import com.yu_morph.smartbudget.ui.showAppToast
@@ -27,26 +28,76 @@ class AuthCoordinator(context: Context, private val api: SmartBudgetApi, private
             onSignInRequired()
             return
         }
-        executeRequest(
-            request = api.auth::validateSession,
-            isSuccessful = { it.data != null },
-            onSuccess = onAuthenticated,
-            onFailure = { result ->
-                if (result is ApiResult.HttpFailure && result.status == HTTP_UNAUTHORIZED) signOut()
+        if (isLoading) return
+        scope.launch {
+            isLoading = true
+            try {
+                when (val result = api.auth.validateSession()) {
+                    is ApiResult.Success -> {
+                        val account = result.data
+                        if (account == null) {
+                            showToast(R.string.response_error)
+                            onSignInRequired()
+                        } else {
+                            persistAccount(account)
+                            onAuthenticated()
+                        }
+                    }
+
+                    else -> {
+                        if (result is ApiResult.HttpFailure && result.status == HTTP_UNAUTHORIZED) signOut()
+                        showFailure(result)
+                        onSignInRequired()
+                    }
+                }
+            } catch (_: Exception) {
+                showToast(R.string.unknown_error)
                 onSignInRequired()
-            },
-        )
+            } finally {
+                isLoading = false
+            }
+        }
     }
 
     fun signIn(username: String, password: String, onSuccess: () -> Unit) {
-        executeRequest(
-            request = { api.auth.signIn(SignInRequest(username, password)) },
-            isSuccessful = { it.data != null },
-            onSuccess = {
-                userIdentityStore.writeUsername(username)
-                onSuccess()
-            },
-        )
+        if (isLoading) return
+        scope.launch {
+            isLoading = true
+            try {
+                val signInResult = api.auth.signIn(SignInRequest(username, password))
+                if (signInResult !is ApiResult.Success || signInResult.data == null) {
+                    if (signInResult is ApiResult.Success) {
+                        showToast(R.string.response_error)
+                    } else {
+                        showFailure(signInResult)
+                    }
+                    if (signInResult is ApiResult.Success) signOut()
+                    return@launch
+                }
+                when (val accountResult = api.auth.getAccount()) {
+                    is ApiResult.Success -> {
+                        val account = accountResult.data
+                        if (account == null) {
+                            signOut()
+                            showToast(R.string.response_error)
+                        } else {
+                            persistAccount(account)
+                            onSuccess()
+                        }
+                    }
+
+                    else -> {
+                        signOut()
+                        showFailure(accountResult)
+                    }
+                }
+            } catch (_: Exception) {
+                signOut()
+                showToast(R.string.unknown_error)
+            } finally {
+                isLoading = false
+            }
+        }
     }
 
     fun signUp(displayName: String, username: String, password: String, onSuccess: () -> Unit) {
@@ -71,6 +122,11 @@ class AuthCoordinator(context: Context, private val api: SmartBudgetApi, private
         api.auth.signOut()
         userIdentityStore.clear()
         profileImageStore.clear()
+    }
+
+    private fun persistAccount(account: AccountData) {
+        userIdentityStore.writeUsername(account.username)
+        profileImageStore.writeBase64(account.profileImage)
     }
 
     private fun <T> executeRequest(

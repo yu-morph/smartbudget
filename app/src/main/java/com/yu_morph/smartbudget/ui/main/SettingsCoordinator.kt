@@ -11,7 +11,7 @@ import com.yu_morph.smartbudget.data.local.DisplayMode
 import com.yu_morph.smartbudget.data.local.PreferenceStoreFactory
 import com.yu_morph.smartbudget.data.remote.ApiResult
 import com.yu_morph.smartbudget.data.remote.SmartBudgetApi
-import com.yu_morph.smartbudget.data.remote.api.TransactionListQuery
+import com.yu_morph.smartbudget.data.remote.model.AccountData
 import com.yu_morph.smartbudget.data.remote.model.CreateTransactionRequest
 import com.yu_morph.smartbudget.data.remote.model.ReplaceMonthlyBudgetRequest
 import com.yu_morph.smartbudget.data.remote.model.TransactionSource
@@ -25,12 +25,11 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 private const val BUDGET_HISTORY_MONTHS = 3
-private const val TRANSACTION_PAGE_LIMIT = 100
+private const val TRANSACTION_BATCH_LIMIT = 500
 private const val BANK_SYNC_START_DATE = "2025-01-01"
 private const val BANK_SYNC_END_DATE = "2026-12-31"
 private const val BANK_SYNC_MAX_ATTEMPTS = 3
 private const val BANK_SYNC_RETRY_DELAY_MILLIS = 250L
-private const val HTTP_NOT_FOUND = 404
 private const val HTTP_SERVICE_UNAVAILABLE = 503
 private const val IDEMPOTENCY_REQUEST_IN_PROGRESS = "IDEMPOTENCY_REQUEST_IN_PROGRESS"
 
@@ -81,8 +80,8 @@ class SettingsCoordinator(
             )
         scope.launch {
             val result = api.auth.getAccount()
-            if (result is ApiResult.Success) {
-                state = state.copy(displayName = result.data?.displayName.orEmpty())
+            if (result is ApiResult.Success && result.data != null) {
+                persistAccount(result.data)
             }
         }
     }
@@ -125,6 +124,7 @@ class SettingsCoordinator(
                         showFailure(profileResult)
                         return@launch
                     }
+                    profileResult.data?.let(::persistAccount)
                 }
                 updateSavedAccountState(displayName, budgetAmount, budgetChanged)
                 showAccountSaveResult(passwordChanged, profileChanged, budgetChanged)
@@ -138,8 +138,44 @@ class SettingsCoordinator(
     }
 
     fun updateProfileImage(uri: String) {
-        profileImageStore.writeUri(uri)
-        state = state.copy(profileImageUri = uri)
+        if (state.isLoading) return
+        scope.launch {
+            state = state.copy(isLoading = true)
+            try {
+                val encodedImage = profileImageStore.encodeUri(uri)
+                if (encodedImage == null) {
+                    showToast(R.string.invalid_request_error)
+                    return@launch
+                }
+                when (val result = api.auth.updateAccount(UpdateAccountRequest(profileImage = encodedImage))) {
+                    is ApiResult.Success -> {
+                        val account = result.data
+                        if (account == null) {
+                            showToast(R.string.response_error)
+                        } else {
+                            persistAccount(account)
+                            showToast(R.string.settings_profile_updated)
+                        }
+                    }
+
+                    else -> showFailure(result)
+                }
+            } catch (_: Exception) {
+                showToast(R.string.unknown_error)
+            } finally {
+                state = state.copy(isLoading = false)
+            }
+        }
+    }
+
+    private fun persistAccount(account: AccountData) {
+        userIdentityStore.writeUsername(account.username)
+        state =
+            state.copy(
+                displayName = account.displayName,
+                userId = account.username,
+                profileImageUri = profileImageStore.writeBase64(account.profileImage),
+            )
     }
 
     private fun updateSavedAccountState(displayName: String, budgetAmount: Int, budgetChanged: Boolean) {
@@ -248,11 +284,8 @@ class SettingsCoordinator(
                     showFailure(result)
                     return@launch
                 }
-                api.transactions.invalidateCache()
-                if (!deleteTransactionsInSyncRange()) return@launch
-                val syncSessionId = UUID.randomUUID().toString()
-                result.data.transactions.forEach { transaction ->
-                    val request =
+                val requests =
+                    result.data.transactions.map { transaction ->
                         CreateTransactionRequest(
                             date = transaction.date,
                             type =
@@ -266,10 +299,10 @@ class SettingsCoordinator(
                             storeName = transaction.description,
                             amount = transaction.amount,
                         )
-                    val idempotencyKey = "bank-sync-$syncSessionId-${transaction.transactionId}"
-                    if (!createTransactionWithRetry(request, idempotencyKey)) return@launch
-                }
-                applicationContext.showAppToast(R.string.settings_bank_sync_success, result.data.count)
+                    }
+                if (!deleteTransactionsInSyncRange()) return@launch
+                if (requests.isNotEmpty() && !createTransactionsWithRetry(requests)) return@launch
+                applicationContext.showAppToast(R.string.settings_bank_sync_success, requests.size)
                 onSuccess()
             } catch (_: Exception) {
                 showToast(R.string.unknown_error)
@@ -279,62 +312,35 @@ class SettingsCoordinator(
         }
     }
 
-    private suspend fun deleteTransactionsInSyncRange(): Boolean {
-        val transactionIds = loadTransactionIdsInSyncRange() ?: return false
-        return deleteTransactions(transactionIds)
+    private suspend fun deleteTransactionsInSyncRange(): Boolean = executeBankSyncMutation {
+        api.transactions.deleteBatch(
+            startDate = BANK_SYNC_START_DATE,
+            endDate = BANK_SYNC_END_DATE,
+        )
     }
 
-    private suspend fun loadTransactionIdsInSyncRange(): List<Int>? {
-        val transactionIds = mutableListOf<Int>()
-        var cursor: String? = null
-        do {
-            val result =
-                api.transactions.list(
-                    TransactionListQuery(
-                        startDate = BANK_SYNC_START_DATE,
-                        endDate = BANK_SYNC_END_DATE,
-                        limit = TRANSACTION_PAGE_LIMIT,
-                        cursor = cursor,
-                    ),
+    private suspend fun createTransactionsWithRetry(requests: List<CreateTransactionRequest>): Boolean {
+        val syncSessionId = UUID.randomUUID().toString()
+        requests.chunked(TRANSACTION_BATCH_LIMIT).forEachIndexed { index, batch ->
+            val idempotencyKey = "bank-sync-$syncSessionId-$index"
+            val succeeded = executeBankSyncMutation {
+                api.transactions.createBatch(
+                    requests = batch,
+                    startDate = BANK_SYNC_START_DATE,
+                    endDate = BANK_SYNC_END_DATE,
+                    idempotencyKey = idempotencyKey,
                 )
-            if (result !is ApiResult.Success || result.data == null) {
-                showFailure(result)
-                return null
             }
-            transactionIds += result.data.items.map { it.id }
-            cursor = result.data.nextCursor
-        } while (cursor != null)
-
-        return transactionIds
-    }
-
-    private suspend fun deleteTransactions(transactionIds: List<Int>): Boolean {
-        transactionIds.forEach { transactionId ->
-            if (!deleteTransactionWithRetry(transactionId)) return false
+            if (!succeeded) return false
         }
         return true
     }
 
-    private suspend fun createTransactionWithRetry(
-        request: CreateTransactionRequest,
-        idempotencyKey: String,
-    ): Boolean = executeBankSyncMutation {
-        api.transactions.create(request, idempotencyKey)
-    }
-
-    private suspend fun deleteTransactionWithRetry(transactionId: Int): Boolean =
-        executeBankSyncMutation(acceptNotFound = true) {
-            api.transactions.delete(transactionId)
-        }
-
-    private suspend fun executeBankSyncMutation(
-        acceptNotFound: Boolean = false,
-        request: suspend () -> ApiResult<*>,
-    ): Boolean {
+    private suspend fun executeBankSyncMutation(request: suspend () -> ApiResult<*>): Boolean {
         var attempt = 1
         var result = request()
         while (
-            !result.isAcceptedBankSyncResult(acceptNotFound) &&
+            result !is ApiResult.Success &&
             result.isTransientBankSyncFailure() &&
             attempt < BANK_SYNC_MAX_ATTEMPTS
         ) {
@@ -342,7 +348,7 @@ class SettingsCoordinator(
             result = request()
             attempt += 1
         }
-        val succeeded = result.isAcceptedBankSyncResult(acceptNotFound)
+        val succeeded = result is ApiResult.Success
         if (!succeeded) showFailure(result)
         return succeeded
     }
@@ -428,8 +434,3 @@ internal fun ApiResult<*>.isTransientBankSyncFailure(): Boolean = this is ApiRes
         this is ApiResult.HttpFailure &&
             (status == HTTP_SERVICE_UNAVAILABLE || code == IDEMPOTENCY_REQUEST_IN_PROGRESS)
         )
-
-private fun ApiResult<*>.isNotFound(): Boolean = this is ApiResult.HttpFailure && status == HTTP_NOT_FOUND
-
-private fun ApiResult<*>.isAcceptedBankSyncResult(acceptNotFound: Boolean): Boolean =
-    this is ApiResult.Success || (acceptNotFound && isNotFound())

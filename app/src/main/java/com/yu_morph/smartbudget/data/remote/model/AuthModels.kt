@@ -24,11 +24,16 @@ data class AuthTokenData(
 )
 
 @Serializable
-data class AccountData(@SerialName("display_name") val displayName: String)
+data class AccountData(
+    val username: String,
+    @SerialName("display_name") val displayName: String,
+    @SerialName("profile_image") val profileImage: String? = null,
+)
 
 @Serializable
 data class UpdateAccountRequest(
     @SerialName("display_name") val displayName: String? = null,
+    @SerialName("profile_image") val profileImage: String? = null,
     @SerialName("current_password") val currentPassword: String? = null,
     val password: String? = null,
 )
