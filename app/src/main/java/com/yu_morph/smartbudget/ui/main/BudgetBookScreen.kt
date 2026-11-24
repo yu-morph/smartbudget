@@ -10,7 +10,6 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.animation.togetherWith
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -49,13 +48,13 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.ElevatedButton
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -1086,7 +1085,7 @@ private fun MonthlyStatisticsCardContent(stats: MonthlyLedgerStats, budgetAmount
         verticalArrangement = Arrangement.spacedBy(10.dp),
     ) {
         Column(
-            modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp),
+            modifier = Modifier.fillMaxWidth(),
             verticalArrangement = Arrangement.spacedBy(5.dp),
         ) {
             Text(
@@ -1107,6 +1106,7 @@ private fun MonthlyStatisticsCardContent(stats: MonthlyLedgerStats, budgetAmount
         HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.45f))
         PreviousMonthBudgetStatus(budgetAmount = budgetAmount, usedAmount = stats.amounts.expense)
         if (stats.largestExpenseCategories.isNotEmpty()) {
+            HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.45f))
             CategoryStatisticsTags(
                 title = stringResource(R.string.budget_book_largest_expense_categories),
                 tags =
@@ -1122,14 +1122,13 @@ private fun MonthlyStatisticsCardContent(stats: MonthlyLedgerStats, budgetAmount
                     },
             )
         }
-        OutlinedButton(
+        ElevatedButton(
             onClick = onClick,
-            modifier = Modifier.fillMaxWidth().height(44.dp),
+            modifier = Modifier.align(Alignment.End).height(44.dp),
             shape = RoundedCornerShape(12.dp),
-            border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.7f)),
             colors =
-                ButtonDefaults.outlinedButtonColors(
-                    contentColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.75f),
+                ButtonDefaults.elevatedButtonColors(
+                    contentColor = MaterialTheme.colorScheme.onSurfaceVariant,
                 ),
         ) {
             Text(
@@ -1152,7 +1151,7 @@ private fun PreviousMonthBudgetStatus(budgetAmount: Int?, usedAmount: Int) {
     val boundedProgress = progress?.coerceIn(0f, 1f) ?: 0f
     val progressColor = progress?.let(::budgetUsageColor) ?: MaterialTheme.colorScheme.outlineVariant
     Column(
-        modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp, vertical = 4.dp),
+        modifier = Modifier.fillMaxWidth(),
         verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {
         Row(
@@ -1258,7 +1257,7 @@ private fun MonthlyMetric(
     alignValueToBottom: Boolean = false,
 ) {
     Column(
-        modifier = modifier.height(70.dp).padding(horizontal = 8.dp, vertical = 4.dp),
+        modifier = modifier.height(70.dp),
     ) {
         Text(
             label,
