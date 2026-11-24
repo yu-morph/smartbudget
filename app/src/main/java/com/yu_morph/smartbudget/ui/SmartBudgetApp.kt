@@ -267,7 +267,7 @@ private fun AuthenticationContent(
                 settingsState = settingsCoordinator.state,
                 onSettingsLoad = settingsCoordinator::refresh,
                 budgetBookState = budgetBookCoordinator.overviewState,
-                onBudgetBookLoad = { budgetBookCoordinator.loadOverview() },
+                onBudgetBookLoad = budgetBookCoordinator::loadOverview,
                 homeDashboardState = homeDashboardCoordinator.state,
                 onHomeDashboardLoad = homeDashboardCoordinator::load,
                 homeNewsState = homeNewsCoordinator.state,

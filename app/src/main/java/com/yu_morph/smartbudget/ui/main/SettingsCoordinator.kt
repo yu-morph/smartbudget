@@ -91,7 +91,7 @@ class SettingsCoordinator(
         currentPassword: String,
         newPassword: String,
         budgetAmount: Int,
-        profileChanged: Boolean,
+        accountChanged: Boolean,
         budgetChanged: Boolean,
         onSuccess: (Boolean) -> Unit,
     ) {
@@ -111,7 +111,7 @@ class SettingsCoordinator(
                         return@launch
                     }
                 }
-                if (profileChanged) {
+                if (accountChanged) {
                     val profileResult =
                         api.auth.updateAccount(
                             UpdateAccountRequest(
@@ -127,7 +127,7 @@ class SettingsCoordinator(
                     profileResult.data?.let(::persistAccount)
                 }
                 updateSavedAccountState(displayName, budgetAmount, budgetChanged)
-                showAccountSaveResult(passwordChanged, profileChanged, budgetChanged)
+                showAccountSaveResult(passwordChanged, accountChanged, budgetChanged)
                 onSuccess(passwordChanged)
             } catch (_: Exception) {
                 showToast(R.string.unknown_error)
@@ -154,7 +154,7 @@ class SettingsCoordinator(
                             showToast(R.string.response_error)
                         } else {
                             persistAccount(account)
-                            showToast(R.string.settings_profile_updated)
+                            showToast(R.string.settings_profile_image_updated)
                         }
                     }
 
@@ -192,20 +192,9 @@ class SettingsCoordinator(
         state = state.copy(displayName = displayName, budgetAmount = budgetAmount, budgetHistory = budgetHistory)
     }
 
-    private fun showAccountSaveResult(passwordChanged: Boolean, profileChanged: Boolean, budgetChanged: Boolean) {
-        val message =
-            when {
-                passwordChanged -> {
-                    userIdentityStore.clear()
-                    R.string.settings_password_updated
-                }
-
-                profileChanged && budgetChanged -> R.string.settings_account_settings_saved
-
-                profileChanged -> R.string.settings_profile_updated
-
-                else -> R.string.settings_budget_saved
-            }
+    private fun showAccountSaveResult(passwordChanged: Boolean, accountChanged: Boolean, budgetChanged: Boolean) {
+        if (passwordChanged) userIdentityStore.clear()
+        val message = accountSaveMessage(passwordChanged, accountChanged, budgetChanged)
         showToast(message)
     }
 
@@ -424,6 +413,13 @@ class SettingsCoordinator(
         .getPackageInfo(applicationContext.packageName, 0)
         .versionName
         .orEmpty()
+}
+
+internal fun accountSaveMessage(passwordChanged: Boolean, accountChanged: Boolean, budgetChanged: Boolean): Int = when {
+    passwordChanged -> R.string.settings_password_updated
+    accountChanged && budgetChanged -> R.string.settings_account_settings_saved
+    accountChanged -> R.string.settings_display_name_updated
+    else -> R.string.settings_budget_saved
 }
 
 enum class NotificationSetting { BUDGET_APPROACHING, BUDGET_EXCEEDED, ANALYSIS }

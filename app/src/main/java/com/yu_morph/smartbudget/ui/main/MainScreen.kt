@@ -125,7 +125,7 @@ internal fun MainScreen(
     settingsState: SettingsUiState,
     onSettingsLoad: () -> Unit,
     budgetBookState: BudgetBookOverviewUiState,
-    onBudgetBookLoad: () -> Unit,
+    onBudgetBookLoad: (YearMonth) -> Unit,
     homeDashboardState: HomeDashboardUiState,
     onHomeDashboardLoad: () -> Unit,
     homeNewsState: HomeNewsUiState,

@@ -116,7 +116,8 @@
     <string name="settings_current_password">현재 비밀번호</string>
     <string name="settings_new_password">새 비밀번호</string>
     <string name="settings_change_password">비밀번호 변경</string>
-    <string name="settings_profile_updated">표시 이름을 변경했습니다.</string>
+    <string name="settings_display_name_updated">표시 이름을 변경했습니다.</string>
+    <string name="settings_profile_image_updated">프로필 사진을 변경했습니다.</string>
     <string name="settings_account_settings_saved">계정 설정을 저장했습니다.</string>
     <string name="settings_password_updated">비밀번호를 변경했습니다. 다시 로그인해 주세요.</string>
     <string name="settings_password_incorrect">비밀번호가 올바르지 않습니다.</string>
@@ -188,6 +189,10 @@
     <string name="budget_book_income_expense_ratio">수입 대비 지출</string>
     <string name="budget_book_no_income_ratio">수입 없음</string>
     <string name="budget_book_expense_change">전월 대비 지출</string>
+    <string name="budget_book_budget_amount">예산 %1$s원</string>
+    <string name="budget_book_used_amount">사용 %1$s원</string>
+    <string name="budget_book_budget_not_set">예산 미설정</string>
+    <string name="budget_book_budget_usage_unavailable">사용률 --</string>
     <string name="budget_book_detail">가계부</string>
     <string name="budget_book_selected_transactions">선택한 날의 거래</string>
     <string name="budget_book_transaction_count">%1$d건</string>

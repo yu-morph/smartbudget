@@ -21,11 +21,10 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 
 private const val TRANSACTION_PAGE_LIMIT = 100
-private const val OVERVIEW_MONTH_COUNT = 5L
-
 data class BudgetBookOverviewUiState(
     val referenceMonth: YearMonth? = null,
     val transactionsByMonth: Map<YearMonth, List<TransactionData>> = emptyMap(),
+    val selectedBudgetAmount: Int? = null,
     val isLoading: Boolean = false,
 )
 
@@ -46,30 +45,56 @@ class BudgetBookCoordinator(context: Context, private val api: SmartBudgetApi, p
     var overviewState by mutableStateOf(BudgetBookOverviewUiState())
         private set
 
-    fun loadOverview(referenceMonth: YearMonth = YearMonth.now()) {
+    fun loadOverview(referenceMonth: YearMonth = YearMonth.now().minusMonths(1)) {
+        val latestPreviousMonth = YearMonth.now().minusMonths(1)
+        val selectedMonth = referenceMonth.coerceAtMost(latestPreviousMonth)
         overviewLoadJob?.cancel()
         overviewLoadJob = scope.launch {
-            overviewState = overviewState.copy(referenceMonth = referenceMonth, isLoading = true)
+            overviewState =
+                overviewState.copy(
+                    referenceMonth = selectedMonth,
+                    selectedBudgetAmount = null,
+                    isLoading = true,
+                )
             try {
-                val firstMonth = referenceMonth.minusMonths(OVERVIEW_MONTH_COUNT - 1)
-                val transactions =
-                    loadAllTransactions(firstMonth.atDay(1), referenceMonth.atEndOfMonth()) ?: return@launch
+                val currentMonth = YearMonth.now()
+                val currentTransactions =
+                    overviewState.transactionsByMonth[currentMonth]
+                        ?: loadAllTransactions(currentMonth.atDay(1), currentMonth.atEndOfMonth())
+                        ?: return@launch
+                val historyTransactions =
+                    loadAllTransactions(selectedMonth.minusMonths(1).atDay(1), selectedMonth.atEndOfMonth())
+                        ?: return@launch
+                val budgetAmount = loadMonthlyBudget(selectedMonth)
                 overviewState =
                     BudgetBookOverviewUiState(
-                        referenceMonth = referenceMonth,
-                        transactionsByMonth = groupTransactionsByMonth(transactions),
+                        referenceMonth = selectedMonth,
+                        transactionsByMonth =
+                            groupTransactionsByMonth(currentTransactions) +
+                                groupTransactionsByMonth(historyTransactions),
+                        selectedBudgetAmount = budgetAmount,
                     )
             } catch (exception: CancellationException) {
                 throw exception
             } catch (_: Exception) {
                 applicationContext.showAppToast(R.string.unknown_error)
             } finally {
-                if (overviewState.referenceMonth == referenceMonth) {
+                if (overviewState.referenceMonth == selectedMonth) {
                     overviewState = overviewState.copy(isLoading = false)
                 }
             }
         }
     }
+
+    private suspend fun loadMonthlyBudget(month: YearMonth): Int? =
+        when (val result = api.monthlyBudgets.get(month.toString())) {
+            is ApiResult.Success -> result.data?.amount
+
+            else -> {
+                showFailure(result)
+                null
+            }
+        }
 
     fun loadMonth(month: YearMonth) {
         loadJob?.cancel()
@@ -112,7 +137,7 @@ class BudgetBookCoordinator(context: Context, private val api: SmartBudgetApi, p
                     is ApiResult.Success -> {
                         onSuccess()
                         state.month?.let(::loadMonth)
-                        loadOverview()
+                        loadOverview(overviewState.referenceMonth ?: YearMonth.now().minusMonths(1))
                     }
 
                     else -> showFailure(result)

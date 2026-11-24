@@ -5,9 +5,27 @@ import com.yu_morph.smartbudget.data.remote.model.TransactionSource
 import com.yu_morph.smartbudget.data.remote.model.TransactionType
 import java.time.YearMonth
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNull
+import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class BudgetBookOverviewTest {
+    @Test
+    fun `이전 월 탐색은 최신 이전 달까지만 다음 이동을 허용한다`() {
+        val latestMonth = YearMonth.of(2026, 10)
+
+        assertTrue(isNextPreviousMonthAvailable(YearMonth.of(2025, 6), latestMonth))
+        assertFalse(isNextPreviousMonthAvailable(latestMonth, latestMonth))
+    }
+
+    @Test
+    fun `월 예산이 설정된 경우 지출 사용률을 계산한다`() {
+        assertEquals(0.75f, budgetUsageProgress(400_000, 300_000) ?: 0f, 0.001f)
+        assertNull(budgetUsageProgress(null, 300_000))
+        assertNull(budgetUsageProgress(0, 300_000))
+    }
+
     @Test
     fun `거래 내역을 년월별로 분류한다`() {
         val transactions =

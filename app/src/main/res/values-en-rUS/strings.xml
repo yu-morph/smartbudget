@@ -116,7 +116,8 @@
     <string name="settings_current_password">Current password</string>
     <string name="settings_new_password">New password</string>
     <string name="settings_change_password">Change password</string>
-    <string name="settings_profile_updated">Your display name was updated.</string>
+    <string name="settings_display_name_updated">Your display name was updated.</string>
+    <string name="settings_profile_image_updated">Your profile photo was updated.</string>
     <string name="settings_account_settings_saved">Your account settings were saved.</string>
     <string name="settings_password_updated">Your password was changed. Please sign in again.</string>
     <string name="settings_password_incorrect">The password is incorrect.</string>
@@ -188,6 +189,10 @@
     <string name="budget_book_income_expense_ratio">Expenses to income</string>
     <string name="budget_book_no_income_ratio">No income</string>
     <string name="budget_book_expense_change">Expense change</string>
+    <string name="budget_book_budget_amount">Budget ₩%1$s</string>
+    <string name="budget_book_used_amount">Used ₩%1$s</string>
+    <string name="budget_book_budget_not_set">Budget not set</string>
+    <string name="budget_book_budget_usage_unavailable">Usage --</string>
     <string name="budget_book_detail">Ledger</string>
     <string name="budget_book_selected_transactions">Transactions on the selected day</string>
     <string name="budget_book_transaction_count">%1$d transactions</string>

@@ -33,6 +33,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.progressSemantics
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -154,20 +155,39 @@ internal fun monthlyLedgerStats(
 internal fun BudgetBookRoute(
     bottomPadding: Dp,
     state: BudgetBookOverviewUiState,
-    onLoad: () -> Unit,
+    onLoad: (YearMonth) -> Unit,
     onOpenMonth: (YearMonth) -> Unit,
 ) {
-    LaunchedEffect(Unit) { onLoad() }
-    BudgetBookOverview(bottomPadding = bottomPadding, state = state, onOpenMonth = onOpenMonth)
+    val latestPreviousMonth = remember { YearMonth.now().minusMonths(1) }
+    LaunchedEffect(Unit) { onLoad(latestPreviousMonth) }
+    BudgetBookOverview(
+        bottomPadding = bottomPadding,
+        state = state,
+        latestPreviousMonth = latestPreviousMonth,
+        onPreviousMonthChange = onLoad,
+        onOpenMonth = onOpenMonth,
+    )
 }
 
 @Composable
-private fun BudgetBookOverview(bottomPadding: Dp, state: BudgetBookOverviewUiState, onOpenMonth: (YearMonth) -> Unit) {
+private fun BudgetBookOverview(
+    bottomPadding: Dp,
+    state: BudgetBookOverviewUiState,
+    latestPreviousMonth: YearMonth,
+    onPreviousMonthChange: (YearMonth) -> Unit,
+    onOpenMonth: (YearMonth) -> Unit,
+) {
     val currentMonth = YearMonth.now()
     val currentTransactions = state.transactionsByMonth[currentMonth].orEmpty()
     val currentTransactionsByDate =
         remember(currentTransactions) { currentTransactions.groupBy { LocalDate.parse(it.date) } }
-    val previousMonths = remember(currentMonth) { (1L..3L).map(currentMonth::minusMonths) }
+    val displayedPreviousMonth = state.referenceMonth?.coerceAtMost(latestPreviousMonth) ?: latestPreviousMonth
+    val previousTransactions = state.transactionsByMonth[displayedPreviousMonth].orEmpty()
+    val previousStats =
+        monthlyLedgerStats(
+            transactions = previousTransactions,
+            previousMonthTransactions = state.transactionsByMonth[displayedPreviousMonth.minusMonths(1)].orEmpty(),
+        )
     MainTabContainer(bottomPadding = bottomPadding) {
         LedgerCard(
             modifier =
@@ -215,29 +235,30 @@ private fun BudgetBookOverview(bottomPadding: Dp, state: BudgetBookOverviewUiSta
             }
         }
         Spacer(Modifier.height(16.dp))
-        LedgerCard(contentPadding = PaddingValues(start = 20.dp, top = 20.dp, end = 20.dp, bottom = 10.dp)) {
-            Text(
-                stringResource(R.string.budget_book_previous_months),
-                modifier = Modifier.padding(bottom = 4.dp),
-                fontSize = 18.sp,
-                fontWeight = FontWeight.Bold,
-            )
-            previousMonths.forEachIndexed { index, month ->
-                val transactions = state.transactionsByMonth[month].orEmpty()
-                val stats =
-                    monthlyLedgerStats(
-                        transactions = transactions,
-                        previousMonthTransactions = state.transactionsByMonth[month.minusMonths(1)].orEmpty(),
-                    )
-                PreviousMonthRow(
-                    month = month,
-                    stats = stats,
-                    onClick = { onOpenMonth(month) },
+        LedgerCard(contentPadding = PaddingValues(20.dp)) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Text(
+                    stringResource(R.string.budget_book_previous_months),
+                    modifier = Modifier.weight(1f),
+                    fontSize = 18.sp,
+                    fontWeight = FontWeight.Bold,
                 )
-                if (index < previousMonths.lastIndex) {
-                    HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.2f))
-                }
+                PreviousMonthNavigation(
+                    month = displayedPreviousMonth,
+                    latestMonth = latestPreviousMonth,
+                    onPrevious = { onPreviousMonthChange(displayedPreviousMonth.minusMonths(1)) },
+                    onNext = { onPreviousMonthChange(displayedPreviousMonth.plusMonths(1)) },
+                )
             }
+            Spacer(Modifier.height(10.dp))
+            PreviousMonthRow(
+                stats = previousStats,
+                budgetAmount = state.selectedBudgetAmount,
+                onClick = { onOpenMonth(displayedPreviousMonth) },
+            )
         }
         Spacer(Modifier.height(16.dp))
     }
@@ -1014,7 +1035,48 @@ private fun DailyTransactionRow(transaction: TransactionData) {
 }
 
 @Composable
-private fun PreviousMonthRow(month: YearMonth, stats: MonthlyLedgerStats, onClick: () -> Unit) {
+private fun PreviousMonthNavigation(
+    month: YearMonth,
+    latestMonth: YearMonth,
+    onPrevious: () -> Unit,
+    onNext: () -> Unit,
+) {
+    Row(verticalAlignment = Alignment.CenterVertically) {
+        IconButton(onClick = onPrevious, modifier = Modifier.size(36.dp)) {
+            Icon(
+                Icons.Outlined.ChevronLeft,
+                contentDescription = stringResource(R.string.budget_book_previous_month),
+                modifier = Modifier.size(20.dp),
+            )
+        }
+        Text(
+            text =
+                if (month.year == YearMonth.now().year) {
+                    stringResource(R.string.month_short, month.monthValue)
+                } else {
+                    stringResource(R.string.year_month, month.year, month.monthValue)
+                },
+            modifier = Modifier.widthIn(min = 48.dp),
+            fontSize = 13.sp,
+            fontWeight = FontWeight.SemiBold,
+            textAlign = TextAlign.Center,
+        )
+        IconButton(
+            onClick = onNext,
+            modifier = Modifier.size(36.dp),
+            enabled = isNextPreviousMonthAvailable(month, latestMonth),
+        ) {
+            Icon(
+                Icons.Outlined.ChevronRight,
+                contentDescription = stringResource(R.string.budget_book_next_month),
+                modifier = Modifier.size(20.dp),
+            )
+        }
+    }
+}
+
+@Composable
+private fun PreviousMonthRow(stats: MonthlyLedgerStats, budgetAmount: Int?, onClick: () -> Unit) {
     val languageTag = LocalConfiguration.current.locales[0].toLanguageTag()
     Column(
         modifier =
@@ -1025,28 +1087,25 @@ private fun PreviousMonthRow(month: YearMonth, stats: MonthlyLedgerStats, onClic
                 .padding(vertical = 14.dp),
         verticalArrangement = Arrangement.spacedBy(10.dp),
     ) {
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            Text(monthTitle(month), modifier = Modifier.weight(1f).padding(start = 8.dp), fontWeight = FontWeight.Bold)
-            Column(horizontalAlignment = Alignment.End) {
-                Text(
-                    stringResource(R.string.budget_book_income_amount, stats.amounts.income.withComma()),
-                    color = CalendarIncomeColor,
-                    fontSize = 13.sp,
-                )
-                Text(
-                    stringResource(R.string.budget_book_expense_amount, stats.amounts.expense.withComma()),
-                    color = CalendarExpenseColor,
-                    fontSize = 13.sp,
-                )
-            }
-            Icon(
-                Icons.Outlined.ChevronRight,
-                contentDescription = null,
-                modifier = Modifier.padding(start = 10.dp),
-                tint = SettingsChevronColor,
+        Row(
+            modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp),
+            horizontalArrangement = Arrangement.spacedBy(20.dp),
+        ) {
+            Text(
+                stringResource(R.string.budget_book_income_amount, stats.amounts.income.withComma()),
+                color = CalendarIncomeColor,
+                fontSize = 14.sp,
+                fontWeight = FontWeight.Bold,
+            )
+            Text(
+                stringResource(R.string.budget_book_expense_amount, stats.amounts.expense.withComma()),
+                color = CalendarExpenseColor,
+                fontSize = 14.sp,
+                fontWeight = FontWeight.Bold,
             )
         }
         MonthlyMetrics(stats)
+        PreviousMonthBudgetStatus(budgetAmount = budgetAmount, usedAmount = stats.amounts.expense)
         if (stats.largestExpenseCategories.isNotEmpty()) {
             CategoryStatisticsTags(
                 title = stringResource(R.string.budget_book_largest_expense_categories),
@@ -1065,6 +1124,76 @@ private fun PreviousMonthRow(month: YearMonth, stats: MonthlyLedgerStats, onClic
         }
     }
 }
+
+@Composable
+private fun PreviousMonthBudgetStatus(budgetAmount: Int?, usedAmount: Int) {
+    val progress = budgetUsageProgress(budgetAmount, usedAmount)
+    val boundedProgress = progress?.coerceIn(0f, 1f) ?: 0f
+    val progressColor = progress?.let(::budgetUsageColor) ?: MaterialTheme.colorScheme.outlineVariant
+    Surface(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(14.dp),
+        color = overviewCalendarBackground(),
+    ) {
+        Column(
+            modifier = Modifier.padding(horizontal = 14.dp, vertical = 12.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp),
+        ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                    Text(
+                        text =
+                            budgetAmount?.let {
+                                stringResource(R.string.budget_book_budget_amount, it.withComma())
+                            } ?: stringResource(R.string.budget_book_budget_not_set),
+                        fontSize = 13.sp,
+                        fontWeight = FontWeight.SemiBold,
+                    )
+                    Text(
+                        stringResource(R.string.budget_book_used_amount, usedAmount.withComma()),
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        fontSize = 11.sp,
+                    )
+                }
+                Text(
+                    text =
+                        progress?.let {
+                            stringResource(R.string.home_budget_usage_percent, (it * 100f).roundToInt())
+                        } ?: stringResource(R.string.budget_book_budget_usage_unavailable),
+                    fontSize = 12.sp,
+                    fontWeight = FontWeight.Bold,
+                )
+            }
+            Box(
+                modifier =
+                    Modifier
+                        .fillMaxWidth()
+                        .height(6.dp)
+                        .clip(CircleShape)
+                        .background(MaterialTheme.colorScheme.surfaceVariant)
+                        .progressSemantics(boundedProgress),
+            ) {
+                if (boundedProgress > 0f) {
+                    Box(
+                        Modifier
+                            .fillMaxWidth(boundedProgress)
+                            .fillMaxHeight()
+                            .background(progressColor, CircleShape),
+                    )
+                }
+            }
+        }
+    }
+}
+
+internal fun isNextPreviousMonthAvailable(month: YearMonth, latestMonth: YearMonth): Boolean = month < latestMonth
+
+internal fun budgetUsageProgress(budgetAmount: Int?, usedAmount: Int): Float? =
+    budgetAmount?.takeIf { it > 0 }?.let { usedAmount.toFloat() / it }
 
 private data class CategoryStatTag(val category: String, val value: String)
 
