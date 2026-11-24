@@ -37,9 +37,11 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.CameraAlt
 import androidx.compose.material.icons.outlined.Close
+import androidx.compose.material.icons.outlined.DocumentScanner
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -86,7 +88,6 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
 private val OverlayDimColor = Color.Black.copy(alpha = 0.55f)
-private val ReviewSecondaryButtonColor = Color(0xFF2C2C2C)
 private const val GUIDE_WIDTH_RATIO = 0.78f
 private const val GUIDE_ASPECT_RATIO = 1.45f
 private const val GUIDE_MAX_HEIGHT_RATIO = 0.6f
@@ -365,31 +366,52 @@ private fun DrawScope.drawCornerBrackets(topLeft: Offset, frameSize: Size) {
 @Composable
 private fun ReviewStep(bitmap: Bitmap, isEncoding: Boolean, onRetake: () -> Unit, onUse: () -> Unit) {
     val imageBitmap = remember(bitmap) { bitmap.asImageBitmap() }
-    Column(modifier = Modifier.fillMaxSize().statusBarsPadding().navigationBarsPadding().padding(20.dp)) {
+    Column(
+        modifier =
+            Modifier
+                .fillMaxSize()
+                .background(MaterialTheme.colorScheme.background)
+                .statusBarsPadding()
+                .navigationBarsPadding()
+                .padding(20.dp),
+    ) {
+        Icon(
+            imageVector = Icons.Outlined.DocumentScanner,
+            contentDescription = null,
+            tint = SmartBudgetGreen,
+            modifier = Modifier.size(30.dp),
+        )
+        Spacer(Modifier.height(14.dp))
         Text(
             stringResource(R.string.receipt_review_title),
-            color = Color.White,
+            color = MaterialTheme.colorScheme.onBackground,
             fontSize = 20.sp,
             fontWeight = FontWeight.Bold,
         )
         Spacer(Modifier.height(6.dp))
         Text(
             stringResource(R.string.receipt_review_message),
-            color = Color.White.copy(alpha = 0.7f),
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
             fontSize = 14.sp,
         )
         Spacer(Modifier.height(16.dp))
         Image(
             bitmap = imageBitmap,
             contentDescription = stringResource(R.string.receipt_review_image),
-            modifier = Modifier.weight(1f).fillMaxWidth().clip(RoundedCornerShape(16.dp)),
+            modifier =
+                Modifier
+                    .weight(1f)
+                    .fillMaxWidth()
+                    .background(MaterialTheme.colorScheme.surfaceVariant, RoundedCornerShape(18.dp))
+                    .clip(RoundedCornerShape(18.dp)),
             contentScale = ContentScale.Fit,
         )
         Spacer(Modifier.height(20.dp))
         Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
             CaptureActionButton(
                 text = stringResource(R.string.receipt_review_retake),
-                color = ReviewSecondaryButtonColor,
+                color = MaterialTheme.colorScheme.surfaceVariant,
+                contentColor = MaterialTheme.colorScheme.onSurfaceVariant,
                 enabled = !isEncoding,
                 modifier = Modifier.weight(1f),
                 onClick = onRetake,
@@ -415,6 +437,7 @@ private fun CaptureActionButton(
     modifier: Modifier = Modifier,
     enabled: Boolean = true,
     isLoading: Boolean = false,
+    contentColor: Color = Color.White,
 ) {
     Surface(
         modifier =
@@ -429,7 +452,7 @@ private fun CaptureActionButton(
             if (isLoading) {
                 CircularProgressIndicator(color = Color.White, strokeWidth = 2.dp, modifier = Modifier.size(20.dp))
             } else {
-                Text(text, color = Color.White, fontSize = 16.sp, fontWeight = FontWeight.SemiBold)
+                Text(text, color = contentColor, fontSize = 16.sp, fontWeight = FontWeight.SemiBold)
             }
         }
     }

@@ -11,6 +11,7 @@ import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -38,9 +39,9 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.luminance
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.LiveRegionMode
 import androidx.compose.ui.semantics.ProgressBarRangeInfo
@@ -63,7 +64,6 @@ private const val PENDING_PROGRESS_LIMIT = 0.9f
 private const val PENDING_PROGRESS_DURATION_MILLIS = 3_000
 private const val SCAN_DURATION_MILLIS = 1_400
 private const val FLOAT_DURATION_MILLIS = 2_400
-private const val RECEIPT_TEETH = 7
 
 /**
  * 영수증 OCR 요청을 처리하는 동안 표시하는 전체 화면 로딩 다이얼로그.
@@ -162,26 +162,36 @@ private fun ScanningReceiptIllustration(modifier: Modifier = Modifier) {
         animationSpec = infiniteRepeatable(tween(FLOAT_DURATION_MILLIS, easing = LinearEasing)),
         label = "장식 점 움직임",
     )
-    val receiptColor = MaterialTheme.colorScheme.surface
-    Canvas(modifier = modifier) {
-        val center = Offset(size.width / 2, size.height / 2)
-        val circleRadius = size.minDimension * 0.42f
-        drawCircle(
-            brush =
-                Brush.radialGradient(
-                    colors = listOf(SmartBudgetGreen.copy(alpha = 0.18f), SmartBudgetGreen.copy(alpha = 0.08f)),
-                    center = center,
-                    radius = circleRadius,
-                ),
-            radius = circleRadius,
-            center = center,
+    Box(modifier = modifier, contentAlignment = Alignment.Center) {
+        Canvas(modifier = Modifier.fillMaxSize()) {
+            val center = Offset(size.width / 2, size.height / 2)
+            val circleRadius = size.minDimension * 0.42f
+            drawCircle(
+                brush =
+                    Brush.radialGradient(
+                        colors = listOf(SmartBudgetGreen.copy(alpha = 0.18f), SmartBudgetGreen.copy(alpha = 0.08f)),
+                        center = center,
+                        radius = circleRadius,
+                    ),
+                radius = circleRadius,
+                center = center,
+            )
+            drawDecorationDots(center, circleRadius, floatPhase)
+        }
+        Image(
+            painter = painterResource(R.drawable.receipt_scan_3d),
+            contentDescription = null,
+            modifier = Modifier.size(width = 164.dp, height = 205.dp),
         )
-        drawDecorationDots(center, circleRadius, floatPhase)
-
-        val receiptSize = Size(circleRadius * 1.04f, circleRadius * 1.42f)
-        val receiptTopLeft = Offset(center.x - receiptSize.width / 2, center.y - receiptSize.height / 2)
-        drawReceipt(receiptTopLeft, receiptSize, receiptColor)
-        drawScanLine(receiptTopLeft, receiptSize, scanFraction)
+        Canvas(modifier = Modifier.fillMaxSize()) {
+            val receiptSize = Size(size.width * 0.5f, size.height * 0.66f)
+            val receiptTopLeft =
+                Offset(
+                    x = (size.width - receiptSize.width) / 2,
+                    y = (size.height - receiptSize.height) / 2,
+                )
+            drawScanLine(receiptTopLeft, receiptSize, scanFraction)
+        }
     }
 }
 
@@ -199,50 +209,6 @@ private fun DrawScope.drawDecorationDots(center: Offset, circleRadius: Float, ph
             color = SmartBudgetGreen.copy(alpha = 0.45f),
             radius = circleRadius * radiusRatio,
             center = Offset(center.x + position.x * circleRadius, center.y + position.y * circleRadius + drift),
-        )
-    }
-}
-
-/** 위아래가 톱니 모양인 영수증 종이와 글자 줄을 그린다. */
-private fun DrawScope.drawReceipt(topLeft: Offset, receiptSize: Size, paperColor: Color) {
-    val toothWidth = receiptSize.width / RECEIPT_TEETH
-    val toothDepth = toothWidth * 0.32f
-    val left = topLeft.x
-    val right = topLeft.x + receiptSize.width
-    val top = topLeft.y
-    val bottom = topLeft.y + receiptSize.height
-    val paper =
-        Path().apply {
-            moveTo(left, top)
-            repeat(RECEIPT_TEETH) { index ->
-                val startX = left + toothWidth * index
-                quadraticTo(startX + toothWidth / 2, top + toothDepth * 2, startX + toothWidth, top)
-            }
-            lineTo(right, bottom)
-            repeat(RECEIPT_TEETH) { index ->
-                val startX = right - toothWidth * index
-                quadraticTo(startX - toothWidth / 2, bottom - toothDepth * 2, startX - toothWidth, bottom)
-            }
-            close()
-        }
-    drawPath(paper, paperColor.copy(alpha = 0.92f))
-
-    val lineLeft = left + receiptSize.width * 0.15f
-    val lineHeight = receiptSize.height * 0.055f
-    val lines =
-        listOf(
-            Triple(0.2f, 0.7f, 0.55f),
-            Triple(0.36f, 0.48f, 0.3f),
-            Triple(0.47f, 0.48f, 0.3f),
-            Triple(0.72f, 0.48f, 0.3f),
-            Triple(0.83f, 0.32f, 0.3f),
-        )
-    lines.forEach { (yRatio, widthRatio, alpha) ->
-        drawRoundRect(
-            color = SmartBudgetGreen.copy(alpha = alpha),
-            topLeft = Offset(lineLeft, top + receiptSize.height * yRatio - lineHeight / 2),
-            size = Size(receiptSize.width * widthRatio, lineHeight),
-            cornerRadius = CornerRadius(lineHeight / 2),
         )
     }
 }

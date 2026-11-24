@@ -223,6 +223,7 @@ internal fun TransactionEditorDialog(
                     onCameraClick = { showCamera = true },
                     onClose = onDismiss,
                 )
+                Spacer(Modifier.height(12.dp))
                 Column(
                     modifier = Modifier.padding(end = 8.dp),
                     verticalArrangement = Arrangement.spacedBy(16.dp),
@@ -253,10 +254,20 @@ internal fun TransactionEditorDialog(
                         }
                     }
                     EditorField(label = stringResource(storeNameLabelFor(type))) {
-                        EditorTextField(value = storeName, onValueChange = { storeName = it }, enabled = !isBusy)
+                        EditorTextField(
+                            value = storeName,
+                            onValueChange = { storeName = it },
+                            enabled = !isBusy,
+                            placeholder = stringResource(storeNameHintFor(type)),
+                        )
                     }
                     EditorField(label = stringResource(R.string.budget_book_editor_note)) {
-                        EditorTextField(value = note, onValueChange = { note = it }, enabled = !isBusy)
+                        EditorTextField(
+                            value = note,
+                            onValueChange = { note = it },
+                            enabled = !isBusy,
+                            placeholder = stringResource(noteHintFor(type)),
+                        )
                     }
                     EditorField(label = stringResource(R.string.budget_book_amount)) {
                         EditorTextField(
@@ -264,6 +275,7 @@ internal fun TransactionEditorDialog(
                             onValueChange = { amountText = it.filter(Char::isDigit).take(MAX_AMOUNT_DIGITS) },
                             enabled = !isBusy,
                             keyboardType = KeyboardType.Number,
+                            placeholder = stringResource(amountHintFor(type)),
                             suffix = stringResource(R.string.settings_won),
                             visualTransformation = ThousandsSeparatorTransformation,
                         )
@@ -345,6 +357,24 @@ private fun storeNameLabelFor(type: TransactionType): Int = if (type == Transact
     R.string.budget_book_editor_income_source
 } else {
     R.string.budget_book_editor_store_name
+}
+
+private fun storeNameHintFor(type: TransactionType): Int = if (type == TransactionType.INCOME) {
+    R.string.budget_book_editor_income_source_hint
+} else {
+    R.string.budget_book_editor_store_name_hint
+}
+
+private fun noteHintFor(type: TransactionType): Int = if (type == TransactionType.INCOME) {
+    R.string.budget_book_editor_income_note_hint
+} else {
+    R.string.budget_book_editor_expense_note_hint
+}
+
+private fun amountHintFor(type: TransactionType): Int = if (type == TransactionType.INCOME) {
+    R.string.budget_book_editor_income_amount_hint
+} else {
+    R.string.budget_book_editor_expense_amount_hint
 }
 
 /** 영수증 OCR 결과를 사용했는지에 따른 거래 출처. */
@@ -502,6 +532,7 @@ private fun EditorTextField(
     onValueChange: (String) -> Unit,
     enabled: Boolean,
     keyboardType: KeyboardType = KeyboardType.Text,
+    placeholder: String? = null,
     suffix: String? = null,
     visualTransformation: VisualTransformation = VisualTransformation.None,
 ) {
@@ -513,6 +544,7 @@ private fun EditorTextField(
         enabled = enabled,
         singleLine = true,
         textStyle = TextStyle(fontSize = 15.sp, fontWeight = FontWeight.Medium),
+        placeholder = placeholder?.let { { Text(it, color = MaterialTheme.colorScheme.onSurfaceVariant) } },
         suffix = suffix?.let { { Text(it, color = MaterialTheme.colorScheme.onSurfaceVariant, fontSize = 14.sp) } },
         visualTransformation = visualTransformation,
         keyboardOptions = KeyboardOptions(keyboardType = keyboardType),
