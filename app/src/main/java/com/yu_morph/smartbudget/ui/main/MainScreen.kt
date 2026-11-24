@@ -412,7 +412,7 @@ private fun ConfettiBurst(progress: Float, particles: List<ConfettiParticle>, mo
 private fun createConfettiParticles(seed: Int): List<ConfettiParticle> {
     val colors = listOf(SmartBudgetGreen, Color(0xFFFFC857), Color(0xFF56B4E9), Color(0xFFFF6B6B), Color.White)
     val horizontalVelocities = confettiHorizontalVelocities()
-    return List(32) { index ->
+    return List(horizontalVelocities.size) { index ->
         val direction = if (horizontalVelocities[index] < 0f) -1f else 1f
         ConfettiParticle(
             horizontalVelocity = horizontalVelocities[index],
@@ -427,10 +427,10 @@ private fun createConfettiParticles(seed: Int): List<ConfettiParticle> {
 
 internal fun canStartFabCelebration(isCelebrating: Boolean): Boolean = !isCelebrating
 
-internal fun fabCelebrationVerticalOffset(progress: Float): Float = 112f - 888f * progress + 888f * progress * progress
+internal fun fabCelebrationVerticalOffset(progress: Float): Float = 112f - 748f * progress + 748f * progress * progress
 
-internal fun confettiHorizontalVelocities(): List<Float> = List(32) { index ->
+internal fun confettiHorizontalVelocities(): List<Float> = List(44) { index ->
     val direction = if (index % 2 == 0) -1f else 1f
-    val spread = 38f + (index / 2 % 8) * 14f
+    val spread = 34f + (index / 2 % 11) * 11f
     direction * spread
 }
