@@ -44,11 +44,11 @@ import androidx.compose.material.icons.outlined.ChevronRight
 import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material.icons.outlined.Edit
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.ElevatedButton
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -1084,21 +1084,27 @@ private fun MonthlyStatisticsCardContent(stats: MonthlyLedgerStats, budgetAmount
         modifier = Modifier.fillMaxWidth().padding(top = 10.dp),
         verticalArrangement = Arrangement.spacedBy(10.dp),
     ) {
-        Column(
+        Row(
             modifier = Modifier.fillMaxWidth(),
-            verticalArrangement = Arrangement.spacedBy(5.dp),
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
         ) {
-            Text(
-                stringResource(R.string.budget_book_income_amount, stats.amounts.income.withComma()),
-                color = CalendarIncomeColor,
-                fontSize = 14.sp,
-                fontWeight = FontWeight.Bold,
+            CashFlowAmount(
+                label = stringResource(R.string.budget_book_income),
+                amount = stats.amounts.income,
+                color = ExpenseRed,
+                modifier = Modifier.weight(1f),
             )
-            Text(
-                stringResource(R.string.budget_book_expense_amount, stats.amounts.expense.withComma()),
-                color = CalendarExpenseColor,
-                fontSize = 14.sp,
-                fontWeight = FontWeight.Bold,
+            CashFlowAmount(
+                label = stringResource(R.string.budget_book_expense),
+                amount = stats.amounts.expense,
+                color = IncomeBlue,
+                modifier = Modifier.weight(1f),
+            )
+            CashFlowAmount(
+                label = stringResource(R.string.budget_book_total),
+                amount = stats.amounts.income - stats.amounts.expense,
+                color = MaterialTheme.colorScheme.onSurface,
+                modifier = Modifier.weight(1f),
             )
         }
         HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.45f))
@@ -1122,24 +1128,26 @@ private fun MonthlyStatisticsCardContent(stats: MonthlyLedgerStats, budgetAmount
                     },
             )
         }
-        ElevatedButton(
+        Button(
             onClick = onClick,
-            modifier = Modifier.align(Alignment.End).height(44.dp),
-            shape = RoundedCornerShape(12.dp),
+            modifier = Modifier.align(Alignment.CenterHorizontally).height(36.dp),
+            shape = RoundedCornerShape(10.dp),
+            contentPadding = PaddingValues(horizontal = 12.dp, vertical = 4.dp),
             colors =
-                ButtonDefaults.elevatedButtonColors(
+                ButtonDefaults.buttonColors(
+                    containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.45f),
                     contentColor = MaterialTheme.colorScheme.onSurfaceVariant,
                 ),
         ) {
             Text(
                 stringResource(R.string.budget_book_view_ledger),
-                fontSize = 13.sp,
+                fontSize = 12.sp,
                 fontWeight = FontWeight.SemiBold,
             )
             Icon(
                 Icons.Outlined.ChevronRight,
                 contentDescription = null,
-                modifier = Modifier.size(18.dp),
+                modifier = Modifier.size(16.dp),
             )
         }
     }
@@ -1148,7 +1156,6 @@ private fun MonthlyStatisticsCardContent(stats: MonthlyLedgerStats, budgetAmount
 @Composable
 private fun PreviousMonthBudgetStatus(budgetAmount: Int?, usedAmount: Int) {
     val progress = budgetUsageProgress(budgetAmount, usedAmount)
-    val boundedProgress = progress?.coerceIn(0f, 1f) ?: 0f
     val progressColor = progress?.let(::budgetUsageColor) ?: MaterialTheme.colorScheme.outlineVariant
     Column(
         modifier = Modifier.fillMaxWidth(),
@@ -1174,32 +1181,16 @@ private fun PreviousMonthBudgetStatus(budgetAmount: Int?, usedAmount: Int) {
                     fontSize = 11.sp,
                 )
             }
-            Text(
-                text =
-                    progress?.let {
-                        stringResource(R.string.home_budget_usage_percent, (it * 100f).roundToInt())
-                    } ?: stringResource(R.string.budget_book_budget_usage_unavailable),
-                fontSize = 12.sp,
-                fontWeight = FontWeight.Bold,
+            BudgetUsageIndicator(
+                progress = progress ?: 0f,
+                progressColor = progressColor,
+                label =
+                    if (progress == null) {
+                        stringResource(R.string.budget_book_budget_usage_unavailable)
+                    } else {
+                        null
+                    },
             )
-        }
-        Box(
-            modifier =
-                Modifier
-                    .fillMaxWidth()
-                    .height(6.dp)
-                    .clip(CircleShape)
-                    .background(MaterialTheme.colorScheme.surfaceVariant)
-                    .progressSemantics(boundedProgress),
-        ) {
-            if (boundedProgress > 0f) {
-                Box(
-                    Modifier
-                        .fillMaxWidth(boundedProgress)
-                        .fillMaxHeight()
-                        .background(progressColor, CircleShape),
-                )
-            }
         }
     }
 }

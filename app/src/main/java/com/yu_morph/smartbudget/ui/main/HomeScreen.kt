@@ -44,8 +44,8 @@ import com.yu_morph.smartbudget.ui.theme.SmartBudgetGreen
 import java.text.NumberFormat
 import kotlin.math.roundToInt
 
-private val ExpenseRed = Color(0xFFEA5A5A)
-private val IncomeBlue = Color(0xFF4B88D8)
+internal val ExpenseRed = Color(0xFFEA5A5A)
+internal val IncomeBlue = Color(0xFF4B88D8)
 private val BudgetYellow = Color(0xFFF2C94C)
 private val BudgetOrange = Color(0xFFF2994A)
 private val BudgetRed = Color(0xFFEB5757)
@@ -231,7 +231,7 @@ private fun MonthlyCashFlowSection(state: HomeDashboardUiState) {
 }
 
 @Composable
-private fun CashFlowAmount(label: String, amount: Int, color: Color, modifier: Modifier = Modifier) {
+internal fun CashFlowAmount(label: String, amount: Int, color: Color, modifier: Modifier = Modifier) {
     Column(
         modifier = modifier,
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -253,11 +253,11 @@ private fun CashFlowAmount(label: String, amount: Int, color: Color, modifier: M
 }
 
 @Composable
-private fun BudgetUsageIndicator(progress: Float, progressColor: Color) {
+internal fun BudgetUsageIndicator(progress: Float, progressColor: Color, label: String? = null) {
     val boundedProgress = progress.coerceIn(0f, 1f)
     Column(horizontalAlignment = Alignment.End) {
         Text(
-            text = stringResource(R.string.home_budget_usage_percent, (progress * 100f).roundToInt()),
+            text = label ?: stringResource(R.string.home_budget_usage_percent, (progress * 100f).roundToInt()),
             color = MaterialTheme.colorScheme.onSurface,
             fontSize = 11.sp,
             fontWeight = FontWeight.Normal,
