@@ -1,4 +1,4 @@
-name: 릴리즈 앱 빌드 및 첨부
+name: Test and Release the App 
 
 on:
   release:
@@ -14,27 +14,27 @@ concurrency:
 
 jobs:
   release:
-    name: APK 및 AAB 빌드
+    name: Test and Build
     runs-on: ubuntu-latest
     timeout-minutes: 30
 
     steps:
-      - name: 릴리즈 태그 소스 코드 체크아웃
+      - name: Checkout
         uses: actions/checkout@v7
         with:
           ref: ${{ github.event.release.tag_name }}
 
-      - name: JDK 설정
+      - name: Setup the JDK
         uses: actions/setup-java@v6
         with:
           distribution: temurin
           java-version: "21"
           cache: gradle
 
-      - name: Gradle Wrapper 실행 권한 설정
+      - name: Grant exec Permission to Gradle Wrapper
         run: chmod +x gradlew
 
-      - name: 릴리즈 태그 검증 및 앱 버전 계산
+      - name: Verify and Parse the Release Tag
         id: version
         shell: bash
         env:
@@ -65,7 +65,7 @@ jobs:
           echo "name=$version_name" >> "$GITHUB_OUTPUT"
           echo "code=$version_code" >> "$GITHUB_OUTPUT"
 
-      - name: 릴리즈 서명 키 준비
+      - name: Prepare the App Signing Key
         shell: bash
         env:
           KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
@@ -81,7 +81,7 @@ jobs:
           printf '%s' "$KEYSTORE_BASE64" | base64 --decode > "$RUNNER_TEMP/smartbudget-release.jks"
           echo "ANDROID_KEYSTORE_PATH=$RUNNER_TEMP/smartbudget-release.jks" >> "$GITHUB_ENV"
 
-      - name: 테스트 및 릴리즈 앱 빌드
+      - name: Test and Build
         env:
           ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
           ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
@@ -91,7 +91,7 @@ jobs:
           -PappVersionName=${{ steps.version.outputs.name }}
           -PappVersionCode=${{ steps.version.outputs.code }}
 
-      - name: 릴리즈 파일 준비
+      - name: Copy Artifacts
         shell: bash
         env:
           RELEASE_TAG: ${{ github.event.release.tag_name }}
@@ -100,7 +100,7 @@ jobs:
           cp app/build/outputs/apk/release/app-release.apk "release-assets/smartbudget-${RELEASE_TAG}.apk"
           cp app/build/outputs/bundle/release/app-release.aab "release-assets/smartbudget-${RELEASE_TAG}.aab"
 
-      - name: APK와 AAB를 워크플로 아티팩트로 업로드
+      - name: Upload Artifacts
         uses: actions/upload-artifact@v7
         with:
           name: smartbudget-${{ github.event.release.tag_name }}-builds
@@ -110,7 +110,7 @@ jobs:
           if-no-files-found: error
           retention-days: 30
 
-      - name: GitHub 릴리즈에 APK 첨부
+      - name: Attach the APK to Release
         shell: bash
         env:
           GH_TOKEN: ${{ github.token }}
