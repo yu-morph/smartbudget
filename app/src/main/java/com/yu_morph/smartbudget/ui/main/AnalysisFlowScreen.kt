@@ -16,17 +16,22 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.selection.selectable
+import androidx.compose.foundation.selection.selectableGroup
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.outlined.ArrowBack
 import androidx.compose.material.icons.outlined.ArrowBack
 import androidx.compose.material.icons.outlined.CalendarMonth
 import androidx.compose.material.icons.outlined.ChevronLeft
 import androidx.compose.material.icons.outlined.ChevronRight
 import androidx.compose.material.icons.outlined.Lightbulb
+import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.DropdownMenu
@@ -52,6 +57,9 @@ import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.Dp
@@ -213,69 +221,105 @@ private fun SurveyScreen(
     onSave: () -> Unit,
 ) {
     MainTabContainer(bottomPadding) {
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            IconButton(onClick = onBack) {
-                Icon(Icons.Outlined.ArrowBack, contentDescription = stringResource(R.string.navigate_back))
-            }
-            Text(stringResource(R.string.analysis_custom_title), fontSize = 20.sp, fontWeight = FontWeight.Bold)
-        }
-        Text(stringResource(R.string.analysis_survey_heading), fontSize = 24.sp, fontWeight = FontWeight.Bold)
-        Text(stringResource(R.string.analysis_survey_privacy), color = MaterialTheme.colorScheme.onSurfaceVariant)
+        AnalysisPageHeading(stringResource(R.string.analysis_survey_title), onBack)
+        Text(
+            stringResource(R.string.analysis_survey_privacy),
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            style = MaterialTheme.typography.bodyMedium,
+        )
         Spacer(Modifier.height(16.dp))
-        SurveyLabel(R.string.analysis_survey_gender)
-        ChoiceRow(
-            labels = listOf(R.string.analysis_survey_male, R.string.analysis_survey_female),
-            selected = survey.gender,
-            values = listOf("male", "female"),
-            onSelect = onGenderChange,
-        )
-        SurveyField(
-            R.string.analysis_survey_birth_date,
-            survey.birthDate,
-            onBirthDateChange,
-            R.string.analysis_survey_birth_hint,
-        )
-        SurveyField(R.string.analysis_survey_job, survey.job, onJobChange, R.string.analysis_survey_job_hint)
-        SurveyField(
-            R.string.analysis_survey_workplace,
-            survey.workplace,
-            onWorkplaceChange,
-            R.string.analysis_survey_workplace_hint,
-        )
-        EducationField(survey.education, onEducationChange)
-        SurveyLabel(R.string.analysis_survey_loan)
-        ChoiceRow(
-            labels = listOf(R.string.analysis_survey_yes, R.string.analysis_survey_no),
-            selected = if (survey.hasLoan) "yes" else "no",
-            values = listOf("yes", "no"),
-            onSelect = { onLoanChange(it == "yes") },
-        )
-        if (survey.hasLoan) {
+        SurveySection(R.string.analysis_survey_profile_section) {
+            ChoiceRow(
+                label = R.string.analysis_survey_gender,
+                labels = listOf(R.string.analysis_survey_male, R.string.analysis_survey_female),
+                selected = survey.gender,
+                values = listOf("male", "female"),
+                onSelect = onGenderChange,
+            )
             SurveyField(
-                R.string.analysis_survey_loan_details,
-                survey.loanDetails,
-                onLoanDetailsChange,
-                R.string.analysis_survey_loan_hint,
-                keyboardType = KeyboardType.Number,
+                R.string.analysis_survey_birth_date,
+                survey.birthDate,
+                onBirthDateChange,
+                R.string.analysis_survey_birth_hint,
+            )
+            SurveyField(R.string.analysis_survey_job, survey.job, onJobChange, R.string.analysis_survey_job_hint)
+            SurveyField(
+                R.string.analysis_survey_workplace,
+                survey.workplace,
+                onWorkplaceChange,
+                R.string.analysis_survey_workplace_hint,
+            )
+            EducationField(survey.education, onEducationChange)
+        }
+        Spacer(Modifier.height(12.dp))
+        SurveySection(R.string.analysis_survey_finance_section) {
+            ChoiceRow(
+                label = R.string.analysis_survey_loan,
+                labels = listOf(R.string.analysis_survey_yes, R.string.analysis_survey_no),
+                selected = if (survey.hasLoan) "yes" else "no",
+                values = listOf("yes", "no"),
+                onSelect = { onLoanChange(it == "yes") },
+            )
+            if (survey.hasLoan) {
+                SurveyField(
+                    R.string.analysis_survey_loan_details,
+                    survey.loanDetails,
+                    onLoanDetailsChange,
+                    R.string.analysis_survey_loan_hint,
+                    keyboardType = KeyboardType.Number,
+                )
+            }
+        }
+        Spacer(Modifier.height(12.dp))
+        SurveySection(R.string.analysis_survey_goal_section) {
+            ChoiceRow(
+                label = R.string.analysis_survey_direction,
+                labels = listOf(R.string.analysis_survey_save, R.string.analysis_survey_maintain),
+                selected = survey.managementDirection,
+                values = listOf("save", "maintain"),
+                onSelect = onDirectionChange,
+            )
+            SurveyField(
+                R.string.analysis_survey_interest,
+                survey.interest,
+                onInterestChange,
+                R.string.analysis_survey_interest_hint,
+                minLines = 3,
             )
         }
-        SurveyLabel(R.string.analysis_survey_direction)
-        ChoiceRow(
-            labels = listOf(R.string.analysis_survey_save, R.string.analysis_survey_maintain),
-            selected = survey.managementDirection,
-            values = listOf("save", "maintain"),
-            onSelect = onDirectionChange,
-        )
-        SurveyField(
-            R.string.analysis_survey_interest,
-            survey.interest,
-            onInterestChange,
-            R.string.analysis_survey_interest_hint,
-            minLines = 3,
+        Spacer(Modifier.height(16.dp))
+        Button(onClick = onSave, modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp)) {
+            Text(stringResource(R.string.analysis_survey_save_button))
+        }
+        Spacer(Modifier.height(16.dp))
+    }
+}
+
+@Composable
+private fun SurveySection(title: Int, content: @Composable () -> Unit) {
+    AnalysisCard {
+        Text(
+            stringResource(title),
+            modifier = Modifier.semantics { heading() },
+            style = MaterialTheme.typography.titleMedium,
         )
         Spacer(Modifier.height(12.dp))
-        PrimaryAuthButton(text = stringResource(R.string.analysis_survey_save_button), onClick = onSave)
-        Spacer(Modifier.height(8.dp))
+        Column(verticalArrangement = Arrangement.spacedBy(14.dp)) { content() }
+    }
+}
+
+@Composable
+private fun AnalysisPageHeading(title: String, onBack: () -> Unit) {
+    Row(verticalAlignment = Alignment.CenterVertically) {
+        IconButton(onClick = onBack) {
+            Icon(Icons.AutoMirrored.Outlined.ArrowBack, contentDescription = stringResource(R.string.navigate_back))
+        }
+        Text(
+            title,
+            modifier = Modifier.semantics { heading() },
+            style = MaterialTheme.typography.headlineSmall,
+            fontWeight = FontWeight.Bold,
+        )
     }
 }
 
@@ -288,18 +332,17 @@ private fun SurveyField(
     keyboardType: KeyboardType = KeyboardType.Text,
     minLines: Int = 1,
 ) {
-    Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
-        SurveyLabel(label)
-        OutlinedTextField(
-            value = value,
-            onValueChange = onValueChange,
-            modifier = Modifier.fillMaxWidth(),
-            placeholder = { Text(stringResource(hint)) },
-            keyboardOptions = KeyboardOptions(keyboardType = keyboardType),
-            minLines = minLines,
-            shape = RoundedCornerShape(14.dp),
-        )
-    }
+    OutlinedTextField(
+        value = value,
+        onValueChange = onValueChange,
+        modifier = Modifier.fillMaxWidth(),
+        label = { Text(stringResource(label)) },
+        placeholder = { Text(stringResource(hint)) },
+        keyboardOptions = KeyboardOptions(keyboardType = keyboardType),
+        minLines = minLines,
+        singleLine = minLines == 1,
+        shape = RoundedCornerShape(14.dp),
+    )
 }
 
 @Composable
@@ -308,29 +351,42 @@ private fun SurveyLabel(label: Int) {
 }
 
 @Composable
-private fun ChoiceRow(labels: List<Int>, values: List<String>, selected: String, onSelect: (String) -> Unit) {
-    Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.fillMaxWidth()) {
-        labels.forEachIndexed { index, label ->
-            val isSelected = selected == values[index]
-            Box(
-                modifier = Modifier.weight(1f).height(48.dp)
-                    .clip(RoundedCornerShape(14.dp))
-                    .background(
-                        if (isSelected) SmartBudgetGreen.copy(alpha = 0.12f) else MaterialTheme.colorScheme.surface,
+private fun ChoiceRow(
+    label: Int,
+    labels: List<Int>,
+    values: List<String>,
+    selected: String,
+    onSelect: (String) -> Unit,
+) {
+    val colors = MaterialTheme.colorScheme
+    Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+        SurveyLabel(label)
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.fillMaxWidth().selectableGroup()) {
+            labels.forEachIndexed { index, label ->
+                val isSelected = selected == values[index]
+                Box(
+                    modifier = Modifier.weight(1f).heightIn(min = 48.dp)
+                        .clip(RoundedCornerShape(14.dp))
+                        .background(
+                            if (isSelected) colors.primary.copy(alpha = 0.12f) else colors.surface,
+                        )
+                        .border(
+                            1.dp,
+                            if (isSelected) colors.primary else colors.outlineVariant,
+                            RoundedCornerShape(14.dp),
+                        )
+                        .selectable(selected = isSelected, role = Role.RadioButton, onClick = {
+                            onSelect(values[index])
+                        })
+                        .padding(8.dp),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Text(
+                        stringResource(label),
+                        color = if (isSelected) colors.primary else colors.onSurface,
+                        fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
                     )
-                    .border(
-                        1.dp,
-                        if (isSelected) SmartBudgetGreen else MaterialTheme.colorScheme.outlineVariant,
-                        RoundedCornerShape(14.dp),
-                    )
-                    .clickable { onSelect(values[index]) },
-                contentAlignment = Alignment.Center,
-            ) {
-                Text(
-                    stringResource(label),
-                    color = if (isSelected) SmartBudgetGreen else MaterialTheme.colorScheme.onSurface,
-                    fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
-                )
+                }
             }
         }
     }
@@ -484,33 +540,27 @@ private fun AnalysisLoadingScreen(bottomPadding: Dp) {
 @Composable
 private fun AnalysisResultScreen(bottomPadding: Dp, year: Int, month: Int, interest: String, onBack: () -> Unit) {
     MainTabContainer(bottomPadding) {
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            IconButton(onClick = onBack) {
-                Icon(Icons.Outlined.ArrowBack, contentDescription = stringResource(R.string.navigate_back))
-            }
+        AnalysisPageHeading(stringResource(R.string.analysis_result_title, year, month), onBack)
+        Text(
+            stringResource(R.string.analysis_sample_data),
+            style = MaterialTheme.typography.labelMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+        Spacer(Modifier.height(12.dp))
+        ResultCard(R.string.analysis_result_total_title) {
             Text(
-                stringResource(R.string.analysis_result_title, year, month),
-                fontSize = 20.sp,
+                stringResource(R.string.analysis_result_total),
+                style = MaterialTheme.typography.headlineLarge,
                 fontWeight = FontWeight.Bold,
             )
-        }
-        ResultCard(R.string.analysis_result_ai_title) {
-            Row(horizontalArrangement = Arrangement.SpaceBetween, modifier = Modifier.fillMaxWidth()) {
-                Text(
-                    stringResource(R.string.analysis_result_ai_body),
-                    modifier = Modifier.weight(1f),
-                    lineHeight = 22.sp,
-                )
-                Icon(Icons.Outlined.Lightbulb, contentDescription = null, tint = SmartBudgetGreen)
-            }
-        }
-        ResultCard(R.string.analysis_result_total_title) {
-            Text(stringResource(R.string.analysis_result_total), fontSize = 28.sp, fontWeight = FontWeight.Bold)
             Text(
                 stringResource(R.string.analysis_result_change),
-                color = Color(0xFFE2533F),
-                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.error,
+                style = MaterialTheme.typography.labelLarge,
             )
+        }
+        ResultCard(R.string.analysis_result_ai_title, highlighted = true) {
+            Text(stringResource(R.string.analysis_result_ai_body), style = MaterialTheme.typography.bodyLarge)
         }
         ResultCard(R.string.analysis_result_categories_title) {
             ResultLine(
@@ -531,11 +581,11 @@ private fun AnalysisResultScreen(bottomPadding: Dp, year: Int, month: Int, inter
         }
         ResultCard(R.string.analysis_result_health_title) {
             Row(verticalAlignment = Alignment.CenterVertically) {
-                HealthScore(modifier = Modifier.size(116.dp))
-                Column(Modifier.padding(start = 20.dp)) {
+                HealthScore(modifier = Modifier.size(76.dp))
+                Column(Modifier.weight(1f).padding(start = 12.dp)) {
                     Text(
                         stringResource(R.string.analysis_result_health_grade),
-                        color = SmartBudgetGreen,
+                        color = MaterialTheme.colorScheme.primary,
                         fontWeight = FontWeight.Bold,
                     )
                     Text(
@@ -551,10 +601,16 @@ private fun AnalysisResultScreen(bottomPadding: Dp, year: Int, month: Int, inter
             Text(
                 stringResource(R.string.analysis_result_weekday_note),
                 modifier = Modifier.padding(top = 12.dp),
-                color = SmartBudgetGreen,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
                 lineHeight = 20.sp,
             )
         }
+        Text(
+            stringResource(R.string.analysis_result_advice_heading),
+            modifier = Modifier.semantics { heading() },
+            style = MaterialTheme.typography.titleLarge,
+        )
+        Spacer(Modifier.height(10.dp))
         AdviceCard(
             R.string.analysis_result_save_advice,
             listOf(

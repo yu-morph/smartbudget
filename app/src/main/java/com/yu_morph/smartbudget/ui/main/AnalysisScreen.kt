@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
@@ -20,9 +21,12 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Add
 import androidx.compose.material.icons.outlined.AutoAwesome
+import androidx.compose.material.icons.outlined.CalendarMonth
 import androidx.compose.material.icons.outlined.ChevronRight
+import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -40,7 +44,10 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -49,7 +56,6 @@ import com.yu_morph.smartbudget.ui.theme.SmartBudgetGreen
 
 internal val AnalysisSlate = Color(0xFF667386)
 internal val AnalysisBlue = Color(0xFF8CA2B8)
-private val AnalysisOrange = Color(0xFFF0A04B)
 
 @Composable
 internal fun AnalysisScreen(bottomPadding: Dp) {
@@ -74,51 +80,35 @@ internal fun AnalysisScreen(bottomPadding: Dp) {
         return
     }
     MainTabContainer(bottomPadding = bottomPadding) {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            Text(stringResource(R.string.analysis_title), fontSize = 24.sp, fontWeight = FontWeight.Bold)
-            TextButton(onClick = {
-                requestAfterSurvey = true
-                flow = AnalysisFlowStep.SURVEY
-            }) {
-                Icon(Icons.Outlined.Add, contentDescription = null, tint = SmartBudgetGreen)
-                Text(stringResource(R.string.analysis_new_report), color = SmartBudgetGreen)
-            }
-        }
-        Spacer(Modifier.height(12.dp))
         SurveySummaryCard(survey = survey, onClick = {
             requestAfterSurvey = false
             flow = AnalysisFlowStep.SURVEY
         })
         Spacer(Modifier.height(14.dp))
-        PreviousReportsCard(onReportClick = { reportMonth ->
-            selectedYear = 2026
-            selectedMonth = reportMonth
-            flow = AnalysisFlowStep.RESULT
-        })
+        PreviousReportsCard(
+            onNewReport = {
+                requestAfterSurvey = true
+                flow = AnalysisFlowStep.SURVEY
+            },
+            onReportClick = { reportMonth ->
+                selectedYear = 2026
+                selectedMonth = reportMonth
+                flow = AnalysisFlowStep.RESULT
+            },
+        )
         Spacer(Modifier.height(16.dp))
     }
 }
 
 @Composable
 private fun SurveySummaryCard(survey: AnalysisSurvey, onClick: () -> Unit) {
-    AnalysisCard(modifier = Modifier.clickable(onClick = onClick)) {
+    AnalysisCard {
         Text(
             stringResource(R.string.analysis_survey_summary_title),
-            fontSize = 18.sp,
-            fontWeight = FontWeight.Bold,
+            modifier = Modifier.semantics { heading() },
+            style = MaterialTheme.typography.titleLarge,
         )
-        Spacer(Modifier.height(6.dp))
-        Text(
-            stringResource(R.string.analysis_survey_summary_description),
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            fontSize = 14.sp,
-            lineHeight = 20.sp,
-        )
-        Spacer(Modifier.height(16.dp))
+        Spacer(Modifier.height(12.dp))
         SurveySummaryRow(
             label = stringResource(R.string.analysis_survey_goal_label),
             value = if (survey.managementDirection == "maintain") {
@@ -132,6 +122,10 @@ private fun SurveySummaryCard(survey: AnalysisSurvey, onClick: () -> Unit) {
             label = stringResource(R.string.analysis_survey_focus_label),
             value = survey.interest.ifBlank { stringResource(R.string.analysis_survey_focus_value) },
         )
+        TextButton(onClick = onClick, modifier = Modifier.align(Alignment.End)) {
+            Text(stringResource(R.string.analysis_edit_survey))
+            Icon(Icons.Outlined.ChevronRight, contentDescription = null)
+        }
     }
 }
 
@@ -142,8 +136,15 @@ private fun SurveySummaryRow(label: String, value: String) {
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Text(label, color = MaterialTheme.colorScheme.onSurfaceVariant, fontSize = 14.sp)
-        Text(value, fontWeight = FontWeight.SemiBold, fontSize = 14.sp)
+        Text(label, modifier = Modifier.weight(1f), color = MaterialTheme.colorScheme.onSurfaceVariant)
+        Text(
+            value,
+            maxLines = 2,
+            overflow = TextOverflow.Ellipsis,
+            modifier = Modifier.weight(1f),
+            fontWeight = FontWeight.SemiBold,
+            fontSize = 14.sp,
+        )
     }
 }
 
@@ -217,20 +218,35 @@ private fun TrendCard() {
 }
 
 @Composable
-private fun PreviousReportsCard(onReportClick: (Int) -> Unit) {
+private fun PreviousReportsCard(onNewReport: () -> Unit, onReportClick: (Int) -> Unit) {
     AnalysisCard {
-        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-            Text(stringResource(R.string.analysis_previous), fontSize = 18.sp, fontWeight = FontWeight.Bold)
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
             Text(
-                stringResource(R.string.analysis_recent_three_months),
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                fontSize = 13.sp,
+                stringResource(R.string.analysis_report_history),
+                modifier = Modifier.weight(1f).semantics {
+                    heading()
+                },
+                style = MaterialTheme.typography.titleLarge,
             )
+            Button(onClick = onNewReport, modifier = Modifier.heightIn(min = 48.dp)) {
+                Icon(Icons.Outlined.Add, contentDescription = null, modifier = Modifier.size(18.dp))
+                Text(stringResource(R.string.analysis_new_report), modifier = Modifier.padding(start = 4.dp))
+            }
         }
+        Text(
+            stringResource(R.string.analysis_sample_data),
+            style = MaterialTheme.typography.labelMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
         Spacer(Modifier.height(8.dp))
         ReportRow(stringResource(R.string.sample_report_october), stringResource(R.string.sample_report_food), "-3%") {
             onReportClick(10)
         }
+        HorizontalDivider()
         ReportRow(
             stringResource(R.string.sample_report_september),
             stringResource(R.string.sample_report_fixed),
@@ -238,6 +254,7 @@ private fun PreviousReportsCard(onReportClick: (Int) -> Unit) {
         ) {
             onReportClick(9)
         }
+        HorizontalDivider()
         ReportRow(stringResource(R.string.sample_report_august), stringResource(R.string.sample_report_goal), "-6%") {
             onReportClick(8)
         }
@@ -251,16 +268,21 @@ private fun ReportRow(month: String, description: String, change: String, onClic
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Box(
-            modifier = Modifier.size(38.dp).background(MaterialTheme.colorScheme.surfaceVariant, CircleShape),
+            modifier = Modifier.size(36.dp).background(MaterialTheme.colorScheme.surfaceVariant, CircleShape),
             contentAlignment = Alignment.Center,
         ) {
-            Box(modifier = Modifier.size(9.dp).background(AnalysisOrange, CircleShape))
+            Icon(
+                Icons.Outlined.CalendarMonth,
+                null,
+                modifier = Modifier.size(18.dp),
+                tint = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
         }
         Column(modifier = Modifier.padding(start = 12.dp).weight(1f)) {
             Text(month, fontWeight = FontWeight.SemiBold)
             Text(description, color = MaterialTheme.colorScheme.onSurfaceVariant, fontSize = 12.sp)
         }
-        Text(change, color = SmartBudgetGreen, fontWeight = FontWeight.Bold)
+        Text(change, fontWeight = FontWeight.Bold)
         Icon(Icons.Outlined.ChevronRight, null, tint = MaterialTheme.colorScheme.onSurfaceVariant)
     }
 }
@@ -275,7 +297,7 @@ private fun CategoryLegend(color: Color, label: String, value: String) {
 }
 
 @Composable
-private fun AnalysisCard(
+internal fun AnalysisCard(
     modifier: Modifier = Modifier,
     containerColor: Color = MaterialTheme.colorScheme.surface,
     content: @Composable ColumnScope.() -> Unit,

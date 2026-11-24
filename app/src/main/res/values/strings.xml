@@ -297,6 +297,14 @@
     <string name="analysis_survey_direction_save">절약하고 싶어요</string>
     <string name="analysis_survey_direction_maintain">현재 수준 유지</string>
     <string name="analysis_new_report">분석</string>
+    <string name="analysis_report_history">분석 내역</string>
+    <string name="analysis_edit_survey">설문 편집</string>
+    <string name="analysis_sample_data">예시 데이터</string>
+    <string name="analysis_survey_title">소비 분석 설문</string>
+    <string name="analysis_survey_profile_section">기본 정보</string>
+    <string name="analysis_survey_finance_section">대출 현황</string>
+    <string name="analysis_survey_goal_section">관리 목표와 관심사</string>
+    <string name="analysis_result_advice_heading">소비 관리 조언</string>
     <string name="analysis_custom_title">맞춤 소비 분석</string>
     <string name="analysis_survey_heading">더 정확한 분석을 위해 알려주세요</string>
     <string name="analysis_survey_privacy">입력한 정보는 소비 분석에만 활용돼요.</string>

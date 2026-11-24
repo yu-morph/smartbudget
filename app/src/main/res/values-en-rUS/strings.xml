@@ -306,4 +306,13 @@
     <string name="receipt_permission_title">Camera permission needed</string>
     <string name="receipt_permission_message">Allow camera access to scan receipts.</string>
     <string name="receipt_permission_retry">Allow permission</string>
+    <string name="analysis_new_report">Analyze</string>
+    <string name="analysis_report_history">Analysis history</string>
+    <string name="analysis_edit_survey">Edit survey</string>
+    <string name="analysis_sample_data">Sample data</string>
+    <string name="analysis_survey_title">Spending analysis survey</string>
+    <string name="analysis_survey_profile_section">Basic information</string>
+    <string name="analysis_survey_finance_section">Loans</string>
+    <string name="analysis_survey_goal_section">Goals and interests</string>
+    <string name="analysis_result_advice_heading">Spending advice</string>
 </resources>
