@@ -1107,12 +1107,12 @@ private fun MonthlyStatisticsCardContent(stats: MonthlyLedgerStats, budgetAmount
                 modifier = Modifier.weight(1f),
             )
         }
-        HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.45f))
+        HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f))
         MonthlyMetrics(stats)
-        HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.45f))
+        HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f))
         PreviousMonthBudgetStatus(budgetAmount = budgetAmount, usedAmount = stats.amounts.expense)
         if (stats.largestExpenseCategories.isNotEmpty()) {
-            HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.45f))
+            HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f))
             CategoryStatisticsTags(
                 title = stringResource(R.string.budget_book_largest_expense_categories),
                 tags =
@@ -1220,6 +1220,7 @@ private fun MonthlyMetrics(stats: MonthlyLedgerStats) {
             progress = ratio?.div(100f)?.coerceIn(0f, 1f),
             progressColor = ratioProgressColor,
             valueTextAlign = TextAlign.End,
+            alignValueToBottom = true,
         )
         MonthlyMetric(
             modifier = Modifier.weight(1f),
@@ -1248,7 +1249,7 @@ private fun MonthlyMetric(
     alignValueToBottom: Boolean = false,
 ) {
     Column(
-        modifier = modifier.height(70.dp),
+        modifier = modifier.height(44.dp),
     ) {
         Text(
             label,
