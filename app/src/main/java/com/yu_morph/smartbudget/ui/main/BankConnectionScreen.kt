@@ -5,7 +5,13 @@ package com.yu_morph.smartbudget.ui.main
 import android.graphics.Bitmap
 import android.graphics.Canvas
 import androidx.annotation.StringRes
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.Canvas as ComposeCanvas
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -35,11 +41,13 @@ import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.graphicsLayer
@@ -276,6 +284,14 @@ private fun SelectionCheck(selected: Boolean, onClick: (() -> Unit)? = null) {
 
 @Composable
 private fun BankSyncLoading(modifier: Modifier) {
+    val dataFlowTransition = rememberInfiniteTransition(label = "은행 데이터 흐름")
+    val dataFlowProgress by
+        dataFlowTransition.animateFloat(
+            initialValue = 0f,
+            targetValue = 1f,
+            animationSpec = infiniteRepeatable(tween(1500), RepeatMode.Restart),
+            label = "은행 데이터 이동",
+        )
     Column(
         modifier =
             modifier
@@ -285,11 +301,14 @@ private fun BankSyncLoading(modifier: Modifier) {
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-        Image(
-            painter = painterResource(R.drawable.bank_sync_robot),
-            contentDescription = null,
-            modifier = Modifier.size(220.dp),
-        )
+        Box(modifier = Modifier.size(240.dp), contentAlignment = Alignment.Center) {
+            BankDataFlow(progress = dataFlowProgress, modifier = Modifier.fillMaxSize())
+            Image(
+                painter = painterResource(R.drawable.bank_sync_robot),
+                contentDescription = null,
+                modifier = Modifier.size(220.dp),
+            )
+        }
         LinearProgressIndicator(
             modifier =
                 Modifier
@@ -306,5 +325,36 @@ private fun BankSyncLoading(modifier: Modifier) {
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             fontSize = 14.sp,
         )
+    }
+}
+
+@Composable
+private fun BankDataFlow(progress: Float, modifier: Modifier = Modifier) {
+    ComposeCanvas(modifier = modifier) {
+        repeat(6) { index ->
+            val phase = (progress + index / 6f) % 1f
+            val comesFromLeft = index % 2 == 0
+            val startX = if (comesFromLeft) -size.width * 0.06f else size.width * 1.06f
+            val endX = size.width * 0.52f
+            val startY = size.height * (0.18f + (index % 3) * 0.16f)
+            val endY = size.height * 0.58f
+            val curvedY = startY + (endY - startY) * phase - size.height * 0.12f * phase * (1f - phase)
+            val position =
+                Offset(
+                    x = startX + (endX - startX) * phase,
+                    y = curvedY,
+                )
+            val alpha = (1f - kotlin.math.abs(phase - 0.5f) * 1.5f).coerceIn(0.12f, 0.85f)
+            drawCircle(
+                color = SmartBudgetGreen.copy(alpha = alpha * 0.18f),
+                radius = 11.dp.toPx(),
+                center = position,
+            )
+            drawCircle(
+                color = SmartBudgetGreen.copy(alpha = alpha),
+                radius = if (index % 3 == 0) 4.5.dp.toPx() else 3.dp.toPx(),
+                center = position,
+            )
+        }
     }
 }
