@@ -24,11 +24,12 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.navigationBarsPadding
-import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
@@ -52,11 +53,13 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
@@ -66,8 +69,11 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.window.Popup
+import androidx.compose.ui.window.PopupProperties
 import androidx.compose.ui.zIndex
 import com.yu_morph.smartbudget.R
 import com.yu_morph.smartbudget.data.remote.news.NewsArticle
@@ -88,7 +94,7 @@ private const val TAB_SLIDE_DISTANCE_DIVISOR = 5
 private const val CELEBRATION_DURATION_MILLIS = 1100
 
 private data class ConfettiParticle(
-    val horizontalFraction: Float,
+    val horizontalVelocity: Float,
     val launchVelocity: Float,
     val gravity: Float,
     val drift: Float,
@@ -210,6 +216,7 @@ internal fun MainScreen(
 @Composable
 private fun MainNavigationBar(selectedTab: MainTab, onTabSelected: (MainTab) -> Unit) {
     var celebrationId by remember { mutableIntStateOf(0) }
+    var isCelebrating by remember { mutableStateOf(false) }
     Box(modifier = Modifier.fillMaxWidth()) {
         Surface(
             modifier = Modifier.padding(top = 12.dp).zIndex(1f),
@@ -234,11 +241,16 @@ private fun MainNavigationBar(selectedTab: MainTab, onTabSelected: (MainTab) -> 
         if (celebrationId > 0) {
             FabCelebration(
                 celebrationId = celebrationId,
-                modifier = Modifier.align(Alignment.TopCenter),
+                onAnimationFinished = { isCelebrating = false },
             )
         }
         MainActionButton(
-            onClick = { celebrationId += 1 },
+            onClick = {
+                if (canStartFabCelebration(isCelebrating)) {
+                    isCelebrating = true
+                    celebrationId += 1
+                }
+            },
             modifier = Modifier.align(Alignment.TopCenter).zIndex(2f),
         )
     }
@@ -316,9 +328,11 @@ private fun MainActionButton(onClick: () -> Unit, modifier: Modifier = Modifier)
 }
 
 @Composable
-private fun FabCelebration(celebrationId: Int, modifier: Modifier = Modifier) {
+private fun FabCelebration(celebrationId: Int, onAnimationFinished: () -> Unit) {
     val progress = remember { Animatable(0f) }
-    val density = LocalDensity.current.density
+    val density = LocalDensity.current
+    val navigationBarInset = WindowInsets.navigationBars.getBottom(density)
+    val popupOffset = IntOffset(0, -(navigationBarInset + with(density) { 80.dp.roundToPx() }))
     val robotResources =
         remember {
             intArrayOf(
@@ -332,33 +346,42 @@ private fun FabCelebration(celebrationId: Int, modifier: Modifier = Modifier) {
     LaunchedEffect(celebrationId) {
         progress.snapTo(0f)
         progress.animateTo(1f, animationSpec = tween(CELEBRATION_DURATION_MILLIS, easing = LinearEasing))
+        onAnimationFinished()
     }
     val time = progress.value
-    val verticalOffset = 160f - 1_080f * time + 1_080f * time * time
+    val verticalOffset = fabCelebrationVerticalOffset(time)
     val entranceAlpha = (time / 0.08f).coerceIn(0f, 1f)
     val exitAlpha = if (time < 0.82f) 1f else ((1f - time) / 0.18f).coerceIn(0f, 1f)
     val visibility = minOf(entranceAlpha, exitAlpha)
     val scale = 0.72f + 0.28f * sin(PI.toFloat() * time).coerceAtLeast(0f)
-    Box(modifier = modifier.size(1.dp)) {
-        ConfettiBurst(
-            progress = time,
-            particles = particles,
-            modifier = Modifier.size(width = 340.dp, height = 210.dp).offset(x = (-170).dp, y = (-150).dp),
-        )
-        Image(
-            painter = painterResource(robotResources[(celebrationId - 1) % robotResources.size]),
-            contentDescription = null,
-            modifier =
-                Modifier
-                    .size(132.dp)
-                    .offset(x = (-66).dp, y = (-88).dp)
-                    .graphicsLayer(
-                        translationY = verticalOffset * density,
-                        scaleX = scale,
-                        scaleY = scale,
-                        alpha = visibility,
-                    ),
-        )
+    Popup(
+        alignment = Alignment.BottomCenter,
+        offset = popupOffset,
+        properties = PopupProperties(focusable = false, clippingEnabled = false),
+    ) {
+        Box(
+            modifier = Modifier.fillMaxWidth().height(250.dp).clipToBounds(),
+            contentAlignment = Alignment.BottomCenter,
+        ) {
+            ConfettiBurst(
+                progress = time,
+                particles = particles,
+                modifier = Modifier.fillMaxSize(),
+            )
+            Image(
+                painter = painterResource(robotResources[(celebrationId - 1) % robotResources.size]),
+                contentDescription = null,
+                modifier =
+                    Modifier
+                        .size(118.dp)
+                        .graphicsLayer(
+                            translationY = verticalOffset * density.density,
+                            scaleX = scale,
+                            scaleY = scale,
+                            alpha = visibility,
+                        ),
+            )
+        }
     }
 }
 
@@ -369,10 +392,13 @@ private fun ConfettiBurst(progress: Float, particles: List<ConfettiParticle>, mo
             val delayedTime = ((progress - index * 0.006f) / 0.78f).coerceIn(0f, 1f)
             if (delayedTime <= 0f) return@forEachIndexed
             val originX = size.width * 0.5f
-            val originY = size.height * 0.92f
+            val originY = size.height
             val x =
-                originX + (particle.horizontalFraction - 0.5f) * size.width * delayedTime + particle.drift * delayedTime
-            val y = originY - particle.launchVelocity * delayedTime + particle.gravity * delayedTime * delayedTime
+                originX + particle.horizontalVelocity.dp.toPx() * delayedTime + particle.drift.dp.toPx() * delayedTime
+            val y =
+                originY -
+                    particle.launchVelocity.dp.toPx() * delayedTime +
+                    particle.gravity.dp.toPx() * delayedTime * delayedTime
             val alpha = (1f - delayedTime).coerceIn(0f, 1f)
             drawCircle(
                 color = particle.color.copy(alpha = alpha),
@@ -385,15 +411,26 @@ private fun ConfettiBurst(progress: Float, particles: List<ConfettiParticle>, mo
 
 private fun createConfettiParticles(seed: Int): List<ConfettiParticle> {
     val colors = listOf(SmartBudgetGreen, Color(0xFFFFC857), Color(0xFF56B4E9), Color(0xFFFF6B6B), Color.White)
-    return List(28) { index ->
-        val mixed = ((seed * 37 + index * 61) % 101) / 100f
+    val horizontalVelocities = confettiHorizontalVelocities()
+    return List(32) { index ->
+        val direction = if (horizontalVelocities[index] < 0f) -1f else 1f
         ConfettiParticle(
-            horizontalFraction = mixed,
-            launchVelocity = 150f + (index % 7) * 11f,
-            gravity = 108f + (index % 5) * 9f,
-            drift = ((index % 3) - 1) * 24f,
+            horizontalVelocity = horizontalVelocities[index],
+            launchVelocity = 172f + ((index + seed) % 7) * 10f,
+            gravity = 92f + (index % 5) * 8f,
+            drift = direction * ((index + seed) % 3) * 5f,
             size = 2.2f + (index % 3),
             color = colors[index % colors.size],
         )
     }
+}
+
+internal fun canStartFabCelebration(isCelebrating: Boolean): Boolean = !isCelebrating
+
+internal fun fabCelebrationVerticalOffset(progress: Float): Float = 112f - 888f * progress + 888f * progress * progress
+
+internal fun confettiHorizontalVelocities(): List<Float> = List(32) { index ->
+    val direction = if (index % 2 == 0) -1f else 1f
+    val spread = 38f + (index / 2 % 8) * 14f
+    direction * spread
 }
