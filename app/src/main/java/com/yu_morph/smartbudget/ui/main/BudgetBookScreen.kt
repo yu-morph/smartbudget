@@ -564,12 +564,18 @@ private fun CategoryIndicators(transactions: List<TransactionData>, compact: Boo
             horizontalArrangement = Arrangement.spacedBy(2.dp),
         ) {
             categories.forEach { transaction ->
+                var backgroundColor = transactionCategoryUi(transaction.category).color
+
+                if (compact) {
+                    backgroundColor = backgroundColor.copy(alpha = 0.8f)
+                }
+
                 Box(
                     modifier =
                         Modifier
                             .size(6.dp)
                             .clip(CircleShape)
-                            .background(transactionCategoryUi(transaction.category).color),
+                            .background(backgroundColor),
                 )
             }
         }
