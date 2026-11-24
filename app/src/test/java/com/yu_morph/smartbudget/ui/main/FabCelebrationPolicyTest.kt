@@ -13,6 +13,13 @@ class FabCelebrationPolicyTest {
     }
 
     @Test
+    fun `축하 애니메이션이 끝나면 입력을 가로채는 팝업을 제거한다`() {
+        assertFalse(shouldShowFabCelebration(celebrationId = 0, isCelebrating = false))
+        assertTrue(shouldShowFabCelebration(celebrationId = 1, isCelebrating = true))
+        assertFalse(shouldShowFabCelebration(celebrationId = 1, isCelebrating = false))
+    }
+
+    @Test
     fun `로봇은 내비게이션 중앙에서 올라갔다 같은 위치로 돌아온다`() {
         assertEquals(112f, fabCelebrationVerticalOffset(0f), 0.001f)
         assertEquals(-75f, fabCelebrationVerticalOffset(0.5f), 0.001f)

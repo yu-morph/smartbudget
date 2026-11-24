@@ -238,7 +238,7 @@ private fun MainNavigationBar(selectedTab: MainTab, onTabSelected: (MainTab) -> 
                 }
             }
         }
-        if (celebrationId > 0) {
+        if (shouldShowFabCelebration(celebrationId, isCelebrating)) {
             FabCelebration(
                 celebrationId = celebrationId,
                 onAnimationFinished = { isCelebrating = false },
@@ -426,6 +426,9 @@ private fun createConfettiParticles(seed: Int): List<ConfettiParticle> {
 }
 
 internal fun canStartFabCelebration(isCelebrating: Boolean): Boolean = !isCelebrating
+
+internal fun shouldShowFabCelebration(celebrationId: Int, isCelebrating: Boolean): Boolean =
+    celebrationId > 0 && isCelebrating
 
 internal fun fabCelebrationVerticalOffset(progress: Float): Float = 112f - 748f * progress + 748f * progress * progress
 
