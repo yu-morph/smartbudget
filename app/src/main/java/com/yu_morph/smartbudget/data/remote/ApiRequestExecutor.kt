@@ -9,6 +9,7 @@ import io.ktor.client.plugins.HttpTimeout
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.client.request.HttpRequestBuilder
 import io.ktor.client.request.bearerAuth
+import io.ktor.client.request.forms.MultiPartFormDataContent
 import io.ktor.client.request.request
 import io.ktor.client.request.setBody
 import io.ktor.http.ContentType
@@ -48,6 +49,7 @@ class ApiRequestExecutor(
     private val tokenStore: AuthTokenStore,
     private val responseCache: ApiResponseCache,
     val json: Json = SmartBudgetHttpClientFactory.defaultJson(),
+    private val failureLogger: ((String) -> Unit)? = null,
 ) {
     private companion object {
         const val HTTP_SUCCESS_MIN = 200
@@ -87,6 +89,15 @@ class ApiRequestExecutor(
         configure: HttpRequestBuilder.() -> Unit,
         decode: (String) -> ApiEnvelope<T>,
     ): ApiResult<T> {
+        var requestQuery = ""
+        var requestBody = body?.toString()
+        var responseStatus: Int? = null
+        fun logFailure(response: String) {
+            failureLogger?.invoke(
+                "$method $path\nQuery: $requestQuery\nBody: ${requestBody.orEmpty()}\n" +
+                    "Response status: ${responseStatus ?: "-"}\nResponse: $response",
+            )
+        }
         return try {
             val response =
                 client.request("$normalizedBaseUrl$path") {
@@ -97,10 +108,19 @@ class ApiRequestExecutor(
                     }
                     body?.let(::setBody)
                     configure()
+                    if (failureLogger != null) {
+                        requestQuery = url.build().encodedQuery
+                        val multipart = this.body as? MultiPartFormDataContent
+                        if (multipart != null) requestBody = "[${multipart.contentType}]"
+                    }
                 }
+            responseStatus = response.status.value
             val rawBody = response.body<String>()
-            val envelope = decodeEnvelope(rawBody, decode) ?: return decodeFailure(rawBody, decode)
-            if (response.status.value !in HTTP_SUCCESS_MIN..HTTP_SUCCESS_MAX) {
+            val envelope = decodeEnvelope(rawBody, decode)
+            val httpFailed = response.status.value !in HTTP_SUCCESS_MIN..HTTP_SUCCESS_MAX
+            if (httpFailed || envelope == null) logFailure(rawBody)
+            if (envelope == null) return decodeFailure(rawBody, decode)
+            if (httpFailed) {
                 ApiResult.HttpFailure(
                     status = response.status.value,
                     code = envelope.code,
@@ -112,6 +132,7 @@ class ApiRequestExecutor(
                 envelope.toSuccess(ResponseSource.NETWORK)
             }
         } catch (exception: IOException) {
+            logFailure(exception.toString())
             cachedResult(cacheKey, decode) ?: ApiResult.NetworkFailure(exception)
         }
     }

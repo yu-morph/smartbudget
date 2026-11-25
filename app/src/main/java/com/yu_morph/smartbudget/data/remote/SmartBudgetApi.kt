@@ -1,6 +1,8 @@
 package com.yu_morph.smartbudget.data.remote
 
 import android.content.Context
+import android.content.pm.ApplicationInfo
+import android.util.Log
 import com.yu_morph.smartbudget.data.local.PreferenceStoreFactory
 import com.yu_morph.smartbudget.data.local.RemoteResourceStore
 import com.yu_morph.smartbudget.data.remote.api.AuthApi
@@ -27,6 +29,8 @@ class SmartBudgetApi internal constructor(
 }
 
 object SmartBudgetApiFactory {
+    private const val API_LOG_TAG = "SmartBudgetAPI"
+    private const val LOG_CHUNK_LENGTH = 900
     const val DEVELOPMENT_BASE_URL =
         "https://smartbudget-dev-kc-260925.koreacentral.cloudapp.azure.com"
     const val MOCK_TRANSACTION_BASE_URL =
@@ -43,6 +47,11 @@ object SmartBudgetApiFactory {
                 tokenStore = tokenStore,
                 responseCache = PreferenceStoreFactory.responseCache(context),
                 json = json,
+                failureLogger = if (context.applicationInfo.flags and ApplicationInfo.FLAG_DEBUGGABLE != 0) {
+                    { message -> message.chunked(LOG_CHUNK_LENGTH).forEach { Log.d(API_LOG_TAG, it) } }
+                } else {
+                    null
+                },
             )
         return SmartBudgetApi(
             version = VersionApi(executor),

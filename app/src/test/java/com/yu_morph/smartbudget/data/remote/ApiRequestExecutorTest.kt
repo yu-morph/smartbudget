@@ -16,6 +16,7 @@ import io.ktor.client.engine.mock.MockEngine
 import io.ktor.client.engine.mock.respond
 import io.ktor.client.plugins.HttpTimeout
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
+import io.ktor.client.request.parameter
 import io.ktor.http.ContentType
 import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpMethod
@@ -24,6 +25,8 @@ import io.ktor.http.headersOf
 import io.ktor.serialization.kotlinx.json.json
 import java.io.IOException
 import kotlinx.coroutines.runBlocking
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonNull
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -33,6 +36,24 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class ApiRequestExecutorTest {
+    @Test
+    fun `HTTP 실패 로그에 인코딩된 쿼리와 마스킹하지 않은 JSON 및 응답을 기록한다`() = runBlocking {
+        val logs = mutableListOf<String>()
+        val rawBody = """{"period_type":"monthly","interest":"가상 입력"}"""
+        val rawResponse = "원본 오류 응답\n두 번째 줄"
+        val executor = executor(TestStores(), failureLogger = { logs.add(it) }) {
+            respond(rawResponse, HttpStatusCode.BadGateway)
+        }
+
+        executor.execute<JsonElement>(HttpMethod.Post, "/api/v1/report", body = Json.parseToJsonElement(rawBody)) {
+            parameter("cursor", "a+b")
+        }
+
+        assertTrue(logs.single().contains("Query: cursor=a%2Bb"))
+        assertTrue(logs.single().contains("Body: $rawBody"))
+        assertTrue(logs.single().contains("Response status: 502\nResponse: $rawResponse"))
+    }
+
     @Test
     fun `인증 요청은 암호화 저장소의 토큰을 사용한다`() = runBlocking {
         var authorization: String? = null
@@ -221,6 +242,7 @@ class ApiRequestExecutorTest {
 
     private fun executor(
         stores: TestStores,
+        failureLogger: ((String) -> Unit)? = null,
         handler: suspend io.ktor.client.engine.mock.MockRequestHandleScope.(
             io.ktor.client.request.HttpRequestData,
         ) -> io.ktor.client.request.HttpResponseData,
@@ -233,7 +255,7 @@ class ApiRequestExecutorTest {
                 // 운영 클라이언트와 같이 요청별 대기 시간 설정을 허용한다.
                 install(HttpTimeout)
             }
-        return ApiRequestExecutor("https://example.test", client, stores, stores, json)
+        return ApiRequestExecutor("https://example.test", client, stores, stores, json, failureLogger)
     }
 
     private fun jsonHeaders() = headersOf(HttpHeaders.ContentType, "application/json")
