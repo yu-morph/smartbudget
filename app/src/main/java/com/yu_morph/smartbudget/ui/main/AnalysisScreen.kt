@@ -91,14 +91,18 @@ private fun SurveySummaryCard(survey: AnalysisSurvey, displayName: String, onCli
     val bodyColor = MaterialTheme.colorScheme.onSurfaceVariant
     val editLabel = stringResource(R.string.analysis_edit_survey)
     AnalysisCard(
+        contentPadding = 0.dp,
         modifier = Modifier.clip(RoundedCornerShape(24.dp)).clickable(
             role = Role.Button,
             onClickLabel = editLabel,
             onClick = onClick,
         ),
     ) {
-        Spacer(Modifier.height(8.dp))
-        Row(verticalAlignment = Alignment.CenterVertically) {
+        Spacer(Modifier.height(28.dp))
+        Row(
+            modifier = Modifier.padding(horizontal = 20.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
             AnalysisCardHeading(
                 R.string.analysis_survey_summary_title,
                 Modifier.weight(1f).padding(start = 8.dp),
@@ -111,10 +115,14 @@ private fun SurveySummaryCard(survey: AnalysisSurvey, displayName: String, onCli
                 tint = bodyColor.copy(alpha = 0.65f),
             )
         }
-        Spacer(Modifier.height(24.dp))
+        Spacer(Modifier.height(12.dp))
+        HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.45f))
         CompositionLocalProvider(LocalContentColor provides bodyColor) {
             ProvideTextStyle(MaterialTheme.typography.bodySmall) {
-                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                Column(
+                    modifier = Modifier.padding(start = 20.dp, top = 12.dp, end = 20.dp, bottom = 20.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp),
+                ) {
                     SurveySummaryContent(survey, displayName)
                 }
             }
@@ -333,6 +341,7 @@ private fun ReportRow(report: com.yu_morph.smartbudget.data.remote.model.ReportS
 internal fun AnalysisCard(
     modifier: Modifier = Modifier,
     containerColor: Color = MaterialTheme.colorScheme.surface,
+    contentPadding: Dp = 20.dp,
     content: @Composable ColumnScope.() -> Unit,
 ) {
     Card(
@@ -341,6 +350,6 @@ internal fun AnalysisCard(
         colors = CardDefaults.cardColors(containerColor = containerColor),
         elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
     ) {
-        Column(modifier = Modifier.fillMaxWidth().padding(20.dp), content = content)
+        Column(modifier = Modifier.fillMaxWidth().padding(contentPadding), content = content)
     }
 }
