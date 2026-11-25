@@ -258,6 +258,7 @@ object PreferenceStoreFactory {
     private const val REMOTE_RESOURCE_FILE = "smartbudget_remote_resources"
     private const val USER_IDENTITY_FILE = "smartbudget_user_identity"
     private const val SECURE_AUTH_FILE = "smartbudget_secure_auth"
+    private const val SECURE_ANALYSIS_SURVEY_FILE = "smartbudget_secure_analysis_survey"
     private const val APP_SETTINGS_FILE = "smartbudget_app_settings"
 
     fun responseCache(context: Context): ApiResponseCache = SharedPreferencesResponseCache(
@@ -278,8 +279,17 @@ object PreferenceStoreFactory {
         context.getSharedPreferences(APP_SETTINGS_FILE, Context.MODE_PRIVATE),
     )
 
+    fun analysisSurveys(context: Context): AnalysisSurveyStore = EncryptedPreferencesAnalysisSurveyStore(
+        encryptedPreferences(context, SECURE_ANALYSIS_SURVEY_FILE),
+    )
+
     @Suppress("DEPRECATION")
-    fun authTokens(context: Context): AuthTokenStore {
+    fun authTokens(context: Context): AuthTokenStore = EncryptedPreferencesAuthTokenStore(
+        encryptedPreferences(context, SECURE_AUTH_FILE),
+    )
+
+    @Suppress("DEPRECATION")
+    private fun encryptedPreferences(context: Context, fileName: String): SharedPreferences {
         val masterKey =
             MasterKey
                 .Builder(context)
@@ -288,11 +298,11 @@ object PreferenceStoreFactory {
         val preferences =
             EncryptedSharedPreferences.create(
                 context,
-                SECURE_AUTH_FILE,
+                fileName,
                 masterKey,
                 EncryptedSharedPreferences.PrefKeyEncryptionScheme.AES256_SIV,
                 EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM,
             )
-        return EncryptedPreferencesAuthTokenStore(preferences)
+        return preferences
     }
 }

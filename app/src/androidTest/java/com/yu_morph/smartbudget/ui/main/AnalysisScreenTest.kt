@@ -66,6 +66,7 @@ class AnalysisScreenTest {
                     bottomPadding = 0.dp,
                     state = state,
                     onLoad = {},
+                    onSurveySaved = {},
                     onRequestReport = { _, _ -> },
                     onOpenReport = {
                         state =

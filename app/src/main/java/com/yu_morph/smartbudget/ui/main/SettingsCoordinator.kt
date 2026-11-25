@@ -62,6 +62,7 @@ class SettingsCoordinator(
 ) {
     private val applicationContext = context.applicationContext
     private val userIdentityStore = PreferenceStoreFactory.userIdentity(applicationContext)
+    private val analysisSurveyStore = PreferenceStoreFactory.analysisSurveys(applicationContext)
     private val profileImageStore = PreferenceStoreFactory.profileImage(applicationContext)
     private val appSettingsStore = PreferenceStoreFactory.appSettings(applicationContext)
 
@@ -203,9 +204,11 @@ class SettingsCoordinator(
     }
 
     fun deleteAccount(onSuccess: () -> Unit) {
+        val username = userIdentityStore.readUsername()
         execute(
             request = api.auth::deleteAccount,
             onSuccess = {
+                username?.let(analysisSurveyStore::remove)
                 userIdentityStore.clear()
                 showToast(R.string.settings_account_deleted)
                 onSuccess()

@@ -4,6 +4,10 @@ import android.content.Context
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import com.yu_morph.smartbudget.data.local.AnalysisSurveyStore
+import com.yu_morph.smartbudget.data.local.PreferenceStoreFactory
+import com.yu_morph.smartbudget.data.local.StoredAnalysisSurvey
+import com.yu_morph.smartbudget.data.local.UserIdentityStore
 import com.yu_morph.smartbudget.data.remote.ApiResult
 import com.yu_morph.smartbudget.data.remote.SmartBudgetApi
 import com.yu_morph.smartbudget.data.remote.model.ReportDetailData
@@ -36,6 +40,7 @@ internal enum class AnalysisFailure {
 }
 
 internal data class AnalysisUiState(
+    val survey: AnalysisSurvey = AnalysisSurvey(),
     val reports: List<ReportSummaryData> = emptyList(),
     val activeReport: ReportDetailData? = null,
     val activeContent: AnalysisReportContent? = null,
@@ -45,21 +50,26 @@ internal data class AnalysisUiState(
     val failure: AnalysisFailure? = null,
 )
 
+@Suppress("TooManyFunctions")
 internal class AnalysisCoordinator(
     context: Context,
     private val api: SmartBudgetApi,
     private val scope: CoroutineScope,
     private val clock: Clock = Clock.system(KOREA_ZONE),
     private val newsRepository: NewsFeedRepository = NewsFeedRepository(context.applicationContext),
+    private val userIdentityStore: UserIdentityStore = PreferenceStoreFactory.userIdentity(context.applicationContext),
+    private val surveyStore: AnalysisSurveyStore = PreferenceStoreFactory.analysisSurveys(context.applicationContext),
 ) : Closeable {
     private var historyJob: Job? = null
     private var reportJob: Job? = null
     private var historyRequested = false
+    private var surveyOwner: String? = null
 
     var state by mutableStateOf(AnalysisUiState())
         private set
 
     fun loadHistory(force: Boolean = false) {
+        restoreSurvey()
         if (force) {
             historyJob?.cancel()
         } else if (historyRequested || historyJob?.isActive == true) {
@@ -136,10 +146,19 @@ internal class AnalysisCoordinator(
         state = state.copy(failure = null)
     }
 
+    fun saveSurvey(survey: AnalysisSurvey) {
+        state = state.copy(survey = survey)
+        userIdentityStore.readUsername()?.let { username ->
+            surveyStore.write(username, survey.toStoredSurvey())
+            surveyOwner = username
+        }
+    }
+
     fun reset() {
         historyJob?.cancel()
         reportJob?.cancel()
         historyRequested = false
+        surveyOwner = null
         api.reports.invalidateCache()
         state = AnalysisUiState()
     }
@@ -164,6 +183,14 @@ internal class AnalysisCoordinator(
 
             else -> state = state.copy(failure = result.toAnalysisFailure())
         }
+    }
+
+    private fun restoreSurvey() {
+        val username = userIdentityStore.readUsername()
+        if (username == surveyOwner) return
+        surveyOwner = username
+        val survey = username?.let(surveyStore::read)?.toAnalysisSurvey() ?: AnalysisSurvey()
+        state = state.copy(survey = survey)
     }
 
     private suspend fun loadTodayNews(today: LocalDate): List<String> {
@@ -214,3 +241,27 @@ internal class AnalysisCoordinator(
         const val MONTHLY_PERIOD_TYPE = "monthly"
     }
 }
+
+private fun AnalysisSurvey.toStoredSurvey(): StoredAnalysisSurvey = StoredAnalysisSurvey(
+    gender = gender,
+    birthDate = birthDate,
+    job = job,
+    workplace = workplace,
+    education = education,
+    hasLoan = hasLoan,
+    loanDetails = loanDetails,
+    managementDirection = managementDirection,
+    interest = interest,
+)
+
+private fun StoredAnalysisSurvey.toAnalysisSurvey(): AnalysisSurvey = AnalysisSurvey(
+    gender = gender,
+    birthDate = birthDate,
+    job = job,
+    workplace = workplace,
+    education = education,
+    hasLoan = hasLoan,
+    loanDetails = loanDetails,
+    managementDirection = managementDirection,
+    interest = interest,
+)

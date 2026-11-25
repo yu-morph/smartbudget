@@ -353,6 +353,7 @@ private fun AuthenticationContent(
                 },
                 analysisState = analysisCoordinator.state,
                 onAnalysisLoad = { analysisCoordinator.loadHistory() },
+                onAnalysisSurveySaved = analysisCoordinator::saveSurvey,
                 onRequestAnalysis = analysisCoordinator::generate,
                 onOpenAnalysisReport = analysisCoordinator::openReport,
                 onClearAnalysisFailure = analysisCoordinator::clearFailure,

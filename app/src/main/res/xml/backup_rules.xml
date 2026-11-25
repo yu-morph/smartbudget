@@ -3,4 +3,7 @@
     <exclude
         domain="sharedpref"
         path="smartbudget_secure_auth.xml" />
+    <exclude
+        domain="sharedpref"
+        path="smartbudget_secure_analysis_survey.xml" />
 </full-backup-content>

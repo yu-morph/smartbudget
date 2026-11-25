@@ -66,12 +66,13 @@ internal fun AnalysisScreen(
     bottomPadding: Dp,
     state: AnalysisUiState,
     onLoad: () -> Unit,
+    onSurveySaved: (AnalysisSurvey) -> Unit,
     onRequestReport: (YearMonth, AnalysisSurvey) -> Unit,
     onOpenReport: (Int) -> Unit,
     onClearFailure: () -> Unit,
 ) {
     var flow by rememberSaveable { mutableStateOf<AnalysisFlowStep?>(null) }
-    var survey by remember { mutableStateOf(AnalysisSurvey()) }
+    val survey = state.survey
     var requestAfterSurvey by rememberSaveable { mutableStateOf(false) }
     var closeAfterResult by rememberSaveable { mutableStateOf(false) }
     val currentMonth = remember { YearMonth.now(analysisZone) }
@@ -89,9 +90,7 @@ internal fun AnalysisScreen(
             continueAfterSurvey = requestAfterSurvey,
             closeAfterResult = closeAfterResult,
             onBack = { flow = null },
-            onSurveySaved = {
-                survey = it
-            },
+            onSurveySaved = onSurveySaved,
             onRequestReport = onRequestReport,
             onClearFailure = onClearFailure,
         )
