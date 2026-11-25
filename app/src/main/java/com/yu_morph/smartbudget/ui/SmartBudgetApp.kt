@@ -41,6 +41,7 @@ import com.yu_morph.smartbudget.ui.auth.LoginScreen
 import com.yu_morph.smartbudget.ui.auth.SignUpScreen
 import com.yu_morph.smartbudget.ui.document.MarkdownDocument
 import com.yu_morph.smartbudget.ui.document.MarkdownViewerScreen
+import com.yu_morph.smartbudget.ui.main.AnalysisCoordinator
 import com.yu_morph.smartbudget.ui.main.BudgetBookCoordinator
 import com.yu_morph.smartbudget.ui.main.BudgetBookDetailScreen
 import com.yu_morph.smartbudget.ui.main.HomeDashboardCoordinator
@@ -83,6 +84,7 @@ fun SmartBudgetApp(onDisplayModeChanged: (DisplayMode) -> Unit, onLanguageChange
     }
     val homeDashboardCoordinator = remember(context, api, scope) { HomeDashboardCoordinator(context, api, scope) }
     val homeNewsCoordinator = remember(context, scope) { HomeNewsCoordinator(context, scope) }
+    val analysisCoordinator = remember(context, api, scope) { AnalysisCoordinator(context, api, scope) }
     val receiptOcrRepository = remember(api) { RemoteReceiptOcrRepository(api.ocr) }
     val onNotificationChanged = rememberNotificationChangeHandler(destination, settingsCoordinator)
     DisposableEffect(api) {
@@ -90,6 +92,9 @@ fun SmartBudgetApp(onDisplayModeChanged: (DisplayMode) -> Unit, onLanguageChange
     }
     DisposableEffect(homeNewsCoordinator) {
         onDispose(homeNewsCoordinator::close)
+    }
+    DisposableEffect(analysisCoordinator) {
+        onDispose(analysisCoordinator::close)
     }
     BackHandler(enabled = destination == AppDestination.SIGN_UP) {
         destination = AppDestination.LOGIN
@@ -119,6 +124,7 @@ fun SmartBudgetApp(onDisplayModeChanged: (DisplayMode) -> Unit, onLanguageChange
                     budgetBookCoordinator = budgetBookCoordinator,
                     homeDashboardCoordinator = homeDashboardCoordinator,
                     homeNewsCoordinator = homeNewsCoordinator,
+                    analysisCoordinator = analysisCoordinator,
                     selectedMainTab = selectedMainTab,
                     onMainTabSelected = { selectedMainTab = it },
                     onDestinationChange = { destination = it },
@@ -149,6 +155,7 @@ fun SmartBudgetApp(onDisplayModeChanged: (DisplayMode) -> Unit, onLanguageChange
                                 onSaved()
                                 afterProfileSaved(passwordChanged) {
                                     openSettings = null
+                                    analysisCoordinator.reset()
                                     coordinator.signOut()
                                     selectedMainTab = MainTab.HOME
                                     destination = AppDestination.LOGIN
@@ -166,6 +173,7 @@ fun SmartBudgetApp(onDisplayModeChanged: (DisplayMode) -> Unit, onLanguageChange
                         onDeleteAccount = {
                             settingsCoordinator.deleteAccount {
                                 openSettings = null
+                                analysisCoordinator.reset()
                                 coordinator.signOut()
                                 selectedMainTab = MainTab.HOME
                                 destination = AppDestination.LOGIN
@@ -274,6 +282,7 @@ private fun AuthenticationContent(
     budgetBookCoordinator: BudgetBookCoordinator,
     homeDashboardCoordinator: HomeDashboardCoordinator,
     homeNewsCoordinator: HomeNewsCoordinator,
+    analysisCoordinator: AnalysisCoordinator,
     selectedMainTab: MainTab,
     onMainTabSelected: (MainTab) -> Unit,
     onDestinationChange: (AppDestination) -> Unit,
@@ -342,7 +351,13 @@ private fun AuthenticationContent(
                         context.showAppToast(R.string.home_news_open_failed)
                     }
                 },
+                analysisState = analysisCoordinator.state,
+                onAnalysisLoad = { analysisCoordinator.loadHistory() },
+                onRequestAnalysis = analysisCoordinator::generate,
+                onOpenAnalysisReport = analysisCoordinator::openReport,
+                onClearAnalysisFailure = analysisCoordinator::clearFailure,
                 onLogout = {
+                    analysisCoordinator.reset()
                     coordinator.signOut()
                     onMainTabSelected(MainTab.HOME)
                     onDestinationChange(AppDestination.LOGIN)

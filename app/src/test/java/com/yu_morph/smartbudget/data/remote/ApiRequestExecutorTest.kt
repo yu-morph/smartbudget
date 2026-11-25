@@ -134,14 +134,36 @@ class ApiRequestExecutorTest {
     }
 
     @Test
-    fun `미구현 API는 네트워크 요청 없이 템플릿 결과를 반환한다`() = runBlocking {
-        val stores = TestStores()
-        val executor = executor(stores) { error("네트워크 요청이 발생하면 안 됩니다") }
+    fun `소비 분석은 인증과 멱등성 키를 사용해 월간 리포트를 요청한다`() = runBlocking {
+        var path: String? = null
+        var method: HttpMethod? = null
+        var authorization: String? = null
+        var idempotencyKey: String? = null
+        val stores = TestStores(token = TEST_TOKEN)
+        val executor = executor(stores) { request ->
+            path = request.url.encodedPath
+            method = request.method
+            authorization = request.headers[HttpHeaders.Authorization]
+            idempotencyKey = request.headers["Idempotency-Key"]
+            respond(REPORT_RESPONSE, headers = jsonHeaders())
+        }
 
         val reportResult =
-            ReportApi(executor).requestReport(RequestReportRequest("monthly", "2026-11-01"))
+            ReportApi(executor).requestReport(
+                RequestReportRequest(
+                    periodType = "monthly",
+                    periodStart = "2026-11-01",
+                    news = listOf("오늘의 경제 기사"),
+                ),
+                idempotencyKey = "report-key",
+            )
 
-        assertTrue(reportResult is ApiResult.NotImplemented)
+        assertEquals("/api/v1/report", path)
+        assertEquals(HttpMethod.Post, method)
+        assertEquals("Bearer access-token", authorization)
+        assertEquals("report-key", idempotencyKey)
+        assertTrue(reportResult is ApiResult.Success)
+        assertEquals("2026-11-01", (reportResult as ApiResult.Success).data?.periodStart)
     }
 
     @Test
@@ -249,6 +271,8 @@ class ApiRequestExecutorTest {
             """{"status":200,"code":"OK","message":"success","data":{"version":"1.2.3","channel":"development","build_timestamp":"2026-11-08T00:00:00+09:00"}}"""
         const val OCR_RESPONSE =
             """{"status":200,"code":"SUCCESS","message":"success","data":[{"file_name":"receipt.jpg","status":"success","error_message":null,"items":["광어회","매운탕추가"],"file_index":0,"store_name":"대박수산","date":"2026-09-12","time":"16:50:11","amount":40500}]}"""
+        const val REPORT_RESPONSE =
+            """{"status":200,"code":"SUCCESS","message":"success","data":{"id":7,"generated_at":"2026-11-26T12:00:00+09:00","period_type":"monthly","period_start":"2026-11-01","period_end":"2026-11-30","is_stale":false,"full_report":"<report><a_word_from_ai>잘 관리했어요.</a_word_from_ai></report>"}}"""
         const val ERROR_RESPONSE =
             """{"status":429,"code":"SIGN_IN_RATE_LIMITED","message":"retry","data":null}"""
     }

@@ -34,4 +34,13 @@ data class ReportDetailData(
 data class RequestReportRequest(
     @SerialName("period_type") val periodType: String,
     @SerialName("period_start") val periodStart: String,
+    val gender: String? = null,
+    val age: Int? = null,
+    val job: String? = null,
+    val company: String? = null,
+    val education: String? = null,
+    val loan: String? = null,
+    val approach: String? = null,
+    val interest: String? = null,
+    val news: List<String>? = null,
 )

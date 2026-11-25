@@ -1,4 +1,4 @@
-@file:Suppress("MagicNumber")
+@file:Suppress("MagicNumber", "TooManyFunctions")
 
 package com.yu_morph.smartbudget.ui.main
 
@@ -26,7 +26,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.ArrowBack
-import androidx.compose.material.icons.outlined.ArrowBack
 import androidx.compose.material.icons.outlined.CalendarMonth
 import androidx.compose.material.icons.outlined.ChevronLeft
 import androidx.compose.material.icons.outlined.ChevronRight
@@ -68,7 +67,8 @@ import androidx.compose.ui.unit.sp
 import com.yu_morph.smartbudget.R
 import com.yu_morph.smartbudget.ui.auth.PrimaryAuthButton
 import com.yu_morph.smartbudget.ui.theme.SmartBudgetGreen
-import kotlinx.coroutines.delay
+import java.time.YearMonth
+import java.time.ZoneId
 
 internal enum class AnalysisFlowStep { SURVEY, REQUEST, LOADING, RESULT }
 
@@ -84,19 +84,21 @@ internal data class AnalysisSurvey(
     val interest: String = "",
 )
 
-private data class AnalysisRequestInput(val year: Int, val month: Int, val survey: AnalysisSurvey)
-
 @Suppress("LongMethod", "CyclomaticComplexMethod")
 @Composable
 internal fun AnalysisFlowScreen(
     bottomPadding: Dp,
+    analysisState: AnalysisUiState,
     initialSurvey: AnalysisSurvey,
     initialStep: AnalysisFlowStep,
     initialYear: Int,
     initialMonth: Int,
     continueAfterSurvey: Boolean,
+    closeAfterResult: Boolean,
     onBack: () -> Unit,
     onSurveySaved: (AnalysisSurvey) -> Unit,
+    onRequestReport: (YearMonth, AnalysisSurvey) -> Unit,
+    onClearFailure: () -> Unit,
 ) {
     var step by rememberSaveable { mutableStateOf(initialStep) }
     var gender by rememberSaveable { mutableStateOf(initialSurvey.gender) }
@@ -110,15 +112,19 @@ internal fun AnalysisFlowScreen(
     var interest by rememberSaveable { mutableStateOf(initialSurvey.interest) }
     var year by rememberSaveable { mutableStateOf(initialYear) }
     var month by rememberSaveable { mutableStateOf(initialMonth) }
-    var submittedRequest by remember { mutableStateOf<AnalysisRequestInput?>(null) }
 
     BackHandler {
         step = when (step) {
             AnalysisFlowStep.REQUEST -> AnalysisFlowStep.SURVEY
 
-            AnalysisFlowStep.LOADING -> AnalysisFlowStep.REQUEST
+            AnalysisFlowStep.LOADING -> if (closeAfterResult) {
+                onBack()
+                AnalysisFlowStep.LOADING
+            } else {
+                AnalysisFlowStep.REQUEST
+            }
 
-            AnalysisFlowStep.RESULT -> if (initialStep == AnalysisFlowStep.RESULT) {
+            AnalysisFlowStep.RESULT -> if (closeAfterResult) {
                 onBack()
                 AnalysisFlowStep.RESULT
             } else {
@@ -131,10 +137,21 @@ internal fun AnalysisFlowScreen(
             }
         }
     }
-    LaunchedEffect(step) {
-        if (step == AnalysisFlowStep.LOADING) {
-            delay(1_800)
-            step = AnalysisFlowStep.RESULT
+    LaunchedEffect(
+        step,
+        analysisState.isGenerating,
+        analysisState.isLoadingReport,
+        analysisState.activeReport,
+        analysisState.failure,
+    ) {
+        if (step == AnalysisFlowStep.LOADING && !analysisState.isGenerating && !analysisState.isLoadingReport) {
+            if (analysisState.activeReport != null && analysisState.activeContent != null) {
+                step = AnalysisFlowStep.RESULT
+            } else if (closeAfterResult) {
+                onBack()
+            } else {
+                step = AnalysisFlowStep.REQUEST
+            }
         }
     }
 
@@ -176,15 +193,13 @@ internal fun AnalysisFlowScreen(
                 month = newMonth
             },
             onBack = { step = AnalysisFlowStep.SURVEY },
+            failure = analysisState.failure,
+            onClearFailure = onClearFailure,
             onStart = {
-                submittedRequest =
-                    AnalysisRequestInput(
-                        year = year,
-                        month = month,
-                        survey = AnalysisSurvey(
-                            gender, birthDate, job, workplace, education, hasLoan, loanDetails, direction, interest,
-                        ),
-                    )
+                val requestSurvey = AnalysisSurvey(
+                    gender, birthDate, job, workplace, education, hasLoan, loanDetails, direction, interest,
+                )
+                onRequestReport(YearMonth.of(year, month), requestSurvey)
                 step = AnalysisFlowStep.LOADING
             },
         )
@@ -193,11 +208,10 @@ internal fun AnalysisFlowScreen(
 
         AnalysisFlowStep.RESULT -> AnalysisResultScreen(
             bottomPadding = bottomPadding,
-            year = submittedRequest?.year ?: year,
-            month = submittedRequest?.month ?: month,
-            interest = submittedRequest?.survey?.interest.orEmpty(),
+            report = analysisState.activeReport,
+            content = analysisState.activeContent,
             onBack = {
-                if (initialStep == AnalysisFlowStep.RESULT) onBack() else step = AnalysisFlowStep.REQUEST
+                if (closeAfterResult) onBack() else step = AnalysisFlowStep.REQUEST
             },
         )
     }
@@ -435,11 +449,15 @@ private fun AnalysisRequestScreen(
     month: Int,
     onYearMonthChange: (Int, Int) -> Unit,
     onBack: () -> Unit,
+    failure: AnalysisFailure?,
+    onClearFailure: () -> Unit,
     onStart: () -> Unit,
 ) {
+    val selectedMonth = YearMonth.of(year, month)
+    val currentMonth = YearMonth.now(analysisZone)
     MainTabContainer(bottomPadding) {
         IconButton(onClick = onBack) {
-            Icon(Icons.Outlined.ArrowBack, contentDescription = stringResource(R.string.navigate_back))
+            Icon(Icons.AutoMirrored.Outlined.ArrowBack, contentDescription = stringResource(R.string.navigate_back))
         }
         Text(stringResource(R.string.analysis_request_title), fontSize = 26.sp, fontWeight = FontWeight.Bold)
         Text(stringResource(R.string.analysis_request_subtitle), color = MaterialTheme.colorScheme.onSurfaceVariant)
@@ -458,6 +476,7 @@ private fun AnalysisRequestScreen(
                 horizontalArrangement = Arrangement.SpaceBetween,
             ) {
                 IconButton(onClick = {
+                    onClearFailure()
                     onYearMonthChange(
                         if (month ==
                             1
@@ -483,21 +502,33 @@ private fun AnalysisRequestScreen(
                         fontWeight = FontWeight.Bold,
                     )
                 }
-                IconButton(onClick = {
-                    onYearMonthChange(
-                        if (month ==
-                            12
-                        ) {
-                            year + 1
-                        } else {
-                            year
-                        },
-                        if (month == 12) 1 else month + 1,
-                    )
-                }) {
+                IconButton(
+                    enabled = selectedMonth < currentMonth,
+                    onClick = {
+                        onClearFailure()
+                        onYearMonthChange(
+                            if (month ==
+                                12
+                            ) {
+                                year + 1
+                            } else {
+                                year
+                            },
+                            if (month == 12) 1 else month + 1,
+                        )
+                    },
+                ) {
                     Icon(Icons.Outlined.ChevronRight, contentDescription = stringResource(R.string.analysis_next_month))
                 }
             }
+        }
+        failure?.let {
+            Text(
+                text = analysisFailureMessage(it),
+                modifier = Modifier.padding(top = 16.dp),
+                color = MaterialTheme.colorScheme.error,
+                style = MaterialTheme.typography.bodyMedium,
+            )
         }
         Spacer(Modifier.height(28.dp))
         PrimaryAuthButton(text = stringResource(R.string.analysis_start), onClick = onStart)
@@ -536,109 +567,82 @@ private fun AnalysisLoadingScreen(bottomPadding: Dp) {
     }
 }
 
-@Suppress("LongMethod")
 @Composable
-private fun AnalysisResultScreen(bottomPadding: Dp, year: Int, month: Int, interest: String, onBack: () -> Unit) {
+private fun AnalysisResultScreen(
+    bottomPadding: Dp,
+    report: com.yu_morph.smartbudget.data.remote.model.ReportDetailData?,
+    content: AnalysisReportContent?,
+    onBack: () -> Unit,
+) {
+    val period = report?.periodStart?.let { runCatching { YearMonth.parse(it.take(7)) }.getOrNull() }
     MainTabContainer(bottomPadding) {
-        AnalysisPageHeading(stringResource(R.string.analysis_result_title, year, month), onBack)
-        Text(
-            stringResource(R.string.analysis_sample_data),
-            style = MaterialTheme.typography.labelMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        AnalysisPageHeading(
+            stringResource(
+                R.string.analysis_result_title,
+                period?.year ?: 0,
+                period?.monthValue ?: 0,
+            ),
+            onBack,
         )
         Spacer(Modifier.height(12.dp))
-        ResultCard(R.string.analysis_result_total_title) {
-            Text(
-                stringResource(R.string.analysis_result_total),
-                style = MaterialTheme.typography.headlineLarge,
-                fontWeight = FontWeight.Bold,
-            )
-            Text(
-                stringResource(R.string.analysis_result_change),
-                color = MaterialTheme.colorScheme.error,
-                style = MaterialTheme.typography.labelLarge,
-            )
+        content?.aWordFromAi?.let { body ->
+            ResultCard(R.string.analysis_result_ai_title, highlighted = true) {
+                Text(body, style = MaterialTheme.typography.bodyLarge, lineHeight = 22.sp)
+            }
         }
-        ResultCard(R.string.analysis_result_ai_title, highlighted = true) {
-            Text(stringResource(R.string.analysis_result_ai_body), style = MaterialTheme.typography.bodyLarge)
-        }
-        ResultCard(R.string.analysis_result_categories_title) {
-            ResultLine(
-                R.string.analysis_result_food_category,
-                R.string.analysis_result_food_count,
-                R.string.analysis_result_food_note,
-            )
-            ResultLine(
-                R.string.analysis_result_transport_category,
-                R.string.analysis_result_transport_count,
-                R.string.analysis_result_transport_note,
-            )
-            ResultLine(
-                R.string.analysis_result_living_category,
-                R.string.analysis_result_living_count,
-                R.string.analysis_result_living_note,
-            )
-        }
-        ResultCard(R.string.analysis_result_health_title) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                HealthScore(modifier = Modifier.size(76.dp))
-                Column(Modifier.weight(1f).padding(start = 12.dp)) {
-                    Text(
-                        stringResource(R.string.analysis_result_health_grade),
-                        color = MaterialTheme.colorScheme.primary,
-                        fontWeight = FontWeight.Bold,
-                    )
-                    Text(
-                        stringResource(R.string.analysis_result_health_body),
-                        modifier = Modifier.padding(top = 8.dp),
-                        lineHeight = 20.sp,
-                    )
+        if (content?.topSpendingCategories?.isNotEmpty() == true) {
+            ResultCard(R.string.analysis_result_categories_title) {
+                content.topSpendingCategories.forEach { category ->
+                    AnalysisCategoryRow(category)
                 }
             }
         }
-        ResultCard(R.string.analysis_result_weekday_title) {
-            WeekdayChart()
+        content?.spendingHealth?.let { AnalysisTextResultCard(R.string.analysis_result_health_title, it) }
+        content?.spendingByDayOfWeek?.let { AnalysisTextResultCard(R.string.analysis_result_weekday_title, it) }
+        content?.tipsForSaving?.let { AnalysisTextResultCard(R.string.analysis_result_save_advice, it) }
+        content?.tipsToKeepItUp?.let { AnalysisTextResultCard(R.string.analysis_result_maintain_advice, it) }
+        content?.tipsForInterests?.let { AnalysisTextResultCard(R.string.analysis_result_interest_title, it) }
+        content?.newsDrivenInsights?.let { AnalysisTextResultCard(R.string.analysis_result_news_title, it) }
+        Spacer(Modifier.height(16.dp))
+    }
+}
+
+@Composable
+private fun AnalysisCategoryRow(category: AnalysisCategoryInsight) {
+    Column(modifier = Modifier.fillMaxWidth().padding(vertical = 6.dp)) {
+        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+            Text(category.name, fontWeight = FontWeight.Bold)
+            category.occurrence?.let { Text(stringResource(R.string.analysis_result_occurrence, it)) }
+        }
+        if (category.tip.isNotBlank()) {
             Text(
-                stringResource(R.string.analysis_result_weekday_note),
-                modifier = Modifier.padding(top = 12.dp),
+                category.tip,
+                modifier = Modifier.padding(top = 4.dp),
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 lineHeight = 20.sp,
             )
         }
-        Text(
-            stringResource(R.string.analysis_result_advice_heading),
-            modifier = Modifier.semantics { heading() },
-            style = MaterialTheme.typography.titleLarge,
-        )
-        Spacer(Modifier.height(10.dp))
-        AdviceCard(
-            R.string.analysis_result_save_advice,
-            listOf(
-                R.string.analysis_result_save_1,
-                R.string.analysis_result_save_2,
-                R.string.analysis_result_save_3,
-            ),
-        )
-        AdviceCard(
-            R.string.analysis_result_maintain_advice,
-            listOf(
-                R.string.analysis_result_maintain_1,
-                R.string.analysis_result_maintain_2,
-            ),
-        )
-        ResultCard(R.string.analysis_result_interest_title) {
-            Text(
-                if (interest.isBlank()) {
-                    stringResource(R.string.analysis_result_interest_body)
-                } else {
-                    stringResource(R.string.analysis_result_interest_custom_body, interest)
-                },
-                lineHeight = 21.sp,
-            )
-        }
-        ResultCard(R.string.analysis_result_news_title) {
-            Text(stringResource(R.string.analysis_result_news_body), lineHeight = 21.sp)
-        }
-        Spacer(Modifier.height(16.dp))
     }
 }
+
+@Composable
+private fun AnalysisTextResultCard(title: Int, body: String) {
+    ResultCard(title) { Text(body, lineHeight = 21.sp) }
+}
+
+@Composable
+internal fun analysisFailureMessage(failure: AnalysisFailure): String = stringResource(
+    when (failure) {
+        AnalysisFailure.NETWORK -> R.string.network_error
+        AnalysisFailure.RESPONSE -> R.string.response_error
+        AnalysisFailure.AUTHENTICATION -> R.string.analysis_error_authentication
+        AnalysisFailure.NO_TRANSACTIONS -> R.string.analysis_error_no_transactions
+        AnalysisFailure.IN_PROGRESS -> R.string.analysis_error_in_progress
+        AnalysisFailure.PROVIDER -> R.string.analysis_error_provider
+        AnalysisFailure.TIMEOUT -> R.string.analysis_error_timeout
+        AnalysisFailure.SERVICE -> R.string.service_unavailable_error
+        AnalysisFailure.UNREADABLE_REPORT -> R.string.analysis_error_unreadable_report
+    },
+)
+
+private val analysisZone: ZoneId = ZoneId.of("Asia/Seoul")

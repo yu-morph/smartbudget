@@ -308,6 +308,11 @@
     <string name="receipt_permission_retry">Allow permission</string>
     <string name="analysis_new_report">Analyze</string>
     <string name="analysis_report_history">Analysis history</string>
+    <string name="analysis_history_loading">Loading analysis history…</string>
+    <string name="analysis_history_empty">No monthly analysis has been created yet.</string>
+    <string name="analysis_report_month">%1$d/%2$d</string>
+    <string name="analysis_report_stale">Transactions changed; analyze again</string>
+    <string name="analysis_report_ready">Analysis complete</string>
     <string name="analysis_edit_survey">Edit survey</string>
     <string name="analysis_sample_data">Sample data</string>
     <string name="analysis_survey_title">Spending analysis survey</string>
@@ -315,4 +320,11 @@
     <string name="analysis_survey_finance_section">Loans</string>
     <string name="analysis_survey_goal_section">Goals and interests</string>
     <string name="analysis_result_advice_heading">Spending advice</string>
+    <string name="analysis_result_occurrence">%1$d times</string>
+    <string name="analysis_error_authentication">Your session has expired. Please sign in again.</string>
+    <string name="analysis_error_no_transactions">There are no transactions to analyze for this month.</string>
+    <string name="analysis_error_in_progress">Analysis for this month is already in progress. Check the history shortly.</string>
+    <string name="analysis_error_provider">The spending analysis service failed. Please try again later.</string>
+    <string name="analysis_error_timeout">Spending analysis timed out. The request was not retried automatically.</string>
+    <string name="analysis_error_unreadable_report">This report has no analysis content that can be displayed.</string>
 </resources>

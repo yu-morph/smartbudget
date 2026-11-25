@@ -133,6 +133,11 @@ internal fun MainScreen(
     onPreviousHomeNewsPage: () -> Unit,
     onNextHomeNewsPage: () -> Unit,
     onNewsArticleClick: (NewsArticle) -> Unit,
+    analysisState: AnalysisUiState,
+    onAnalysisLoad: () -> Unit,
+    onRequestAnalysis: (YearMonth, AnalysisSurvey) -> Unit,
+    onOpenAnalysisReport: (Int) -> Unit,
+    onClearAnalysisFailure: () -> Unit,
     onLogout: () -> Unit,
     onOpenDocument: (MarkdownDocument) -> Unit,
     onOpenSettings: (SettingsDetailDestination) -> Unit,
@@ -197,6 +202,11 @@ internal fun MainScreen(
 
                     MainTab.ANALYSIS -> AnalysisScreen(
                         bottomPadding = innerPadding.calculateBottomPadding(),
+                        state = analysisState,
+                        onLoad = onAnalysisLoad,
+                        onRequestReport = onRequestAnalysis,
+                        onOpenReport = onOpenAnalysisReport,
+                        onClearFailure = onClearAnalysisFailure,
                     )
 
                     MainTab.SETTINGS -> SettingsScreen(

@@ -32,6 +32,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -53,47 +54,72 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.yu_morph.smartbudget.R
 import com.yu_morph.smartbudget.ui.theme.SmartBudgetGreen
+import java.time.LocalDate
+import java.time.YearMonth
+import java.time.ZoneId
 
 internal val AnalysisSlate = Color(0xFF667386)
 internal val AnalysisBlue = Color(0xFF8CA2B8)
 
 @Composable
-internal fun AnalysisScreen(bottomPadding: Dp) {
+internal fun AnalysisScreen(
+    bottomPadding: Dp,
+    state: AnalysisUiState,
+    onLoad: () -> Unit,
+    onRequestReport: (YearMonth, AnalysisSurvey) -> Unit,
+    onOpenReport: (Int) -> Unit,
+    onClearFailure: () -> Unit,
+) {
     var flow by rememberSaveable { mutableStateOf<AnalysisFlowStep?>(null) }
     var survey by remember { mutableStateOf(AnalysisSurvey()) }
     var requestAfterSurvey by rememberSaveable { mutableStateOf(false) }
-    var selectedYear by rememberSaveable { mutableStateOf(2026) }
-    var selectedMonth by rememberSaveable { mutableStateOf(10) }
+    var closeAfterResult by rememberSaveable { mutableStateOf(false) }
+    val currentMonth = remember { YearMonth.now(analysisZone) }
+    var selectedYear by rememberSaveable { mutableStateOf(currentMonth.year) }
+    var selectedMonth by rememberSaveable { mutableStateOf(currentMonth.monthValue) }
+    LaunchedEffect(Unit) { onLoad() }
     if (flow != null) {
         AnalysisFlowScreen(
             bottomPadding = bottomPadding,
+            analysisState = state,
             initialSurvey = survey,
             initialStep = flow ?: AnalysisFlowStep.SURVEY,
             initialYear = selectedYear,
             initialMonth = selectedMonth,
             continueAfterSurvey = requestAfterSurvey,
+            closeAfterResult = closeAfterResult,
             onBack = { flow = null },
             onSurveySaved = {
                 survey = it
             },
+            onRequestReport = onRequestReport,
+            onClearFailure = onClearFailure,
         )
         return
     }
     MainTabContainer(bottomPadding = bottomPadding) {
         SurveySummaryCard(survey = survey, onClick = {
             requestAfterSurvey = false
+            closeAfterResult = false
             flow = AnalysisFlowStep.SURVEY
         })
         Spacer(Modifier.height(14.dp))
         PreviousReportsCard(
+            state = state,
             onNewReport = {
                 requestAfterSurvey = true
+                closeAfterResult = false
                 flow = AnalysisFlowStep.SURVEY
             },
-            onReportClick = { reportMonth ->
-                selectedYear = 2026
-                selectedMonth = reportMonth
-                flow = AnalysisFlowStep.RESULT
+            onReportClick = { report ->
+                runCatching { LocalDate.parse(report.periodStart) }.getOrNull()?.let { date ->
+                    selectedYear = date.year
+                    selectedMonth = date.monthValue
+                }
+                requestAfterSurvey = false
+                closeAfterResult = true
+                onOpenReport(report.id)
+                flow = AnalysisFlowStep.LOADING
             },
         )
         Spacer(Modifier.height(16.dp))
@@ -218,7 +244,11 @@ private fun TrendCard() {
 }
 
 @Composable
-private fun PreviousReportsCard(onNewReport: () -> Unit, onReportClick: (Int) -> Unit) {
+private fun PreviousReportsCard(
+    state: AnalysisUiState,
+    onNewReport: () -> Unit,
+    onReportClick: (com.yu_morph.smartbudget.data.remote.model.ReportSummaryData) -> Unit,
+) {
     AnalysisCard {
         Row(
             modifier = Modifier.fillMaxWidth(),
@@ -237,32 +267,34 @@ private fun PreviousReportsCard(onNewReport: () -> Unit, onReportClick: (Int) ->
                 Text(stringResource(R.string.analysis_new_report), modifier = Modifier.padding(start = 4.dp))
             }
         }
-        Text(
-            stringResource(R.string.analysis_sample_data),
-            style = MaterialTheme.typography.labelMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-        )
         Spacer(Modifier.height(8.dp))
-        ReportRow(stringResource(R.string.sample_report_october), stringResource(R.string.sample_report_food), "-3%") {
-            onReportClick(10)
-        }
-        HorizontalDivider()
-        ReportRow(
-            stringResource(R.string.sample_report_september),
-            stringResource(R.string.sample_report_fixed),
-            "+2%",
-        ) {
-            onReportClick(9)
-        }
-        HorizontalDivider()
-        ReportRow(stringResource(R.string.sample_report_august), stringResource(R.string.sample_report_goal), "-6%") {
-            onReportClick(8)
+        when {
+            state.isLoadingHistory -> Text(
+                stringResource(R.string.analysis_history_loading),
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+
+            state.failure != null && state.reports.isEmpty() -> Text(
+                analysisFailureMessage(state.failure),
+                color = MaterialTheme.colorScheme.error,
+            )
+
+            state.reports.isEmpty() -> Text(
+                stringResource(R.string.analysis_history_empty),
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+
+            else -> state.reports.forEachIndexed { index, report ->
+                ReportRow(report = report) { onReportClick(report) }
+                if (index != state.reports.lastIndex) HorizontalDivider()
+            }
         }
     }
 }
 
 @Composable
-private fun ReportRow(month: String, description: String, change: String, onClick: () -> Unit) {
+private fun ReportRow(report: com.yu_morph.smartbudget.data.remote.model.ReportSummaryData, onClick: () -> Unit) {
+    val month = runCatching { LocalDate.parse(report.periodStart) }.getOrNull()
     Row(
         modifier = Modifier.fillMaxWidth().clickable(onClick = onClick).padding(vertical = 11.dp),
         verticalAlignment = Alignment.CenterVertically,
@@ -279,10 +311,20 @@ private fun ReportRow(month: String, description: String, change: String, onClic
             )
         }
         Column(modifier = Modifier.padding(start = 12.dp).weight(1f)) {
-            Text(month, fontWeight = FontWeight.SemiBold)
-            Text(description, color = MaterialTheme.colorScheme.onSurfaceVariant, fontSize = 12.sp)
+            Text(
+                stringResource(R.string.analysis_report_month, month?.year ?: 0, month?.monthValue ?: 0),
+                fontWeight = FontWeight.SemiBold,
+            )
+            Text(
+                if (report.isStale) {
+                    stringResource(R.string.analysis_report_stale)
+                } else {
+                    stringResource(R.string.analysis_report_ready)
+                },
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                fontSize = 12.sp,
+            )
         }
-        Text(change, fontWeight = FontWeight.Bold)
         Icon(Icons.Outlined.ChevronRight, null, tint = MaterialTheme.colorScheme.onSurfaceVariant)
     }
 }
@@ -311,3 +353,5 @@ internal fun AnalysisCard(
         Column(modifier = Modifier.fillMaxWidth().padding(20.dp), content = content)
     }
 }
+
+private val analysisZone: ZoneId = ZoneId.of("Asia/Seoul")
