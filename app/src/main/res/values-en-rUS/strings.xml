@@ -332,7 +332,7 @@
     <string name="analysis_error_in_progress">Analysis for this month is already in progress. Check the history shortly.</string>
     <string name="analysis_error_timeout">Spending analysis timed out. The request was not retried automatically.</string>
     <string name="analysis_error_unreadable_report">This report has no analysis content that can be displayed.</string>
-    <string name="analysis_survey_summary_title">Spending analysis survey summary</string>
+    <string name="analysis_survey_summary_title">Basic information</string>
     <string name="analysis_survey_loan_details">Loan type and remaining balance</string>
     <string name="analysis_survey_interest">Interests</string>
     <string name="analysis_survey_education">Education</string>

@@ -290,7 +290,7 @@
     <string name="year_month">%1$d년 %2$d월</string>
     <string name="analysis_title">소비 분석</string>
     <string name="analysis_subtitle">지출 패턴을 이해하고 다음 달을 준비하세요.</string>
-    <string name="analysis_survey_summary_title">소비 분석 설문 요약</string>
+    <string name="analysis_survey_summary_title">기본 정보</string>
     <string name="analysis_survey_summary_description">설문 응답을 바탕으로 이번 달 소비를 살펴볼게요.</string>
     <string name="analysis_survey_goal_label">관리 목표</string>
     <string name="analysis_survey_goal_value">외식비 줄이기</string>
@@ -299,7 +299,7 @@
     <string name="analysis_survey_direction_save">절약하기</string>
     <string name="analysis_survey_direction_maintain">유지하기</string>
     <string name="analysis_new_report">분석 추가</string>
-    <string name="analysis_report_history">분석 레포트</string>
+    <string name="analysis_report_history">분석 리포트</string>
     <string name="analysis_history_loading">분석 내역을 불러오는 중…</string>
     <string name="analysis_history_empty">아직 생성된 월간 분석이 없어요.</string>
     <string name="analysis_report_month">%1$d년 %2$d월</string>
