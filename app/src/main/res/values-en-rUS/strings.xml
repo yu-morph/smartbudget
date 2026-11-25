@@ -330,7 +330,6 @@
     <string name="analysis_error_authentication">Your session has expired. Please sign in again.</string>
     <string name="analysis_error_no_transactions">There are no transactions to analyze for this month.</string>
     <string name="analysis_error_in_progress">Analysis for this month is already in progress. Check the history shortly.</string>
-    <string name="analysis_error_provider">The spending analysis service failed. Please try again later.</string>
     <string name="analysis_error_timeout">Spending analysis timed out. The request was not retried automatically.</string>
     <string name="analysis_error_unreadable_report">This report has no analysis content that can be displayed.</string>
     <string name="analysis_survey_summary_title">Spending analysis survey summary</string>
@@ -340,4 +339,8 @@
     <string name="analysis_survey_privacy">※ Your information is used only for spending analysis. Data that could identify you is excluded from external requests.</string>
     <string name="analysis_age_group">%1$ds (%2$s)</string>
     <string name="analysis_info_missing">Not provided</string>
+    <string name="analysis_loading_title">Analyzing spending</string>
+    <string name="analysis_loading_status">Analyzing your spending…</string>
+    <string name="analysis_error_invalid_request">The analysis request could not be processed. Check the selected month and survey details.</string>
+    <string name="analysis_error_provider">The server could not get a result from the spending analysis service. Try again later.</string>
 </resources>

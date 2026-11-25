@@ -30,6 +30,7 @@ import kotlinx.coroutines.supervisorScope
 internal enum class AnalysisFailure {
     NETWORK,
     RESPONSE,
+    INVALID_REQUEST,
     AUTHENTICATION,
     NO_TRANSACTIONS,
     IN_PROGRESS,
@@ -210,35 +211,37 @@ internal class AnalysisCoordinator(
         emptyList()
     }
 
-    private fun ApiResult<*>.toAnalysisFailure(): AnalysisFailure = when (this) {
-        is ApiResult.NetworkFailure -> AnalysisFailure.NETWORK
-
-        is ApiResult.DecodeFailure -> AnalysisFailure.RESPONSE
-
-        is ApiResult.NotImplemented -> AnalysisFailure.SERVICE
-
-        is ApiResult.Success -> AnalysisFailure.SERVICE
-
-        is ApiResult.HttpFailure -> when (code) {
-            "AUTHENTICATION_REQUIRED" -> AnalysisFailure.AUTHENTICATION
-
-            "REPORT_NO_TRANSACTIONS" -> AnalysisFailure.NO_TRANSACTIONS
-
-            "IDEMPOTENCY_REQUEST_IN_PROGRESS",
-            "REPORT_GENERATION_IN_PROGRESS",
-            -> AnalysisFailure.IN_PROGRESS
-
-            "REPORT_PROVIDER_TIMEOUT" -> AnalysisFailure.TIMEOUT
-
-            "REPORT_PROVIDER_ERROR" -> AnalysisFailure.PROVIDER
-
-            else -> AnalysisFailure.SERVICE
-        }
-    }
-
     private companion object {
         val KOREA_ZONE: ZoneId = ZoneId.of("Asia/Seoul")
         const val MONTHLY_PERIOD_TYPE = "monthly"
+    }
+}
+
+internal fun ApiResult<*>.toAnalysisFailure(): AnalysisFailure = when (this) {
+    is ApiResult.NetworkFailure -> AnalysisFailure.NETWORK
+
+    is ApiResult.DecodeFailure -> AnalysisFailure.RESPONSE
+
+    is ApiResult.NotImplemented -> AnalysisFailure.SERVICE
+
+    is ApiResult.Success -> AnalysisFailure.SERVICE
+
+    is ApiResult.HttpFailure -> when (code) {
+        "INVALID_REQUEST" -> AnalysisFailure.INVALID_REQUEST
+
+        "AUTHENTICATION_REQUIRED" -> AnalysisFailure.AUTHENTICATION
+
+        "REPORT_NO_TRANSACTIONS" -> AnalysisFailure.NO_TRANSACTIONS
+
+        "IDEMPOTENCY_REQUEST_IN_PROGRESS",
+        "REPORT_GENERATION_IN_PROGRESS",
+        -> AnalysisFailure.IN_PROGRESS
+
+        "REPORT_PROVIDER_TIMEOUT" -> AnalysisFailure.TIMEOUT
+
+        "REPORT_PROVIDER_ERROR" -> AnalysisFailure.PROVIDER
+
+        else -> AnalysisFailure.SERVICE
     }
 }
 

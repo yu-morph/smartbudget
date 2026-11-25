@@ -42,7 +42,6 @@ import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -74,7 +73,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.yu_morph.smartbudget.R
 import com.yu_morph.smartbudget.ui.auth.PrimaryAuthButton
-import com.yu_morph.smartbudget.ui.theme.SmartBudgetGreen
 import java.time.YearMonth
 import java.time.ZoneId
 
@@ -181,7 +179,9 @@ internal fun AnalysisFlowScreen(
             reportPeriod?.monthValue ?: month,
         )
 
-        AnalysisFlowStep.REQUEST, AnalysisFlowStep.LOADING -> stringResource(R.string.analysis_title)
+        AnalysisFlowStep.REQUEST -> stringResource(R.string.analysis_title)
+
+        AnalysisFlowStep.LOADING -> stringResource(R.string.analysis_loading_title)
     }
     Scaffold(
         containerColor = MaterialTheme.colorScheme.background,
@@ -243,7 +243,10 @@ internal fun AnalysisFlowScreen(
                 },
             )
 
-            AnalysisFlowStep.LOADING -> AnalysisLoadingScreen(Modifier.padding(innerPadding))
+            AnalysisFlowStep.LOADING -> BankSyncLoading(
+                modifier = Modifier.padding(innerPadding),
+                message = R.string.analysis_loading_status,
+            )
 
             AnalysisFlowStep.RESULT -> AnalysisResultScreen(
                 modifier = Modifier.padding(innerPadding),
@@ -595,38 +598,6 @@ private fun AnalysisMonthControl(selectedMonth: YearMonth, onChange: (Long) -> U
 }
 
 @Composable
-private fun AnalysisLoadingScreen(modifier: Modifier) {
-    Column(
-        modifier = modifier.fillMaxSize().padding(24.dp),
-        verticalArrangement = Arrangement.Center,
-        horizontalAlignment = Alignment.CenterHorizontally,
-    ) {
-        Image(painterResource(R.drawable.bank_sync_robot), contentDescription = null, modifier = Modifier.size(220.dp))
-        Text(
-            stringResource(R.string.analysis_loading_title),
-            modifier = Modifier.padding(top = 22.dp),
-            fontSize = 24.sp,
-            fontWeight = FontWeight.Bold,
-        )
-        Text(
-            stringResource(R.string.analysis_loading_subtitle),
-            modifier = Modifier.padding(top = 8.dp),
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-        )
-        LinearProgressIndicator(
-            modifier = Modifier.padding(top = 24.dp).fillMaxWidth(0.72f).height(6.dp).clip(CircleShape),
-            color = SmartBudgetGreen,
-            trackColor = SmartBudgetGreen.copy(alpha = 0.16f),
-        )
-        Text(
-            stringResource(R.string.analysis_loading_wait),
-            modifier = Modifier.padding(top = 18.dp),
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-        )
-    }
-}
-
-@Composable
 private fun AnalysisResultScreen(modifier: Modifier, content: AnalysisReportContent?) {
     MainTabContainer(bottomPadding = 0.dp, modifier = modifier) {
         content?.aWordFromAi?.let { body ->
@@ -679,6 +650,7 @@ internal fun analysisFailureMessage(failure: AnalysisFailure): String = stringRe
     when (failure) {
         AnalysisFailure.NETWORK -> R.string.network_error
         AnalysisFailure.RESPONSE -> R.string.response_error
+        AnalysisFailure.INVALID_REQUEST -> R.string.analysis_error_invalid_request
         AnalysisFailure.AUTHENTICATION -> R.string.analysis_error_authentication
         AnalysisFailure.NO_TRANSACTIONS -> R.string.analysis_error_no_transactions
         AnalysisFailure.IN_PROGRESS -> R.string.analysis_error_in_progress

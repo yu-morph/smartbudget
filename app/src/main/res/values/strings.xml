@@ -354,6 +354,7 @@
     <string name="analysis_next_month">다음 달</string>
     <string name="analysis_start">분석 시작</string>
     <string name="analysis_loading_title">소비 분석 중</string>
+    <string name="analysis_loading_status">소비 내역을 분석하는 중…</string>
     <string name="analysis_loading_subtitle">거래 내역과 소비 패턴을 꼼꼼히 살펴보고 있어요.</string>
     <string name="analysis_loading_wait">잠시만 기다려주세요</string>
     <string name="analysis_result_title">%1$d년 %2$d월 소비 분석</string>
@@ -392,9 +393,10 @@
     <string name="analysis_result_news_title">뉴스 기반 인사이트</string>
     <string name="analysis_result_news_body">최근 금리와 고용 지표의 변동성이 커지고 있어요. 비상 자금을 우선 확보하고 고위험 투자는 보수적으로 접근해보세요.</string>
     <string name="analysis_error_authentication">로그인 정보가 만료됐어요. 다시 로그인해 주세요.</string>
+    <string name="analysis_error_invalid_request">분석 요청을 처리할 수 없어요. 선택한 달과 설문 정보를 확인해 주세요.</string>
     <string name="analysis_error_no_transactions">선택한 달에 분석할 거래가 없어요.</string>
     <string name="analysis_error_in_progress">이 달의 분석이 이미 진행 중이에요. 잠시 후 내역을 확인해 주세요.</string>
-    <string name="analysis_error_provider">소비 분석 서비스 요청에 실패했어요. 잠시 후 다시 시도해 주세요.</string>
+    <string name="analysis_error_provider">서버가 소비 분석 서비스에서 결과를 받지 못했어요. 잠시 후 다시 시도해 주세요.</string>
     <string name="analysis_error_timeout">소비 분석 시간이 초과됐어요. 자동으로 다시 요청하지 않았습니다.</string>
     <string name="analysis_error_unreadable_report">표시할 수 있는 소비 분석 내용이 없어요.</string>
     <string name="analysis_insight_title">AI 소비 인사이트</string>

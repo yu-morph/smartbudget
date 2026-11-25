@@ -283,7 +283,7 @@ private fun SelectionCheck(selected: Boolean, onClick: (() -> Unit)? = null) {
 }
 
 @Composable
-private fun BankSyncLoading(modifier: Modifier) {
+internal fun BankSyncLoading(modifier: Modifier, @StringRes message: Int = R.string.settings_bank_fetching) {
     val dataFlowTransition = rememberInfiniteTransition(label = "은행 데이터 흐름")
     val dataFlowProgress by
         dataFlowTransition.animateFloat(
@@ -320,7 +320,7 @@ private fun BankSyncLoading(modifier: Modifier) {
             trackColor = SmartBudgetGreen.copy(alpha = 0.16f),
         )
         Text(
-            text = stringResource(R.string.settings_bank_fetching),
+            text = stringResource(message),
             modifier = Modifier.padding(top = 14.dp),
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             fontSize = 14.sp,
