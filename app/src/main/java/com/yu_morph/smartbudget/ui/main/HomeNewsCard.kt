@@ -51,12 +51,12 @@ import coil3.compose.AsyncImage
 import com.yu_morph.smartbudget.R
 import com.yu_morph.smartbudget.data.remote.news.NewsArticle
 import com.yu_morph.smartbudget.ui.theme.SmartBudgetGreen
-import kotlinx.coroutines.delay
 import java.time.Instant
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.util.Locale
 import kotlin.math.roundToInt
+import kotlinx.coroutines.delay
 
 @Composable
 internal fun NewsCard(

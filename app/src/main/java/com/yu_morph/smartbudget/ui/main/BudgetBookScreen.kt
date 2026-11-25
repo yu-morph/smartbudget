@@ -1172,7 +1172,7 @@ private fun PreviousMonthBudgetStatus(budgetAmount: Int?, usedAmount: Int) {
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            Column{
+            Column {
                 Text(
                     text =
                         budgetAmount?.let {
@@ -1218,7 +1218,10 @@ private fun MonthlyMetrics(stats: MonthlyLedgerStats) {
             ratio < 200 -> CalendarWarningColor
             else -> CalendarIncomeColor
         }
-    Row(modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp), horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+    Row(
+        modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
+        horizontalArrangement = Arrangement.spacedBy(16.dp),
+    ) {
         MonthlyMetric(
             modifier = Modifier.weight(1f),
             label = stringResource(R.string.budget_book_income_expense_ratio),
@@ -1301,7 +1304,10 @@ private fun MonthlyMetric(
 private fun CategoryStatisticsTags(title: String, tags: List<CategoryStatTag>) {
     Column(verticalArrangement = Arrangement.spacedBy(5.dp)) {
         Text(title, color = MaterialTheme.colorScheme.onSurfaceVariant, fontSize = 11.sp)
-        Row(modifier = Modifier.fillMaxWidth().padding(bottom = 4.dp), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+        Row(
+            modifier = Modifier.fillMaxWidth().padding(bottom = 4.dp),
+            horizontalArrangement = Arrangement.spacedBy(6.dp),
+        ) {
             tags.forEach { tag ->
                 val category = transactionCategoryUi(tag.category)
                 Surface(
