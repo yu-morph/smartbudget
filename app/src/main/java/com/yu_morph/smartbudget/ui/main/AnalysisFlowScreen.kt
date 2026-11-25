@@ -18,11 +18,12 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.selection.selectableGroup
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.ArrowBack
 import androidx.compose.material.icons.outlined.CalendarMonth
@@ -30,7 +31,6 @@ import androidx.compose.material.icons.outlined.ChevronLeft
 import androidx.compose.material.icons.outlined.ChevronRight
 import androidx.compose.material.icons.outlined.Female
 import androidx.compose.material.icons.outlined.Male
-import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.DropdownMenu
@@ -40,7 +40,6 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
@@ -60,10 +59,12 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
-import androidx.compose.ui.semantics.heading
-import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.input.OffsetMapping
+import androidx.compose.ui.text.input.TransformedText
+import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.yu_morph.smartbudget.R
@@ -104,7 +105,7 @@ internal fun AnalysisFlowScreen(
 ) {
     var step by rememberSaveable { mutableStateOf(initialStep) }
     var gender by rememberSaveable { mutableStateOf(initialSurvey.gender.ifBlank { "male" }) }
-    var birthDate by rememberSaveable { mutableStateOf(initialSurvey.birthDate) }
+    var birthDate by rememberSaveable { mutableStateOf(surveyBirthDateDigits(initialSurvey.birthDate)) }
     var job by rememberSaveable { mutableStateOf(initialSurvey.job) }
     var workplace by rememberSaveable { mutableStateOf(initialSurvey.workplace) }
     var education by rememberSaveable { mutableStateOf(initialSurvey.education) }
@@ -204,7 +205,11 @@ internal fun AnalysisFlowScreen(
                 onInterestChange = { interest = it },
                 onSave = {
                     val completedSurvey = AnalysisSurvey(
-                        gender, birthDate, job, workplace, education, hasLoan, loanDetails, direction, interest,
+                        gender,
+                        formatSurveyBirthDate(
+                            birthDate,
+                        ),
+                        job, workplace, education, hasLoan, loanDetails, direction, interest,
                     )
                     onSurveySaved(completedSurvey)
                     if (continueAfterSurvey) step = AnalysisFlowStep.REQUEST else onBack()
@@ -223,7 +228,11 @@ internal fun AnalysisFlowScreen(
                 onClearFailure = onClearFailure,
                 onStart = {
                     val requestSurvey = AnalysisSurvey(
-                        gender, birthDate, job, workplace, education, hasLoan, loanDetails, direction, interest,
+                        gender,
+                        formatSurveyBirthDate(
+                            birthDate,
+                        ),
+                        job, workplace, education, hasLoan, loanDetails, direction, interest,
                     )
                     onRequestReport(YearMonth.of(year, month), requestSurvey)
                     step = AnalysisFlowStep.LOADING
@@ -256,7 +265,12 @@ private fun SurveyScreen(
     onInterestChange: (String) -> Unit,
     onSave: () -> Unit,
 ) {
-    MainTabContainer(bottomPadding = 0.dp, modifier = modifier) {
+    Column(
+        modifier = modifier.fillMaxSize()
+            .background(MaterialTheme.colorScheme.background)
+            .verticalScroll(rememberScrollState())
+            .padding(horizontal = 20.dp, vertical = 16.dp),
+    ) {
         SurveySection(R.string.analysis_survey_profile_section) {
             EditorField(stringResource(R.string.analysis_survey_gender)) {
                 Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.selectableGroup()) {
@@ -278,7 +292,8 @@ private fun SurveyScreen(
                     )
                     EditorTextField(
                         value = survey.birthDate,
-                        onValueChange = { onBirthDateChange(formatSurveyBirthDate(it)) },
+                        onValueChange = { onBirthDateChange(surveyBirthDateDigits(it)) },
+                        visualTransformation = SurveyBirthDateTransformation,
                         enabled = true,
                         modifier = Modifier.weight(1f),
                         placeholder = stringResource(R.string.analysis_survey_birth_hint),
@@ -293,9 +308,11 @@ private fun SurveyScreen(
                 onWorkplaceChange,
                 R.string.analysis_survey_workplace_hint,
             )
-            EducationField(survey.education, onEducationChange)
+            EditorField(stringResource(R.string.analysis_survey_education)) {
+                EducationField(survey.education, onEducationChange)
+            }
         }
-        Spacer(Modifier.height(12.dp))
+        Spacer(Modifier.height(28.dp))
         SurveySection(R.string.analysis_survey_finance_section) {
             ChoiceRow(
                 labels = listOf(R.string.analysis_survey_yes, R.string.analysis_survey_no),
@@ -313,7 +330,7 @@ private fun SurveyScreen(
                 )
             }
         }
-        Spacer(Modifier.height(12.dp))
+        Spacer(Modifier.height(28.dp))
         SurveySection(R.string.analysis_survey_goal_section) {
             ChoiceRow(
                 labels = listOf(R.string.analysis_survey_save, R.string.analysis_survey_maintain),
@@ -367,8 +384,25 @@ private fun SurveyField(
     }
 }
 
+private fun surveyBirthDateDigits(value: String): String = value.filter { it in '0'..'9' }.take(8)
+
+internal object SurveyBirthDateTransformation : VisualTransformation {
+    override fun filter(text: AnnotatedString): TransformedText {
+        val formatted = formatSurveyBirthDate(text.text)
+        return TransformedText(
+            AnnotatedString(formatted),
+            object : OffsetMapping {
+                override fun originalToTransformed(offset: Int): Int =
+                    offset + (if (offset > 4) 1 else 0) + (if (offset > 6) 1 else 0)
+
+                override fun transformedToOriginal(offset: Int): Int = formatted.take(offset).count { it != '-' }
+            },
+        )
+    }
+}
+
 internal fun formatSurveyBirthDate(value: String): String {
-    val digits = value.filter { it in '0'..'9' }.take(8)
+    val digits = surveyBirthDateDigits(value)
     return listOf(digits.take(4), digits.drop(4).take(2), digits.drop(6))
         .filter(String::isNotEmpty)
         .joinToString("-")

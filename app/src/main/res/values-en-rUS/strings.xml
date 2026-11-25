@@ -307,7 +307,7 @@
     <string name="receipt_permission_message">Allow camera access to scan receipts.</string>
     <string name="receipt_permission_retry">Allow permission</string>
     <string name="analysis_new_report">Analyze</string>
-    <string name="analysis_report_history">Analysis history</string>
+    <string name="analysis_report_history">Previous analysis reports</string>
     <string name="analysis_history_loading">Loading analysis history…</string>
     <string name="analysis_history_empty">No monthly analysis has been created yet.</string>
     <string name="analysis_report_month">%1$d/%2$d</string>
@@ -327,4 +327,11 @@
     <string name="analysis_error_provider">The spending analysis service failed. Please try again later.</string>
     <string name="analysis_error_timeout">Spending analysis timed out. The request was not retried automatically.</string>
     <string name="analysis_error_unreadable_report">This report has no analysis content that can be displayed.</string>
+    <string name="analysis_survey_summary_title">My basic information</string>
+    <string name="analysis_survey_loan_details">Loan type and remaining balance</string>
+    <string name="analysis_survey_interest">Interests</string>
+    <string name="analysis_survey_education">Education</string>
+    <string name="analysis_survey_privacy">※ Your information is used only for spending analysis. Data that could identify you is excluded from external requests.</string>
+    <string name="analysis_age_group">%1$ds (%2$s)</string>
+    <string name="analysis_info_missing">Not provided</string>
 </resources>

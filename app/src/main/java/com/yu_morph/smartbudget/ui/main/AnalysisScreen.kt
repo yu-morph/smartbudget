@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -21,8 +22,13 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Add
 import androidx.compose.material.icons.outlined.AutoAwesome
+import androidx.compose.material.icons.outlined.Business
 import androidx.compose.material.icons.outlined.CalendarMonth
 import androidx.compose.material.icons.outlined.ChevronRight
+import androidx.compose.material.icons.outlined.Female
+import androidx.compose.material.icons.outlined.Male
+import androidx.compose.material.icons.outlined.Person
+import androidx.compose.material.icons.outlined.School
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -39,6 +45,7 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
@@ -50,6 +57,8 @@ import androidx.compose.ui.unit.sp
 import com.yu_morph.smartbudget.R
 import com.yu_morph.smartbudget.ui.theme.SmartBudgetGreen
 import java.time.LocalDate
+import java.time.Period
+import java.time.ZoneId
 
 internal val AnalysisSlate = Color(0xFF667386)
 internal val AnalysisBlue = Color(0xFF8CA2B8)
@@ -80,29 +89,76 @@ internal fun AnalysisScreen(
 @Composable
 private fun SurveySummaryCard(survey: AnalysisSurvey, onClick: () -> Unit) {
     AnalysisCard {
-        Text(
-            stringResource(R.string.analysis_survey_summary_title),
-            modifier = Modifier.semantics { heading() },
-            style = MaterialTheme.typography.titleLarge,
-        )
+        AnalysisCardHeading(R.string.analysis_survey_summary_title, Modifier.fillMaxWidth())
         Spacer(Modifier.height(12.dp))
-        SurveySummaryRow(
-            label = stringResource(R.string.analysis_survey_goal_label),
-            value = if (survey.managementDirection == "maintain") {
-                stringResource(R.string.analysis_survey_direction_maintain)
-            } else {
-                stringResource(R.string.analysis_survey_direction_save)
-            },
-        )
-        Spacer(Modifier.height(10.dp))
-        SurveySummaryRow(
-            label = stringResource(R.string.analysis_survey_focus_label),
-            value = survey.interest.ifBlank { stringResource(R.string.analysis_survey_focus_value) },
-        )
+        Column(verticalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.padding(horizontal = 8.dp)) {
+            val age = surveyAge(survey.birthDate)
+            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                Text(
+                    if (age == null) {
+                        survey.birthDate.ifBlank { stringResource(R.string.analysis_info_missing) }
+                    } else {
+                        stringResource(R.string.analysis_age_group, age / 10 * 10, survey.birthDate)
+                    },
+                )
+                if (survey.gender == "male" || survey.gender == "female") {
+                    val male = survey.gender == "male"
+                    Icon(
+                        if (male) Icons.Outlined.Male else Icons.Outlined.Female,
+                        stringResource(if (male) R.string.analysis_survey_male else R.string.analysis_survey_female),
+                        modifier = Modifier.size(18.dp),
+                        tint = if (male) Color(0xFF2879CB) else Color(0xFFD04459),
+                    )
+                }
+            }
+            SurveyProfileLine(Icons.Outlined.Person, R.string.analysis_survey_job, survey.job)
+            SurveyProfileLine(Icons.Outlined.Business, R.string.analysis_survey_workplace, survey.workplace)
+            SurveyProfileLine(Icons.Outlined.School, R.string.analysis_survey_education, survey.education)
+            HorizontalDivider()
+            SurveySummaryRow(
+                stringResource(R.string.analysis_survey_loan),
+                stringResource(if (survey.hasLoan) R.string.analysis_survey_yes else R.string.analysis_survey_no),
+            )
+            if (survey.hasLoan && survey.loanDetails.isNotBlank()) Text(survey.loanDetails)
+            HorizontalDivider()
+            SurveySummaryRow(
+                stringResource(R.string.analysis_survey_goal_label),
+                stringResource(
+                    if (survey.managementDirection == "maintain") {
+                        R.string.analysis_survey_maintain
+                    } else {
+                        R.string.analysis_survey_save
+                    },
+                ),
+            )
+        }
         TextButton(onClick = onClick, modifier = Modifier.align(Alignment.End)) {
             Text(stringResource(R.string.analysis_edit_survey))
             Icon(Icons.Outlined.ChevronRight, contentDescription = null)
         }
+    }
+}
+
+internal fun surveyAge(birthDate: String, today: LocalDate = LocalDate.now(ZoneId.of("Asia/Seoul"))): Int? =
+    runCatching { LocalDate.parse(birthDate) }.getOrNull()
+        ?.takeUnless { it.isAfter(today) }
+        ?.let { Period.between(it, today).years }
+
+@Composable
+private fun AnalysisCardHeading(title: Int, modifier: Modifier) {
+    Text(
+        stringResource(title),
+        modifier = modifier.padding(start = 8.dp).semantics { heading() },
+        fontSize = 18.sp,
+        fontWeight = FontWeight.Bold,
+    )
+}
+
+@Composable
+private fun SurveyProfileLine(icon: ImageVector, label: Int, value: String) {
+    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        Icon(icon, stringResource(label), modifier = Modifier.size(18.dp))
+        Text(value.ifBlank { stringResource(R.string.analysis_info_missing) })
     }
 }
 
@@ -126,75 +182,6 @@ private fun SurveySummaryRow(label: String, value: String) {
 }
 
 @Composable
-private fun AnalysisInsightCard() {
-    AnalysisCard {
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            Box(
-                modifier = Modifier.size(40.dp).background(SmartBudgetGreen, CircleShape),
-                contentAlignment = Alignment.Center,
-            ) {
-                Icon(Icons.Outlined.AutoAwesome, null, tint = Color.White)
-            }
-            Column(modifier = Modifier.padding(start = 12.dp)) {
-                Text(
-                    stringResource(R.string.analysis_insight_title),
-                    color = SmartBudgetGreen,
-                    fontWeight = FontWeight.Bold,
-                )
-                Text(stringResource(R.string.analysis_insight_summary), fontWeight = FontWeight.SemiBold)
-            }
-        }
-        Spacer(Modifier.height(14.dp))
-        Text(
-            stringResource(R.string.analysis_insight_body),
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            lineHeight = 22.sp,
-        )
-    }
-}
-
-@Composable
-private fun CategoryCard() {
-    AnalysisCard {
-        Text(stringResource(R.string.analysis_categories), fontSize = 18.sp, fontWeight = FontWeight.Bold)
-        Spacer(Modifier.height(16.dp))
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            DonutChart(modifier = Modifier.size(132.dp))
-            Column(
-                modifier = Modifier.padding(start = 22.dp).weight(1f),
-                verticalArrangement = Arrangement.spacedBy(12.dp),
-            ) {
-                CategoryLegend(SmartBudgetGreen, stringResource(R.string.analysis_food), "45%")
-                CategoryLegend(AnalysisSlate, stringResource(R.string.analysis_transport), "30%")
-                CategoryLegend(AnalysisBlue, stringResource(R.string.analysis_living), "25%")
-            }
-        }
-    }
-}
-
-@Composable
-private fun TrendCard() {
-    AnalysisCard {
-        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-            Text(stringResource(R.string.analysis_trend), fontSize = 18.sp, fontWeight = FontWeight.Bold)
-            Text(
-                stringResource(R.string.analysis_unit),
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                fontSize = 12.sp,
-            )
-        }
-        Spacer(Modifier.height(18.dp))
-        TrendChart(modifier = Modifier.fillMaxWidth().height(150.dp))
-        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-            listOf(6, 7, 8, 9, 10, 11).forEach {
-                val label = stringResource(R.string.month_short, it)
-                Text(label, color = MaterialTheme.colorScheme.onSurfaceVariant, fontSize = 11.sp)
-            }
-        }
-    }
-}
-
-@Composable
 private fun PreviousReportsCard(
     state: AnalysisUiState,
     onNewReport: () -> Unit,
@@ -206,14 +193,12 @@ private fun PreviousReportsCard(
             horizontalArrangement = Arrangement.spacedBy(8.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            Text(
-                stringResource(R.string.analysis_report_history),
-                modifier = Modifier.weight(1f).semantics {
-                    heading()
-                },
-                style = MaterialTheme.typography.titleLarge,
-            )
-            Button(onClick = onNewReport, modifier = Modifier.heightIn(min = 48.dp)) {
+            AnalysisCardHeading(R.string.analysis_report_history, Modifier.weight(1f))
+            TextButton(
+                onClick = onNewReport,
+                modifier = Modifier.heightIn(min = 48.dp),
+                contentPadding = PaddingValues(horizontal = 4.dp),
+            ) {
                 Icon(Icons.Outlined.Add, contentDescription = null, modifier = Modifier.size(18.dp))
                 Text(stringResource(R.string.analysis_new_report), modifier = Modifier.padding(start = 4.dp))
             }
@@ -232,6 +217,7 @@ private fun PreviousReportsCard(
 
             state.reports.isEmpty() -> Text(
                 stringResource(R.string.analysis_history_empty),
+                fontSize = 13.sp,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
 
@@ -277,15 +263,6 @@ private fun ReportRow(report: com.yu_morph.smartbudget.data.remote.model.ReportS
             )
         }
         Icon(Icons.Outlined.ChevronRight, null, tint = MaterialTheme.colorScheme.onSurfaceVariant)
-    }
-}
-
-@Composable
-private fun CategoryLegend(color: Color, label: String, value: String) {
-    Row(verticalAlignment = Alignment.CenterVertically) {
-        Box(modifier = Modifier.size(8.dp).background(color, CircleShape))
-        Text(label, modifier = Modifier.padding(start = 8.dp).weight(1f))
-        Text(value, fontWeight = FontWeight.Bold)
     }
 }
 

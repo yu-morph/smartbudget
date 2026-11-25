@@ -288,7 +288,7 @@
     <string name="year_month">%1$d년 %2$d월</string>
     <string name="analysis_title">소비 분석</string>
     <string name="analysis_subtitle">지출 패턴을 이해하고 다음 달을 준비하세요.</string>
-    <string name="analysis_survey_summary_title">내 분석 설문 요약</string>
+    <string name="analysis_survey_summary_title">내 기본 정보</string>
     <string name="analysis_survey_summary_description">설문 응답을 바탕으로 이번 달 소비를 살펴볼게요.</string>
     <string name="analysis_survey_goal_label">관리 목표</string>
     <string name="analysis_survey_goal_value">외식비 줄이기</string>
@@ -297,7 +297,7 @@
     <string name="analysis_survey_direction_save">절약하기</string>
     <string name="analysis_survey_direction_maintain">유지하기</string>
     <string name="analysis_new_report">분석</string>
-    <string name="analysis_report_history">분석 내역</string>
+    <string name="analysis_report_history">이전 분석 레포트</string>
     <string name="analysis_history_loading">분석 내역을 불러오는 중…</string>
     <string name="analysis_history_empty">아직 생성된 월간 분석이 없어요.</string>
     <string name="analysis_report_month">%1$d년 %2$d월</string>
@@ -312,7 +312,7 @@
     <string name="analysis_result_advice_heading">소비 관리 조언</string>
     <string name="analysis_custom_title">맞춤 소비 분석</string>
     <string name="analysis_survey_heading">더 정확한 분석을 위해 알려주세요</string>
-    <string name="analysis_survey_privacy">입력한 정보는 소비 분석에만 활용돼요.</string>
+    <string name="analysis_survey_privacy">※ 입력된 정보는 소비 분석 기능에만 사용되며, 사용자 개인 식별이 가능한 데이터는 외부 요청 시 포함되지 않습니다.</string>
     <string name="analysis_survey_gender">성별 및 생년월일</string>
     <string name="analysis_survey_male">남성</string>
     <string name="analysis_survey_female">여성</string>
@@ -327,12 +327,12 @@
     <string name="analysis_survey_loan">대출</string>
     <string name="analysis_survey_yes">있음</string>
     <string name="analysis_survey_no">없음</string>
-    <string name="analysis_survey_loan_details">대출 종류와 남은 금액</string>
+    <string name="analysis_survey_loan_details">대출 종류 및 남은 금액</string>
     <string name="analysis_survey_loan_hint">예: 학자금 대출 5,000,000원</string>
     <string name="analysis_survey_direction">관리 목표</string>
     <string name="analysis_survey_save">절약하기</string>
     <string name="analysis_survey_maintain">유지하기</string>
-    <string name="analysis_survey_interest">현재 관심사</string>
+    <string name="analysis_survey_interest">관심사</string>
     <string name="analysis_survey_interest_hint">나의 금융·경제적 관심사 (자유 입력)</string>
     <string name="analysis_survey_save_button">저장</string>
     <string name="analysis_education_high_school">고등학교 졸업</string>
@@ -412,4 +412,6 @@
     <string name="sample_report_food" formatted="false">외식비 8% 감소</string>
     <string name="sample_report_fixed">고정비 비중 증가</string>
     <string name="sample_report_goal">예산 목표 달성</string>
+    <string name="analysis_age_group">%1$d대 (%2$s)</string>
+    <string name="analysis_info_missing">미입력</string>
 </resources>
