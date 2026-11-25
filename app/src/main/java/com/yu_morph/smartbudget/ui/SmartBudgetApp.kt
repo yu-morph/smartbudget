@@ -232,7 +232,8 @@ fun SmartBudgetApp(onDisplayModeChanged: (DisplayMode) -> Unit, onLanguageChange
                         analysisState = analysisCoordinator.state,
                         initialSurvey = analysisCoordinator.state.survey,
                         initialStep = when (mode) {
-                            AnalysisDetailMode.EDIT_SURVEY, AnalysisDetailMode.NEW_REPORT -> AnalysisFlowStep.SURVEY
+                            AnalysisDetailMode.EDIT_SURVEY -> AnalysisFlowStep.SURVEY
+                            AnalysisDetailMode.NEW_REPORT -> AnalysisFlowStep.REQUEST
                             AnalysisDetailMode.REPORT -> AnalysisFlowStep.LOADING
                         },
                         initialYear = analysisYear,

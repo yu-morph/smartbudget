@@ -296,8 +296,8 @@
     <string name="analysis_survey_focus_value">식비 · 고정비</string>
     <string name="analysis_survey_direction_save">절약하기</string>
     <string name="analysis_survey_direction_maintain">유지하기</string>
-    <string name="analysis_new_report">분석</string>
-    <string name="analysis_report_history">이전 분석 레포트</string>
+    <string name="analysis_new_report">분석 추가</string>
+    <string name="analysis_report_history">분석 레포트</string>
     <string name="analysis_history_loading">분석 내역을 불러오는 중…</string>
     <string name="analysis_history_empty">아직 생성된 월간 분석이 없어요.</string>
     <string name="analysis_report_month">%1$d년 %2$d월</string>
@@ -344,8 +344,10 @@
     <string name="analysis_education_master">대학원 졸업</string>
     <string name="analysis_education_doctorate">박사</string>
     <string name="analysis_education_other">기타</string>
-    <string name="analysis_request_title">어느 달의 소비를 분석할까요?</string>
-    <string name="analysis_request_subtitle">한 달간의 소비 패턴을 꼼꼼히 살펴드릴게요.</string>
+    <string name="analysis_request_app_bar">새로운 소비 분석</string>
+    <string name="analysis_request_edit_survey">설문 수정</string>
+    <string name="analysis_request_title">한 달의 소비를 돌아볼까요?</string>
+    <string name="analysis_request_subtitle">분석할 달을 선택하면 지출 기록과 설문을 바탕으로 소비 패턴을 정리해 드려요.</string>
     <string name="analysis_request_month">분석 대상 월</string>
     <string name="analysis_previous_month">이전 달</string>
     <string name="analysis_next_month">다음 달</string>

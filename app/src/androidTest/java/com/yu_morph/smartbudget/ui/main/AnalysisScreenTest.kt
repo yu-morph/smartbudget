@@ -2,6 +2,7 @@ package com.yu_morph.smartbudget.ui.main
 
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.createComposeRule
+import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollTo
@@ -17,6 +18,21 @@ import org.junit.Test
 class AnalysisScreenTest {
     @get:Rule
     val composeRule = createComposeRule()
+
+    @Test
+    fun editingSurveyFromStartKeepsSelectedMonth() {
+        showAnalysisFlow(initialStep = AnalysisFlowStep.REQUEST, returnToRequest = true)
+
+        text(R.string.analysis_request_app_bar).assertIsDisplayed()
+        val context = InstrumentationRegistry.getInstrumentation().targetContext
+        composeRule.onNodeWithContentDescription(context.getString(R.string.analysis_previous_month)).performClick()
+        text(R.string.analysis_request_edit_survey).performClick()
+        text(R.string.analysis_survey_title).assertIsDisplayed()
+        text(R.string.analysis_survey_save_button).performScrollTo().performClick()
+
+        text(R.string.year_month, 2026, 9).assertIsDisplayed()
+        text(R.string.analysis_start).assertIsDisplayed()
+    }
 
     @Test
     fun tappingProfileCardOpensSurvey() {
@@ -56,7 +72,11 @@ class AnalysisScreenTest {
         composeRule.onNodeWithText("예산 기록을 이어가세요.").performScrollTo().assertIsDisplayed()
     }
 
-    private fun showAnalysisFlow(initialStep: AnalysisFlowStep, darkTheme: Boolean = false) {
+    private fun showAnalysisFlow(
+        initialStep: AnalysisFlowStep,
+        darkTheme: Boolean = false,
+        returnToRequest: Boolean = false,
+    ) {
         composeRule.setContent {
             val state =
                 AnalysisUiState(
@@ -83,7 +103,7 @@ class AnalysisScreenTest {
                     initialStep = initialStep,
                     initialYear = 2026,
                     initialMonth = 10,
-                    continueAfterSurvey = false,
+                    continueAfterSurvey = returnToRequest,
                     closeAfterResult = true,
                     onBack = {},
                     onSurveySaved = {},

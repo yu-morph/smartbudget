@@ -306,8 +306,13 @@
     <string name="receipt_permission_title">Camera permission needed</string>
     <string name="receipt_permission_message">Allow camera access to scan receipts.</string>
     <string name="receipt_permission_retry">Allow permission</string>
-    <string name="analysis_new_report">Analyze</string>
-    <string name="analysis_report_history">Previous analysis reports</string>
+    <string name="analysis_new_report">Add analysis</string>
+    <string name="analysis_report_history">Analysis reports</string>
+    <string name="analysis_request_app_bar">New spending analysis</string>
+    <string name="analysis_request_edit_survey">Edit survey</string>
+    <string name="analysis_request_title">Take a look at your monthly spending</string>
+    <string name="analysis_request_subtitle">Choose a month to see spending patterns based on your transactions and survey answers.</string>
+    <string name="analysis_start">Start analysis</string>
     <string name="analysis_history_loading">Loading analysis history…</string>
     <string name="analysis_history_empty">No monthly analysis has been created yet.</string>
     <string name="analysis_report_month">%1$d/%2$d</string>

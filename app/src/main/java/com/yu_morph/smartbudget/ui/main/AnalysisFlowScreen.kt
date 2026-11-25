@@ -34,7 +34,8 @@ import androidx.compose.material.icons.outlined.ChevronLeft
 import androidx.compose.material.icons.outlined.ChevronRight
 import androidx.compose.material.icons.outlined.Female
 import androidx.compose.material.icons.outlined.Male
-import androidx.compose.material3.Card
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
@@ -121,7 +122,10 @@ internal fun AnalysisFlowScreen(
 
     val handleBack: () -> Unit = {
         step = when (step) {
-            AnalysisFlowStep.REQUEST -> AnalysisFlowStep.SURVEY
+            AnalysisFlowStep.REQUEST -> {
+                onBack()
+                AnalysisFlowStep.REQUEST
+            }
 
             AnalysisFlowStep.LOADING -> if (closeAfterResult) {
                 onBack()
@@ -137,7 +141,9 @@ internal fun AnalysisFlowScreen(
                 AnalysisFlowStep.REQUEST
             }
 
-            AnalysisFlowStep.SURVEY -> {
+            AnalysisFlowStep.SURVEY -> if (continueAfterSurvey) {
+                AnalysisFlowStep.REQUEST
+            } else {
                 onBack()
                 AnalysisFlowStep.SURVEY
             }
@@ -174,7 +180,9 @@ internal fun AnalysisFlowScreen(
             reportPeriod?.monthValue ?: month,
         )
 
-        AnalysisFlowStep.REQUEST, AnalysisFlowStep.LOADING -> stringResource(R.string.analysis_title)
+        AnalysisFlowStep.REQUEST -> stringResource(R.string.analysis_request_app_bar)
+
+        AnalysisFlowStep.LOADING -> stringResource(R.string.analysis_title)
     }
     Scaffold(
         containerColor = MaterialTheme.colorScheme.background,
@@ -229,15 +237,9 @@ internal fun AnalysisFlowScreen(
                 },
                 failure = analysisState.failure,
                 onClearFailure = onClearFailure,
+                onEditSurvey = { step = AnalysisFlowStep.SURVEY },
                 onStart = {
-                    val requestSurvey = AnalysisSurvey(
-                        gender,
-                        formatSurveyBirthDate(
-                            birthDate,
-                        ),
-                        job, workplace, education, hasLoan, loanDetails, direction, interest,
-                    )
-                    onRequestReport(YearMonth.of(year, month), requestSurvey)
+                    onRequestReport(YearMonth.of(year, month), analysisState.survey)
                     step = AnalysisFlowStep.LOADING
                 },
             )
@@ -502,7 +504,6 @@ private fun EducationField(value: String, onChange: (String) -> Unit) {
     }
 }
 
-@Suppress("LongMethod")
 @Composable
 private fun AnalysisRequestScreen(
     modifier: Modifier,
@@ -511,84 +512,81 @@ private fun AnalysisRequestScreen(
     onYearMonthChange: (Int, Int) -> Unit,
     failure: AnalysisFailure?,
     onClearFailure: () -> Unit,
+    onEditSurvey: () -> Unit,
     onStart: () -> Unit,
 ) {
     val selectedMonth = YearMonth.of(year, month)
-    val currentMonth = YearMonth.now(analysisZone)
-    MainTabContainer(bottomPadding = 0.dp, modifier = modifier) {
-        Text(stringResource(R.string.analysis_request_title), fontSize = 26.sp, fontWeight = FontWeight.Bold)
+    val changeMonth: (Long) -> Unit = { offset ->
+        val updated = selectedMonth.plusMonths(offset)
+        onClearFailure()
+        onYearMonthChange(updated.year, updated.monthValue)
+    }
+    Column(
+        modifier = modifier.fillMaxSize().padding(top = 20.dp, start = 24.dp, end = 24.dp, bottom = 24.dp),
+        verticalArrangement = Arrangement.spacedBy(16.dp),
+    ) {
+        Text(stringResource(R.string.analysis_request_title), fontSize = 24.sp, fontWeight = FontWeight.Bold)
         Text(stringResource(R.string.analysis_request_subtitle), color = MaterialTheme.colorScheme.onSurfaceVariant)
-        Spacer(Modifier.height(32.dp))
-        Image(
-            painterResource(R.drawable.home_greeting_robot),
-            contentDescription = null,
-            modifier = Modifier.fillMaxWidth().height(220.dp),
-        )
-        Spacer(Modifier.height(24.dp))
-        Text(stringResource(R.string.analysis_request_month), fontWeight = FontWeight.Bold, fontSize = 18.sp)
-        Card(colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)) {
-            Row(
-                modifier = Modifier.fillMaxWidth().padding(12.dp),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.SpaceBetween,
-            ) {
-                IconButton(onClick = {
-                    onClearFailure()
-                    onYearMonthChange(
-                        if (month ==
-                            1
-                        ) {
-                            year - 1
-                        } else {
-                            year
-                        },
-                        if (month == 1) 12 else month - 1,
-                    )
-                }) {
-                    Icon(
-                        Icons.Outlined.ChevronLeft,
-                        contentDescription = stringResource(R.string.analysis_previous_month),
-                    )
-                }
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Icon(Icons.Outlined.CalendarMonth, contentDescription = null, tint = SmartBudgetGreen)
-                    Text(
-                        stringResource(R.string.year_month, year, month),
-                        modifier = Modifier.padding(start = 10.dp),
-                        fontSize = 20.sp,
-                        fontWeight = FontWeight.Bold,
-                    )
-                }
-                IconButton(
-                    enabled = selectedMonth < currentMonth,
-                    onClick = {
-                        onClearFailure()
-                        onYearMonthChange(
-                            if (month ==
-                                12
-                            ) {
-                                year + 1
-                            } else {
-                                year
-                            },
-                            if (month == 12) 1 else month + 1,
-                        )
-                    },
-                ) {
-                    Icon(Icons.Outlined.ChevronRight, contentDescription = stringResource(R.string.analysis_next_month))
-                }
-            }
+        Box(Modifier.fillMaxWidth().weight(1f), contentAlignment = Alignment.Center) {
+            Image(
+                painterResource(R.drawable.spending_analysis_robot),
+                contentDescription = null,
+                modifier = Modifier.size(210.dp),
+            )
         }
         failure?.let {
             Text(
                 text = analysisFailureMessage(it),
-                modifier = Modifier.padding(top = 16.dp),
                 color = MaterialTheme.colorScheme.error,
                 style = MaterialTheme.typography.bodyMedium,
             )
         }
-        Spacer(Modifier.height(28.dp))
-        PrimaryAuthButton(text = stringResource(R.string.analysis_start), onClick = onStart)
+        AnalysisMonthControl(selectedMonth, changeMonth)
+        Row(horizontalArrangement = Arrangement.spacedBy(12.dp), modifier = Modifier.fillMaxWidth()) {
+            Button(
+                onClick = onEditSurvey,
+                modifier = Modifier.weight(1f).heightIn(min = 52.dp),
+                shape = RoundedCornerShape(9.dp),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = editorMutedBackground(),
+                    contentColor = MaterialTheme.colorScheme.onSurface,
+                ),
+            ) {
+                Text(
+                    stringResource(R.string.analysis_request_edit_survey),
+                    fontSize = 16.sp,
+                    fontWeight = FontWeight.SemiBold,
+                )
+            }
+            PrimaryAuthButton(
+                text = stringResource(R.string.analysis_start),
+                onClick = onStart,
+                modifier = Modifier.weight(1f),
+                fontSize = 16.sp,
+                fontWeight = FontWeight.SemiBold,
+            )
+        }
+    }
+}
+
+@Composable
+private fun AnalysisMonthControl(selectedMonth: YearMonth, onChange: (Long) -> Unit) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.Center,
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        IconButton(onClick = { onChange(-1) }) {
+            Icon(Icons.Outlined.ChevronLeft, stringResource(R.string.analysis_previous_month))
+        }
+        Text(
+            stringResource(R.string.year_month, selectedMonth.year, selectedMonth.monthValue),
+            fontSize = 18.sp,
+            fontWeight = FontWeight.SemiBold,
+        )
+        IconButton(enabled = selectedMonth < YearMonth.now(analysisZone), onClick = { onChange(1) }) {
+            Icon(Icons.Outlined.ChevronRight, stringResource(R.string.analysis_next_month))
+        }
     }
 }
 
