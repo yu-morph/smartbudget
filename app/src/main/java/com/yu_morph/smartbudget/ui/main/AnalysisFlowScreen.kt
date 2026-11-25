@@ -319,7 +319,7 @@ private fun SurveyScreen(
                 EducationField(survey.education, onEducationChange)
             }
         }
-        Spacer(Modifier.height(28.dp))
+        Spacer(Modifier.height(40.dp))
         SurveySection(R.string.analysis_survey_finance_section) {
             ChoiceRow(
                 labels = listOf(R.string.analysis_survey_yes, R.string.analysis_survey_no),
@@ -333,11 +333,10 @@ private fun SurveyScreen(
                     survey.loanDetails,
                     onLoanDetailsChange,
                     R.string.analysis_survey_loan_hint,
-                    keyboardType = KeyboardType.Number,
                 )
             }
         }
-        Spacer(Modifier.height(28.dp))
+        Spacer(Modifier.height(40.dp))
         SurveySection(R.string.analysis_survey_goal_section) {
             ChoiceRow(
                 labels = listOf(R.string.analysis_survey_save, R.string.analysis_survey_maintain),
@@ -353,15 +352,15 @@ private fun SurveyScreen(
                 minLines = 3,
             )
         }
-        Spacer(Modifier.height(16.dp))
+        Spacer(Modifier.height(12.dp))
         Text(
             stringResource(R.string.analysis_survey_privacy),
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f),
+            style = MaterialTheme.typography.bodySmall,
         )
-        Spacer(Modifier.height(16.dp))
+        Spacer(Modifier.height(32.dp))
         SaveButton(enabled = true, isSaving = false, onClick = onSave)
-        Spacer(Modifier.height(16.dp))
+        Spacer(Modifier.height(10.dp))
     }
 }
 

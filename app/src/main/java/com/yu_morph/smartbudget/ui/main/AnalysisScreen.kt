@@ -161,6 +161,7 @@ private fun SurveyDemographics(survey: AnalysisSurvey) {
                     if (male) R.string.analysis_survey_male else R.string.analysis_survey_female,
                 ),
                 modifier = Modifier.size(14.dp),
+                tint = if (male) Color(0xFF2879CB) else Color(0xFFD04459),
             )
         }
     }
