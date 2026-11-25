@@ -26,7 +26,7 @@ fun SplashScreen(onFinished: () -> Unit) {
         contentColor = MaterialTheme.colorScheme.onBackground,
     ) {
         Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-            BrandSignature(logoSize = 100.dp, textSize = 24)
+            BrandSignature(logoSize = 100.dp, textSize = 24, useGradientBackground = true)
         }
     }
 }

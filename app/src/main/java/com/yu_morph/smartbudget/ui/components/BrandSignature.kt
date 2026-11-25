@@ -13,6 +13,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -23,11 +24,19 @@ import androidx.compose.ui.unit.sp
 import com.yu_morph.smartbudget.R
 import com.yu_morph.smartbudget.ui.theme.OutfitFontFamily
 import com.yu_morph.smartbudget.ui.theme.SmartBudgetGreen
+import com.yu_morph.smartbudget.ui.theme.SmartBudgetLogoGradientEnd
+import com.yu_morph.smartbudget.ui.theme.SmartBudgetLogoGradientStart
 
 private const val INTERNAL_LOGO_SCALE = 1.68f
 
 @Composable
-fun BrandSignature(modifier: Modifier = Modifier, logoSize: Dp = 64.dp, textSize: Int = 28) {
+fun BrandSignature(
+    modifier: Modifier = Modifier,
+    logoSize: Dp = 64.dp,
+    textSize: Int = 28,
+    useGradientBackground: Boolean = false,
+) {
+    val logoShape = RoundedCornerShape(percent = 22)
     Column(
         modifier = modifier,
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -37,7 +46,18 @@ fun BrandSignature(modifier: Modifier = Modifier, logoSize: Dp = 64.dp, textSize
             modifier =
                 Modifier
                     .size(logoSize)
-                    .background(SmartBudgetGreen, RoundedCornerShape(percent = 22)),
+                    .then(
+                        if (useGradientBackground) {
+                            Modifier.background(
+                                brush = Brush.linearGradient(
+                                    listOf(SmartBudgetLogoGradientStart, SmartBudgetLogoGradientEnd),
+                                ),
+                                shape = logoShape,
+                            )
+                        } else {
+                            Modifier.background(SmartBudgetGreen, logoShape)
+                        },
+                    ),
             contentAlignment = Alignment.Center,
         ) {
             Image(

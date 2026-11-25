@@ -80,14 +80,14 @@ import com.yu_morph.smartbudget.data.remote.news.NewsArticle
 import com.yu_morph.smartbudget.ui.document.MarkdownDocument
 import com.yu_morph.smartbudget.ui.showAppToast
 import com.yu_morph.smartbudget.ui.theme.SmartBudgetGreen
+import com.yu_morph.smartbudget.ui.theme.SmartBudgetLogoGradientEnd
+import com.yu_morph.smartbudget.ui.theme.SmartBudgetLogoGradientStart
 import java.time.YearMonth
 import kotlin.math.PI
 import kotlin.math.sin
 import kotlinx.coroutines.launch
 
 private val MainNavigationInactiveColor = Color(0xFF737373)
-private val MainActionGradientStart = Color(0xFF18A874)
-private val MainActionGradientEnd = Color(0xFF087A55)
 private const val MAIN_TAB_PRESSED_SCALE = 0.88f
 private const val TAB_TRANSITION_DURATION_MILLIS = 260
 private const val TAB_SLIDE_DISTANCE_DIVISOR = 5
@@ -323,7 +323,9 @@ private fun MainActionButton(onClick: () -> Unit, modifier: Modifier = Modifier)
                 Modifier
                     .fillMaxSize()
                     .background(
-                        brush = Brush.linearGradient(listOf(MainActionGradientStart, MainActionGradientEnd)),
+                        brush = Brush.linearGradient(
+                            listOf(SmartBudgetLogoGradientStart, SmartBudgetLogoGradientEnd),
+                        ),
                         shape = CircleShape,
                     ),
             contentAlignment = Alignment.Center,
