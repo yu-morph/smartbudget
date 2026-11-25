@@ -308,7 +308,6 @@
     <string name="receipt_permission_retry">Allow permission</string>
     <string name="analysis_new_report">Add analysis</string>
     <string name="analysis_report_history">Analysis reports</string>
-    <string name="analysis_request_app_bar">New spending analysis</string>
     <string name="analysis_request_edit_survey">Edit survey</string>
     <string name="analysis_request_title">Take a look at your monthly spending</string>
     <string name="analysis_request_subtitle">Choose a month to see spending patterns based on your transactions and survey answers.</string>

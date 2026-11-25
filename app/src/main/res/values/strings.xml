@@ -344,7 +344,6 @@
     <string name="analysis_education_master">대학원 졸업</string>
     <string name="analysis_education_doctorate">박사</string>
     <string name="analysis_education_other">기타</string>
-    <string name="analysis_request_app_bar">새로운 소비 분석</string>
     <string name="analysis_request_edit_survey">설문 수정</string>
     <string name="analysis_request_title">한 달의 소비를 돌아볼까요?</string>
     <string name="analysis_request_subtitle">분석할 달을 선택하면 지출 기록과 설문을 바탕으로 소비 패턴을 정리해 드려요.</string>

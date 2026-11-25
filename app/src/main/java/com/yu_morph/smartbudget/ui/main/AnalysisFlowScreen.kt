@@ -69,6 +69,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.OffsetMapping
 import androidx.compose.ui.text.input.TransformedText
 import androidx.compose.ui.text.input.VisualTransformation
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.yu_morph.smartbudget.R
@@ -180,9 +181,7 @@ internal fun AnalysisFlowScreen(
             reportPeriod?.monthValue ?: month,
         )
 
-        AnalysisFlowStep.REQUEST -> stringResource(R.string.analysis_request_app_bar)
-
-        AnalysisFlowStep.LOADING -> stringResource(R.string.analysis_title)
+        AnalysisFlowStep.REQUEST, AnalysisFlowStep.LOADING -> stringResource(R.string.analysis_title)
     }
     Scaffold(
         containerColor = MaterialTheme.colorScheme.background,
@@ -572,8 +571,11 @@ private fun AnalysisRequestScreen(
 @Composable
 private fun AnalysisMonthControl(selectedMonth: YearMonth, onChange: (Long) -> Unit) {
     Row(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.Center,
+        modifier = Modifier.fillMaxWidth().border(
+            width = 1.dp,
+            color = MaterialTheme.colorScheme.outlineVariant,
+            shape = RoundedCornerShape(12.dp),
+        ),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         IconButton(onClick = { onChange(-1) }) {
@@ -581,6 +583,8 @@ private fun AnalysisMonthControl(selectedMonth: YearMonth, onChange: (Long) -> U
         }
         Text(
             stringResource(R.string.year_month, selectedMonth.year, selectedMonth.monthValue),
+            modifier = Modifier.weight(1f),
+            textAlign = TextAlign.Center,
             fontSize = 18.sp,
             fontWeight = FontWeight.SemiBold,
         )

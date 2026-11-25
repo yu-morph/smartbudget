@@ -23,7 +23,7 @@ class AnalysisScreenTest {
     fun editingSurveyFromStartKeepsSelectedMonth() {
         showAnalysisFlow(initialStep = AnalysisFlowStep.REQUEST, returnToRequest = true)
 
-        text(R.string.analysis_request_app_bar).assertIsDisplayed()
+        text(R.string.analysis_title).assertIsDisplayed()
         val context = InstrumentationRegistry.getInstrumentation().targetContext
         composeRule.onNodeWithContentDescription(context.getString(R.string.analysis_previous_month)).performClick()
         text(R.string.analysis_request_edit_survey).performClick()
