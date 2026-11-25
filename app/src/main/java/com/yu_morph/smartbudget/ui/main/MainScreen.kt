@@ -56,6 +56,7 @@ import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.saveable.rememberSaveableStateHolder
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -146,6 +147,7 @@ internal fun MainScreen(
     onExit: () -> Unit,
 ) {
     val context = LocalContext.current
+    val tabState = rememberSaveableStateHolder()
     val exitConfirmation = remember { ExitConfirmation() }
     BackHandler {
         if (exitConfirmation.shouldExit(SystemClock.elapsedRealtime())) {
@@ -180,44 +182,46 @@ internal fun MainScreen(
                 },
                 label = "메인 탭 화면 전환",
             ) { currentTab ->
-                when (currentTab) {
-                    MainTab.HOME -> HomeScreen(
-                        bottomPadding = innerPadding.calculateBottomPadding(),
-                        dashboardState = homeDashboardState,
-                        displayName = settingsState.displayName,
-                        newsState = homeNewsState,
-                        onDashboardLoad = onHomeDashboardLoad,
-                        onProfileLoad = onSettingsLoad,
-                        onNewsLoad = onHomeNewsLoad,
-                        onPreviousNewsPage = onPreviousHomeNewsPage,
-                        onNextNewsPage = onNextHomeNewsPage,
-                        onArticleClick = onNewsArticleClick,
-                    )
+                tabState.SaveableStateProvider(currentTab.name) {
+                    when (currentTab) {
+                        MainTab.HOME -> HomeScreen(
+                            bottomPadding = innerPadding.calculateBottomPadding(),
+                            dashboardState = homeDashboardState,
+                            displayName = settingsState.displayName,
+                            newsState = homeNewsState,
+                            onDashboardLoad = onHomeDashboardLoad,
+                            onProfileLoad = onSettingsLoad,
+                            onNewsLoad = onHomeNewsLoad,
+                            onPreviousNewsPage = onPreviousHomeNewsPage,
+                            onNextNewsPage = onNextHomeNewsPage,
+                            onArticleClick = onNewsArticleClick,
+                        )
 
-                    MainTab.BUDGET_BOOK -> BudgetBookRoute(
-                        bottomPadding = innerPadding.calculateBottomPadding(),
-                        state = budgetBookState,
-                        onLoad = onBudgetBookLoad,
-                        onOpenMonth = onOpenBudgetBook,
-                    )
+                        MainTab.BUDGET_BOOK -> BudgetBookRoute(
+                            bottomPadding = innerPadding.calculateBottomPadding(),
+                            state = budgetBookState,
+                            onLoad = onBudgetBookLoad,
+                            onOpenMonth = onOpenBudgetBook,
+                        )
 
-                    MainTab.ANALYSIS -> AnalysisScreen(
-                        bottomPadding = innerPadding.calculateBottomPadding(),
-                        state = analysisState,
-                        onLoad = onAnalysisLoad,
-                        onEditSurvey = onEditAnalysisSurvey,
-                        onNewReport = onNewAnalysisReport,
-                        onOpenReport = onOpenAnalysisReport,
-                    )
+                        MainTab.ANALYSIS -> AnalysisScreen(
+                            bottomPadding = innerPadding.calculateBottomPadding(),
+                            state = analysisState,
+                            onLoad = onAnalysisLoad,
+                            onEditSurvey = onEditAnalysisSurvey,
+                            onNewReport = onNewAnalysisReport,
+                            onOpenReport = onOpenAnalysisReport,
+                        )
 
-                    MainTab.SETTINGS -> SettingsScreen(
-                        state = settingsState,
-                        bottomContentPadding = innerPadding.calculateBottomPadding(),
-                        onLoad = onSettingsLoad,
-                        onLogout = onLogout,
-                        onOpenDocument = onOpenDocument,
-                        onOpenSettings = onOpenSettings,
-                    )
+                        MainTab.SETTINGS -> SettingsScreen(
+                            state = settingsState,
+                            bottomContentPadding = innerPadding.calculateBottomPadding(),
+                            onLoad = onSettingsLoad,
+                            onLogout = onLogout,
+                            onOpenDocument = onOpenDocument,
+                            onOpenSettings = onOpenSettings,
+                        )
+                    }
                 }
             }
         }

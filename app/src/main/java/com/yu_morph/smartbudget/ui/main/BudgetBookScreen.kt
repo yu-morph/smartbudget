@@ -160,7 +160,7 @@ internal fun BudgetBookRoute(
     onOpenMonth: (YearMonth) -> Unit,
 ) {
     val latestMonth = remember { YearMonth.now() }
-    LaunchedEffect(Unit) { onLoad(latestMonth) }
+    LaunchedEffect(Unit) { onLoad(state.referenceMonth ?: latestMonth) }
     BudgetBookOverview(
         bottomPadding = bottomPadding,
         state = state,

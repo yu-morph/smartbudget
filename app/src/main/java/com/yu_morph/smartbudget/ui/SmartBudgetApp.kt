@@ -26,6 +26,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.saveable.rememberSaveableStateHolder
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -110,6 +111,7 @@ fun SmartBudgetApp(onDisplayModeChanged: (DisplayMode) -> Unit, onLanguageChange
     BackHandler(enabled = destination == AppDestination.SIGN_UP) {
         destination = AppDestination.LOGIN
     }
+    val screenState = rememberSaveableStateHolder()
     val appContent = when {
         openDocument != null -> AppContent.DOCUMENT
         openSettings != null -> AppContent.SETTINGS_DETAIL
@@ -129,37 +131,39 @@ fun SmartBudgetApp(onDisplayModeChanged: (DisplayMode) -> Unit, onLanguageChange
             label = "앱 상세 화면 전환",
         ) { content ->
             when (content) {
-                AppContent.BASE -> AuthenticationContent(
-                    destination = destination,
-                    coordinator = coordinator,
-                    settingsCoordinator = settingsCoordinator,
-                    budgetBookCoordinator = budgetBookCoordinator,
-                    homeDashboardCoordinator = homeDashboardCoordinator,
-                    homeNewsCoordinator = homeNewsCoordinator,
-                    analysisCoordinator = analysisCoordinator,
-                    selectedMainTab = selectedMainTab,
-                    onMainTabSelected = { selectedMainTab = it },
-                    onDestinationChange = { destination = it },
-                    onOpenDocument = { openDocument = it },
-                    onOpenSettings = { openSettings = it },
-                    onOpenBudgetBook = { openBudgetBookMonth = it.toString() },
-                    onEditAnalysisSurvey = { analysisDetailMode = AnalysisDetailMode.EDIT_SURVEY },
-                    onNewAnalysisReport = {
-                        val month = YearMonth.now(ZoneId.of("Asia/Seoul"))
-                        analysisYear = month.year
-                        analysisMonth = month.monthValue
-                        analysisDetailMode = AnalysisDetailMode.NEW_REPORT
-                    },
-                    onOpenAnalysisReport = { report ->
-                        runCatching { LocalDate.parse(report.periodStart) }.getOrNull()?.let { date ->
-                            analysisYear = date.year
-                            analysisMonth = date.monthValue
-                        }
-                        analysisCoordinator.openReport(report.id)
-                        analysisDetailMode = AnalysisDetailMode.REPORT
-                    },
-                    onExit = onExit,
-                )
+                AppContent.BASE -> screenState.SaveableStateProvider(AppContent.BASE.name) {
+                    AuthenticationContent(
+                        destination = destination,
+                        coordinator = coordinator,
+                        settingsCoordinator = settingsCoordinator,
+                        budgetBookCoordinator = budgetBookCoordinator,
+                        homeDashboardCoordinator = homeDashboardCoordinator,
+                        homeNewsCoordinator = homeNewsCoordinator,
+                        analysisCoordinator = analysisCoordinator,
+                        selectedMainTab = selectedMainTab,
+                        onMainTabSelected = { selectedMainTab = it },
+                        onDestinationChange = { destination = it },
+                        onOpenDocument = { openDocument = it },
+                        onOpenSettings = { openSettings = it },
+                        onOpenBudgetBook = { openBudgetBookMonth = it.toString() },
+                        onEditAnalysisSurvey = { analysisDetailMode = AnalysisDetailMode.EDIT_SURVEY },
+                        onNewAnalysisReport = {
+                            val month = YearMonth.now(ZoneId.of("Asia/Seoul"))
+                            analysisYear = month.year
+                            analysisMonth = month.monthValue
+                            analysisDetailMode = AnalysisDetailMode.NEW_REPORT
+                        },
+                        onOpenAnalysisReport = { report ->
+                            runCatching { LocalDate.parse(report.periodStart) }.getOrNull()?.let { date ->
+                                analysisYear = date.year
+                                analysisMonth = date.monthValue
+                            }
+                            analysisCoordinator.openReport(report.id)
+                            analysisDetailMode = AnalysisDetailMode.REPORT
+                        },
+                        onExit = onExit,
+                    )
+                }
 
                 AppContent.DOCUMENT -> openDocument?.let { document ->
                     MarkdownViewerScreen(document = document, onBack = { openDocument = null })

@@ -514,7 +514,7 @@ private fun ReceiptOcrFailureReason?.messageRes(): Int = when (this) {
 
 /** 시안의 "작은 회색 라벨 + 둥근 입력칸" 형태를 만든다. */
 @Composable
-private fun EditorField(label: String, content: @Composable () -> Unit) {
+internal fun EditorField(label: String, content: @Composable () -> Unit) {
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
         Text(
             label,
@@ -527,7 +527,7 @@ private fun EditorField(label: String, content: @Composable () -> Unit) {
 }
 
 @Composable
-private fun EditorTextField(
+internal fun EditorTextField(
     value: String,
     onValueChange: (String) -> Unit,
     enabled: Boolean,
@@ -535,14 +535,19 @@ private fun EditorTextField(
     placeholder: String? = null,
     suffix: String? = null,
     visualTransformation: VisualTransformation = VisualTransformation.None,
+    modifier: Modifier = Modifier,
+    minLines: Int = 1,
+    readOnly: Boolean = false,
 ) {
     val containerColor = editorMutedBackground()
     TextField(
         value = value,
         onValueChange = onValueChange,
-        modifier = Modifier.fillMaxWidth(),
+        modifier = modifier.fillMaxWidth(),
         enabled = enabled,
-        singleLine = true,
+        readOnly = readOnly,
+        minLines = minLines,
+        singleLine = minLines == 1,
         textStyle = TextStyle(fontSize = 15.sp, fontWeight = FontWeight.Medium),
         placeholder =
             placeholder?.let {
@@ -649,7 +654,7 @@ private fun CategoryOption(code: String, selected: Boolean, modifier: Modifier, 
 }
 
 @Composable
-private fun SaveButton(enabled: Boolean, isSaving: Boolean, onClick: () -> Unit) {
+internal fun SaveButton(enabled: Boolean, isSaving: Boolean, onClick: () -> Unit) {
     Button(
         onClick = onClick,
         modifier = Modifier.fillMaxWidth().height(54.dp),
@@ -677,7 +682,7 @@ private fun SaveButton(enabled: Boolean, isSaving: Boolean, onClick: () -> Unit)
 }
 
 /** 금액 입력칸에 세 자리마다 쉼표를 표시한다. 실제 값은 숫자만 유지한다. */
-private object ThousandsSeparatorTransformation : VisualTransformation {
+internal object ThousandsSeparatorTransformation : VisualTransformation {
     override fun filter(text: AnnotatedString): TransformedText {
         val digits = text.text
         val formatted = formatThousands(digits)
@@ -717,5 +722,5 @@ internal fun DeleteTransactionDialog(isDeleting: Boolean, onDismiss: () -> Unit,
 }
 
 @Composable
-private fun editorMutedBackground(): Color =
+internal fun editorMutedBackground(): Color =
     if (MaterialTheme.colorScheme.background.luminance() > 0.5f) Color(0xFFF3F3F3) else Color(0xFF252525)

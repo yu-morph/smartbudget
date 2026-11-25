@@ -476,13 +476,17 @@ private fun BudgetEditDialog(
         title = { Text(stringResource(R.string.settings_edit_budget)) },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                AuthTextField(
-                    value = value,
-                    onValueChange = onValueChange,
-                    placeholder = stringResource(R.string.settings_budget_amount),
-                    suffix = { Text(stringResource(R.string.settings_won)) },
-                    keyboardType = KeyboardType.Number,
-                )
+                EditorField(stringResource(R.string.settings_budget_amount)) {
+                    EditorTextField(
+                        value = value,
+                        onValueChange = onValueChange,
+                        enabled = true,
+                        placeholder = stringResource(R.string.budget_book_editor_income_amount_hint),
+                        suffix = stringResource(R.string.settings_won),
+                        keyboardType = KeyboardType.Number,
+                        visualTransformation = ThousandsSeparatorTransformation,
+                    )
+                }
                 Row(modifier = Modifier.fillMaxWidth()) {
                     val presets = listOf(500_000, 1_000_000, 2_000_000)
                     presets.forEachIndexed { index, preset ->
@@ -716,7 +720,7 @@ private fun SettingsColumn(modifier: Modifier, content: @Composable ColumnScope.
 }
 
 @Composable
-private fun SettingsSection(title: String, content: @Composable ColumnScope.() -> Unit) {
+internal fun SettingsSection(title: String, content: @Composable ColumnScope.() -> Unit) {
     Column(
         modifier = Modifier.fillMaxWidth(),
         verticalArrangement = Arrangement.spacedBy(14.dp),

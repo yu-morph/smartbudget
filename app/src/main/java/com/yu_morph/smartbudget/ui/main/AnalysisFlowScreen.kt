@@ -3,7 +3,6 @@
 package com.yu_morph.smartbudget.ui.main
 
 import androidx.activity.compose.BackHandler
-import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -29,7 +28,8 @@ import androidx.compose.material.icons.automirrored.rounded.ArrowBack
 import androidx.compose.material.icons.outlined.CalendarMonth
 import androidx.compose.material.icons.outlined.ChevronLeft
 import androidx.compose.material.icons.outlined.ChevronRight
-import androidx.compose.material.icons.outlined.Lightbulb
+import androidx.compose.material.icons.outlined.Female
+import androidx.compose.material.icons.outlined.Male
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -56,8 +56,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.StrokeCap
-import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
@@ -104,7 +103,7 @@ internal fun AnalysisFlowScreen(
     onClearFailure: () -> Unit,
 ) {
     var step by rememberSaveable { mutableStateOf(initialStep) }
-    var gender by rememberSaveable { mutableStateOf(initialSurvey.gender) }
+    var gender by rememberSaveable { mutableStateOf(initialSurvey.gender.ifBlank { "male" }) }
     var birthDate by rememberSaveable { mutableStateOf(initialSurvey.birthDate) }
     var job by rememberSaveable { mutableStateOf(initialSurvey.job) }
     var workplace by rememberSaveable { mutableStateOf(initialSurvey.workplace) }
@@ -258,26 +257,35 @@ private fun SurveyScreen(
     onSave: () -> Unit,
 ) {
     MainTabContainer(bottomPadding = 0.dp, modifier = modifier) {
-        Text(
-            stringResource(R.string.analysis_survey_privacy),
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            style = MaterialTheme.typography.bodyMedium,
-        )
-        Spacer(Modifier.height(16.dp))
         SurveySection(R.string.analysis_survey_profile_section) {
-            ChoiceRow(
-                label = R.string.analysis_survey_gender,
-                labels = listOf(R.string.analysis_survey_male, R.string.analysis_survey_female),
-                selected = survey.gender,
-                values = listOf("male", "female"),
-                onSelect = onGenderChange,
-            )
-            SurveyField(
-                R.string.analysis_survey_birth_date,
-                survey.birthDate,
-                onBirthDateChange,
-                R.string.analysis_survey_birth_hint,
-            )
+            EditorField(stringResource(R.string.analysis_survey_gender)) {
+                Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.selectableGroup()) {
+                    GenderOption(
+                        survey.gender,
+                        "male",
+                        R.string.analysis_survey_male,
+                        Icons.Outlined.Male,
+                        Color(0xFF2879CB),
+                        onGenderChange,
+                    )
+                    GenderOption(
+                        survey.gender,
+                        "female",
+                        R.string.analysis_survey_female,
+                        Icons.Outlined.Female,
+                        Color(0xFFD04459),
+                        onGenderChange,
+                    )
+                    EditorTextField(
+                        value = survey.birthDate,
+                        onValueChange = { onBirthDateChange(formatSurveyBirthDate(it)) },
+                        enabled = true,
+                        modifier = Modifier.weight(1f),
+                        placeholder = stringResource(R.string.analysis_survey_birth_hint),
+                        keyboardType = KeyboardType.Number,
+                    )
+                }
+            }
             SurveyField(R.string.analysis_survey_job, survey.job, onJobChange, R.string.analysis_survey_job_hint)
             SurveyField(
                 R.string.analysis_survey_workplace,
@@ -290,7 +298,6 @@ private fun SurveyScreen(
         Spacer(Modifier.height(12.dp))
         SurveySection(R.string.analysis_survey_finance_section) {
             ChoiceRow(
-                label = R.string.analysis_survey_loan,
                 labels = listOf(R.string.analysis_survey_yes, R.string.analysis_survey_no),
                 selected = if (survey.hasLoan) "yes" else "no",
                 values = listOf("yes", "no"),
@@ -309,7 +316,6 @@ private fun SurveyScreen(
         Spacer(Modifier.height(12.dp))
         SurveySection(R.string.analysis_survey_goal_section) {
             ChoiceRow(
-                label = R.string.analysis_survey_direction,
                 labels = listOf(R.string.analysis_survey_save, R.string.analysis_survey_maintain),
                 selected = survey.managementDirection,
                 values = listOf("save", "maintain"),
@@ -324,24 +330,20 @@ private fun SurveyScreen(
             )
         }
         Spacer(Modifier.height(16.dp))
-        Button(onClick = onSave, modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp)) {
-            Text(stringResource(R.string.analysis_survey_save_button))
-        }
+        Text(
+            stringResource(R.string.analysis_survey_privacy),
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            style = MaterialTheme.typography.bodyMedium,
+        )
+        Spacer(Modifier.height(16.dp))
+        SaveButton(enabled = true, isSaving = false, onClick = onSave)
         Spacer(Modifier.height(16.dp))
     }
 }
 
 @Composable
 private fun SurveySection(title: Int, content: @Composable () -> Unit) {
-    AnalysisCard {
-        Text(
-            stringResource(title),
-            modifier = Modifier.semantics { heading() },
-            style = MaterialTheme.typography.titleMedium,
-        )
-        Spacer(Modifier.height(12.dp))
-        Column(verticalArrangement = Arrangement.spacedBy(14.dp)) { content() }
-    }
+    SettingsSection(stringResource(title)) { content() }
 }
 
 @Composable
@@ -353,35 +355,49 @@ private fun SurveyField(
     keyboardType: KeyboardType = KeyboardType.Text,
     minLines: Int = 1,
 ) {
-    OutlinedTextField(
-        value = value,
-        onValueChange = onValueChange,
-        modifier = Modifier.fillMaxWidth(),
-        label = { Text(stringResource(label)) },
-        placeholder = { Text(stringResource(hint)) },
-        keyboardOptions = KeyboardOptions(keyboardType = keyboardType),
-        minLines = minLines,
-        singleLine = minLines == 1,
-        shape = RoundedCornerShape(14.dp),
-    )
+    EditorField(stringResource(label)) {
+        EditorTextField(
+            value = value,
+            onValueChange = onValueChange,
+            enabled = true,
+            placeholder = stringResource(hint),
+            keyboardType = keyboardType,
+            minLines = minLines,
+        )
+    }
+}
+
+internal fun formatSurveyBirthDate(value: String): String {
+    val digits = value.filter { it in '0'..'9' }.take(8)
+    return listOf(digits.take(4), digits.drop(4).take(2), digits.drop(6))
+        .filter(String::isNotEmpty)
+        .joinToString("-")
 }
 
 @Composable
-private fun SurveyLabel(label: Int) {
-    Text(stringResource(label), fontWeight = FontWeight.SemiBold, color = MaterialTheme.colorScheme.onSurfaceVariant)
-}
-
-@Composable
-private fun ChoiceRow(
-    label: Int,
-    labels: List<Int>,
-    values: List<String>,
+private fun GenderOption(
     selected: String,
+    value: String,
+    label: Int,
+    icon: ImageVector,
+    tint: Color,
     onSelect: (String) -> Unit,
 ) {
+    val isSelected = selected == value
+    Box(
+        modifier = Modifier.size(48.dp).clip(RoundedCornerShape(14.dp))
+            .background(if (isSelected) tint.copy(alpha = 0.18f) else editorMutedBackground())
+            .selectable(selected = isSelected, role = Role.RadioButton, onClick = { onSelect(value) }),
+        contentAlignment = Alignment.Center,
+    ) {
+        Icon(icon, stringResource(label), tint = tint)
+    }
+}
+
+@Composable
+private fun ChoiceRow(labels: List<Int>, values: List<String>, selected: String, onSelect: (String) -> Unit) {
     val colors = MaterialTheme.colorScheme
     Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
-        SurveyLabel(label)
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.fillMaxWidth().selectableGroup()) {
             labels.forEachIndexed { index, label ->
                 val isSelected = selected == values[index]
@@ -389,7 +405,7 @@ private fun ChoiceRow(
                     modifier = Modifier.weight(1f).heightIn(min = 48.dp)
                         .clip(RoundedCornerShape(14.dp))
                         .background(
-                            if (isSelected) colors.primary.copy(alpha = 0.12f) else colors.surface,
+                            if (isSelected) colors.primary.copy(alpha = 0.12f) else editorMutedBackground(),
                         )
                         .border(
                             1.dp,
@@ -417,25 +433,23 @@ private fun ChoiceRow(
 private fun EducationField(value: String, onChange: (String) -> Unit) {
     var expanded by remember { mutableStateOf(false) }
     Column {
-        SurveyLabel(R.string.analysis_survey_education)
         Box {
-            OutlinedTextField(
+            EditorTextField(
                 value = value,
                 onValueChange = {},
-                modifier = Modifier.fillMaxWidth().clickable { expanded = true },
+                enabled = true,
                 readOnly = true,
-                placeholder = { Text(stringResource(R.string.analysis_survey_education_hint)) },
-                trailingIcon = { Icon(Icons.Outlined.ChevronRight, contentDescription = null) },
-                shape = RoundedCornerShape(14.dp),
+                placeholder = stringResource(R.string.analysis_survey_education_hint),
             )
             Box(Modifier.matchParentSize().clickable { expanded = true })
             DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
                 listOf(
+                    stringResource(R.string.analysis_education_middle_school),
                     stringResource(R.string.analysis_education_high_school),
-                    stringResource(R.string.analysis_education_college),
+                    stringResource(R.string.analysis_education_university_student),
                     stringResource(R.string.analysis_education_bachelor),
+                    stringResource(R.string.analysis_education_graduate_student),
                     stringResource(R.string.analysis_education_master),
-                    stringResource(R.string.analysis_education_doctorate),
                     stringResource(R.string.analysis_education_other),
                 ).forEach { item ->
                     DropdownMenuItem(text = { Text(item) }, onClick = {

@@ -230,8 +230,8 @@
     <string name="budget_book_editor_income_source_hint">Company</string>
     <string name="budget_book_editor_expense_note_hint">Coffee</string>
     <string name="budget_book_editor_income_note_hint">Salary</string>
-    <string name="budget_book_editor_expense_amount_hint">10000</string>
-    <string name="budget_book_editor_income_amount_hint">3000000</string>
+    <string name="budget_book_editor_expense_amount_hint">10,000</string>
+    <string name="budget_book_editor_income_amount_hint">3,000,000</string>
     <string name="budget_book_ocr_not_available">Receipt OCR is not available yet.</string>
     <string name="budget_book_unknown_income_source">Unknown source</string>
     <string name="budget_book_unknown_expense_place">Unknown place</string>
