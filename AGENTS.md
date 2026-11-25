@@ -20,6 +20,7 @@ SmartBudget은 Kotlin과 Jetpack Compose로 개발하는 Android 개인 재무 �
 ## 작업 원칙
 
 - 화면, 도메인 모델, API 연동을 변경하기 전에 `knowledges` 아래의 관련 문서를 확인한다.
+- 백엔드 API를 다루는 작업을 시작하기 전에 [`smartbudget-server`의 `LLMs.txt`](https://github.com/yu-morph/smartbudget-server/blob/develop/LLMs.txt)를 읽고, 진행하려는 작업에 알맞은 백엔드 문서를 선택해 참고한다.
 - 문서 간 내용이 충돌하면 목표 API 계약은 `knowledges/api/openapi.json`을 따른다. 현재 구현된 범위는 실행 중인 서버의 `/openapi.json`과 `/docs`를 기준으로 판단한다.
 - 목표 계약 지원 코드와 임시 호환 코드를 분리한다. 목표 `/api/v1` 엔드포인트를 mock API로 암묵적으로 대체하지 않는다.
 - UI에는 Kotlin과 Jetpack Compose를 사용한다. 컴포저블은 불변 상태를 렌더링하고 이벤트를 전달하며, 네트워크와 영속성 처리는 컴포저블 밖에 두는 단방향 데이터 흐름을 따른다.
