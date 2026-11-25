@@ -26,6 +26,7 @@ class AnalysisScreenTest {
                 AnalysisScreen(
                     bottomPadding = 0.dp,
                     state = AnalysisUiState(),
+                    displayName = "테스트 사용자",
                     onLoad = {},
                     onEditSurvey = { opened = true },
                     onNewReport = {},
@@ -34,6 +35,7 @@ class AnalysisScreenTest {
             }
         }
 
+        composeRule.onNodeWithText("테스트 사용자").assertIsDisplayed()
         text(R.string.analysis_survey_summary_title).performClick()
         composeRule.runOnIdle { assertTrue(opened) }
     }

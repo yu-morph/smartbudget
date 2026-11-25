@@ -207,6 +207,7 @@ internal fun MainScreen(
                         MainTab.ANALYSIS -> AnalysisScreen(
                             bottomPadding = innerPadding.calculateBottomPadding(),
                             state = analysisState,
+                            displayName = settingsState.displayName,
                             onLoad = onAnalysisLoad,
                             onEditSurvey = onEditAnalysisSurvey,
                             onNewReport = onNewAnalysisReport,

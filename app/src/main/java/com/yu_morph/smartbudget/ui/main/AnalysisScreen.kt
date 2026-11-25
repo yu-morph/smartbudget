@@ -66,6 +66,7 @@ internal val AnalysisBlue = Color(0xFF8CA2B8)
 internal fun AnalysisScreen(
     bottomPadding: Dp,
     state: AnalysisUiState,
+    displayName: String,
     onLoad: () -> Unit,
     onEditSurvey: () -> Unit,
     onNewReport: () -> Unit,
@@ -74,7 +75,7 @@ internal fun AnalysisScreen(
     val survey = state.survey
     LaunchedEffect(Unit) { onLoad() }
     MainTabContainer(bottomPadding = bottomPadding) {
-        SurveySummaryCard(survey = survey, onClick = onEditSurvey)
+        SurveySummaryCard(survey = survey, displayName = displayName, onClick = onEditSurvey)
         Spacer(Modifier.height(14.dp))
         PreviousReportsCard(
             state = state,
@@ -86,7 +87,7 @@ internal fun AnalysisScreen(
 }
 
 @Composable
-private fun SurveySummaryCard(survey: AnalysisSurvey, onClick: () -> Unit) {
+private fun SurveySummaryCard(survey: AnalysisSurvey, displayName: String, onClick: () -> Unit) {
     val bodyColor = MaterialTheme.colorScheme.onSurfaceVariant
     val editLabel = stringResource(R.string.analysis_edit_survey)
     AnalysisCard(
@@ -98,59 +99,74 @@ private fun SurveySummaryCard(survey: AnalysisSurvey, onClick: () -> Unit) {
     ) {
         Spacer(Modifier.height(8.dp))
         Row(verticalAlignment = Alignment.CenterVertically) {
-            AnalysisCardHeading(R.string.analysis_survey_summary_title, Modifier.weight(1f).padding(start = 8.dp), inset = 0.dp)
-            Icon(Icons.Outlined.ChevronRight, modifier = Modifier.padding(end = 8.dp), contentDescription = null, tint = bodyColor.copy(alpha = 0.65f))
+            AnalysisCardHeading(
+                R.string.analysis_survey_summary_title,
+                Modifier.weight(1f).padding(start = 8.dp),
+                inset = 0.dp,
+            )
+            Icon(
+                Icons.Outlined.ChevronRight,
+                modifier = Modifier.padding(end = 8.dp),
+                contentDescription = null,
+                tint = bodyColor.copy(alpha = 0.65f),
+            )
         }
         Spacer(Modifier.height(24.dp))
         CompositionLocalProvider(LocalContentColor provides bodyColor) {
             ProvideTextStyle(MaterialTheme.typography.bodySmall) {
                 Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    SurveyDemographics(survey)
-                    HorizontalDivider(
-                        modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp),
-                        thickness = 0.5.dp,
-                        color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.45f),
-                    )
-                    SurveyProfileLine(Icons.Outlined.Person, R.string.analysis_survey_job, survey.job)
-                    SurveyProfileLine(Icons.Outlined.Business, R.string.analysis_survey_workplace, survey.workplace)
-                    SurveyProfileLine(Icons.Outlined.School, R.string.analysis_survey_education, survey.education)
-                    HorizontalDivider(
-                        modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp),
-                        thickness = 0.5.dp,
-                        color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.45f),
-                    )
-                    SurveySummaryRow(
-                        stringResource(R.string.analysis_survey_loan),
-                        stringResource(
-                            if (survey.hasLoan) R.string.analysis_survey_yes else R.string.analysis_survey_no,
-                        ),
-                    )
-                    if (survey.hasLoan && survey.loanDetails.isNotBlank()) {
-                        Text(
-                            survey.loanDetails,
-                            modifier = Modifier.fillMaxWidth().padding(top = 2.dp),
-                            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
-                        )
-                    }
-                    HorizontalDivider(
-                        modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp),
-                        thickness = 0.5.dp,
-                        color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.45f),
-                    )
-                    SurveySummaryRow(
-                        stringResource(R.string.analysis_survey_goal_label),
-                        stringResource(
-                            if (survey.managementDirection == "maintain") {
-                                R.string.analysis_survey_maintain
-                            } else {
-                                R.string.analysis_survey_save
-                            },
-                        ),
-                    )
+                    SurveySummaryContent(survey, displayName)
                 }
             }
         }
     }
+}
+
+@Composable
+private fun SurveySummaryContent(survey: AnalysisSurvey, displayName: String) {
+    if (displayName.isNotBlank()) Text(displayName, fontWeight = FontWeight.SemiBold)
+    SurveyDemographics(survey)
+    HorizontalDivider(
+        modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp),
+        thickness = 0.5.dp,
+        color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.45f),
+    )
+    SurveyProfileLine(Icons.Outlined.Person, R.string.analysis_survey_job, survey.job)
+    SurveyProfileLine(Icons.Outlined.Business, R.string.analysis_survey_workplace, survey.workplace)
+    SurveyProfileLine(Icons.Outlined.School, R.string.analysis_survey_education, survey.education)
+    HorizontalDivider(
+        modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp),
+        thickness = 0.5.dp,
+        color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.45f),
+    )
+    SurveySummaryRow(
+        stringResource(R.string.analysis_survey_loan),
+        stringResource(
+            if (survey.hasLoan) R.string.analysis_survey_yes else R.string.analysis_survey_no,
+        ),
+    )
+    if (survey.hasLoan && survey.loanDetails.isNotBlank()) {
+        Text(
+            survey.loanDetails,
+            modifier = Modifier.fillMaxWidth().padding(top = 2.dp),
+            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
+        )
+    }
+    HorizontalDivider(
+        modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp),
+        thickness = 0.5.dp,
+        color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.45f),
+    )
+    SurveySummaryRow(
+        stringResource(R.string.analysis_survey_goal_label),
+        stringResource(
+            if (survey.managementDirection == "maintain") {
+                R.string.analysis_survey_maintain
+            } else {
+                R.string.analysis_survey_save
+            },
+        ),
+    )
 }
 
 @Composable
