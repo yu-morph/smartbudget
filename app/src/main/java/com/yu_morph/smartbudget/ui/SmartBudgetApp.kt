@@ -37,6 +37,7 @@ import com.yu_morph.smartbudget.data.remote.SmartBudgetApiFactory
 import com.yu_morph.smartbudget.data.remote.model.ReportSummaryData
 import com.yu_morph.smartbudget.notification.BudgetNotificationCoordinator
 import com.yu_morph.smartbudget.notification.hasNotificationPermission
+import com.yu_morph.smartbudget.notification.syncAnalysisReminder
 import com.yu_morph.smartbudget.ui.auth.AuthCoordinator
 import com.yu_morph.smartbudget.ui.auth.AuthLoadingDialog
 import com.yu_morph.smartbudget.ui.auth.LoginScreen
@@ -263,15 +264,23 @@ private fun rememberNotificationChangeHandler(
     var permissionRequested by rememberSaveable { mutableStateOf(false) }
     val permissionLauncher =
         rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
-            if (granted) pendingNotificationType?.let { settingsCoordinator.setNotification(it, true) }
+            if (granted) {
+                pendingNotificationType?.let { settingsCoordinator.setNotification(it, true) }
+                syncAnalysisReminder(context)
+            }
             pendingNotificationType = null
         }
-    val budgetNotificationEnabled =
+    val notificationEnabled =
         settingsCoordinator.state.appSettings.budgetApproachingNotification ||
-            settingsCoordinator.state.appSettings.budgetExceededNotification
+            settingsCoordinator.state.appSettings.budgetExceededNotification ||
+            settingsCoordinator.state.appSettings.analysisNotification
 
-    LaunchedEffect(destination, budgetNotificationEnabled) {
-        if (shouldRequestNotificationPermission(destination, budgetNotificationEnabled, permissionRequested, context)) {
+    val analysisNotificationEnabled = settingsCoordinator.state.appSettings.analysisNotification
+    LaunchedEffect(destination, analysisNotificationEnabled) {
+        if (destination != AppDestination.SPLASH) syncAnalysisReminder(context)
+    }
+    LaunchedEffect(destination, notificationEnabled) {
+        if (shouldRequestNotificationPermission(destination, notificationEnabled, permissionRequested, context)) {
             permissionRequested = true
             permissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
         }
@@ -293,13 +302,13 @@ private fun rememberNotificationChangeHandler(
 
 private fun shouldRequestNotificationPermission(
     destination: AppDestination,
-    budgetNotificationEnabled: Boolean,
+    notificationEnabled: Boolean,
     permissionRequested: Boolean,
     context: android.content.Context,
 ): Boolean {
     var shouldRequest =
         Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU && destination == AppDestination.MAIN
-    shouldRequest = shouldRequest && budgetNotificationEnabled
+    shouldRequest = shouldRequest && notificationEnabled
     shouldRequest = shouldRequest && !permissionRequested
     return shouldRequest && !hasNotificationPermission(context)
 }

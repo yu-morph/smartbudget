@@ -145,6 +145,8 @@
     <string name="settings_budget_approaching_notification">Budget limit approaching</string>
     <string name="settings_budget_exceeded_notification">Budget limit exceeded</string>
     <string name="settings_analysis_notification">Spending analysis</string>
+    <string name="analysis_notification_title">Month-end spending analysis</string>
+    <string name="analysis_notification_message">Run this month’s spending analysis to review your spending patterns.</string>
     <string name="budget_notification_channel_name">Budget alerts</string>
     <string name="budget_notification_channel_description">Alerts for monthly budget usage and limit overruns.</string>
     <string name="budget_approaching_notification_title">You’re nearing your budget limit</string>
