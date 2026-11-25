@@ -76,6 +76,7 @@ import androidx.compose.ui.window.Popup
 import androidx.compose.ui.window.PopupProperties
 import androidx.compose.ui.zIndex
 import com.yu_morph.smartbudget.R
+import com.yu_morph.smartbudget.data.remote.model.ReportSummaryData
 import com.yu_morph.smartbudget.data.remote.news.NewsArticle
 import com.yu_morph.smartbudget.ui.document.MarkdownDocument
 import com.yu_morph.smartbudget.ui.showAppToast
@@ -135,10 +136,9 @@ internal fun MainScreen(
     onNewsArticleClick: (NewsArticle) -> Unit,
     analysisState: AnalysisUiState,
     onAnalysisLoad: () -> Unit,
-    onAnalysisSurveySaved: (AnalysisSurvey) -> Unit,
-    onRequestAnalysis: (YearMonth, AnalysisSurvey) -> Unit,
-    onOpenAnalysisReport: (Int) -> Unit,
-    onClearAnalysisFailure: () -> Unit,
+    onEditAnalysisSurvey: () -> Unit,
+    onNewAnalysisReport: () -> Unit,
+    onOpenAnalysisReport: (ReportSummaryData) -> Unit,
     onLogout: () -> Unit,
     onOpenDocument: (MarkdownDocument) -> Unit,
     onOpenSettings: (SettingsDetailDestination) -> Unit,
@@ -205,10 +205,9 @@ internal fun MainScreen(
                         bottomPadding = innerPadding.calculateBottomPadding(),
                         state = analysisState,
                         onLoad = onAnalysisLoad,
-                        onSurveySaved = onAnalysisSurveySaved,
-                        onRequestReport = onRequestAnalysis,
+                        onEditSurvey = onEditAnalysisSurvey,
+                        onNewReport = onNewAnalysisReport,
                         onOpenReport = onOpenAnalysisReport,
-                        onClearFailure = onClearAnalysisFailure,
                     )
 
                     MainTab.SETTINGS -> SettingsScreen(

@@ -33,6 +33,7 @@ import com.yu_morph.smartbudget.R
 import com.yu_morph.smartbudget.data.local.DisplayMode
 import com.yu_morph.smartbudget.data.ocr.RemoteReceiptOcrRepository
 import com.yu_morph.smartbudget.data.remote.SmartBudgetApiFactory
+import com.yu_morph.smartbudget.data.remote.model.ReportSummaryData
 import com.yu_morph.smartbudget.notification.BudgetNotificationCoordinator
 import com.yu_morph.smartbudget.notification.hasNotificationPermission
 import com.yu_morph.smartbudget.ui.auth.AuthCoordinator
@@ -42,6 +43,8 @@ import com.yu_morph.smartbudget.ui.auth.SignUpScreen
 import com.yu_morph.smartbudget.ui.document.MarkdownDocument
 import com.yu_morph.smartbudget.ui.document.MarkdownViewerScreen
 import com.yu_morph.smartbudget.ui.main.AnalysisCoordinator
+import com.yu_morph.smartbudget.ui.main.AnalysisFlowScreen
+import com.yu_morph.smartbudget.ui.main.AnalysisFlowStep
 import com.yu_morph.smartbudget.ui.main.BudgetBookCoordinator
 import com.yu_morph.smartbudget.ui.main.BudgetBookDetailScreen
 import com.yu_morph.smartbudget.ui.main.HomeDashboardCoordinator
@@ -53,23 +56,31 @@ import com.yu_morph.smartbudget.ui.main.SettingsCoordinator
 import com.yu_morph.smartbudget.ui.main.SettingsDetailDestination
 import com.yu_morph.smartbudget.ui.main.SettingsDetailScreen
 import com.yu_morph.smartbudget.ui.splash.SplashScreen
+import java.time.LocalDate
 import java.time.YearMonth
+import java.time.ZoneId
 
 private enum class AppDestination { SPLASH, LOGIN, SIGN_UP, MAIN }
 
-private enum class AppContent { BASE, DOCUMENT, SETTINGS_DETAIL, BUDGET_BOOK_DETAIL }
+private enum class AppContent { BASE, DOCUMENT, SETTINGS_DETAIL, BUDGET_BOOK_DETAIL, ANALYSIS_DETAIL }
+
+private enum class AnalysisDetailMode { EDIT_SURVEY, NEW_REPORT, REPORT }
 
 private const val MORPH_DURATION_MILLIS = 350
 private const val DETAIL_TRANSITION_DURATION_MILLIS = 260
 private const val DETAIL_SLIDE_DISTANCE_DIVISOR = 5
 
 @Composable
-@Suppress("LongMethod")
+@Suppress("LongMethod", "CyclomaticComplexMethod")
 fun SmartBudgetApp(onDisplayModeChanged: (DisplayMode) -> Unit, onLanguageChanged: () -> Unit, onExit: () -> Unit) {
     var destination by rememberSaveable { mutableStateOf(AppDestination.SPLASH) }
     var openDocument by rememberSaveable { mutableStateOf<MarkdownDocument?>(null) }
     var openSettings by rememberSaveable { mutableStateOf<SettingsDetailDestination?>(null) }
     var openBudgetBookMonth by rememberSaveable { mutableStateOf<String?>(null) }
+    var analysisDetailMode by rememberSaveable { mutableStateOf<AnalysisDetailMode?>(null) }
+    val currentAnalysisMonth = remember { YearMonth.now(ZoneId.of("Asia/Seoul")) }
+    var analysisYear by rememberSaveable { mutableStateOf(currentAnalysisMonth.year) }
+    var analysisMonth by rememberSaveable { mutableStateOf(currentAnalysisMonth.monthValue) }
     var selectedMainTab by rememberSaveable { mutableStateOf(MainTab.HOME) }
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
@@ -103,6 +114,7 @@ fun SmartBudgetApp(onDisplayModeChanged: (DisplayMode) -> Unit, onLanguageChange
         openDocument != null -> AppContent.DOCUMENT
         openSettings != null -> AppContent.SETTINGS_DETAIL
         openBudgetBookMonth != null -> AppContent.BUDGET_BOOK_DETAIL
+        analysisDetailMode != null -> AppContent.ANALYSIS_DETAIL
         else -> AppContent.BASE
     }
     Box(
@@ -131,6 +143,21 @@ fun SmartBudgetApp(onDisplayModeChanged: (DisplayMode) -> Unit, onLanguageChange
                     onOpenDocument = { openDocument = it },
                     onOpenSettings = { openSettings = it },
                     onOpenBudgetBook = { openBudgetBookMonth = it.toString() },
+                    onEditAnalysisSurvey = { analysisDetailMode = AnalysisDetailMode.EDIT_SURVEY },
+                    onNewAnalysisReport = {
+                        val month = YearMonth.now(ZoneId.of("Asia/Seoul"))
+                        analysisYear = month.year
+                        analysisMonth = month.monthValue
+                        analysisDetailMode = AnalysisDetailMode.NEW_REPORT
+                    },
+                    onOpenAnalysisReport = { report ->
+                        runCatching { LocalDate.parse(report.periodStart) }.getOrNull()?.let { date ->
+                            analysisYear = date.year
+                            analysisMonth = date.monthValue
+                        }
+                        analysisCoordinator.openReport(report.id)
+                        analysisDetailMode = AnalysisDetailMode.REPORT
+                    },
                     onExit = onExit,
                 )
 
@@ -193,6 +220,25 @@ fun SmartBudgetApp(onDisplayModeChanged: (DisplayMode) -> Unit, onLanguageChange
                         onMonthChange = { changedMonth -> openBudgetBookMonth = changedMonth.toString() },
                         onBack = { openBudgetBookMonth = null },
                         receiptOcrRepository = receiptOcrRepository,
+                    )
+                }
+
+                AppContent.ANALYSIS_DETAIL -> analysisDetailMode?.let { mode ->
+                    AnalysisFlowScreen(
+                        analysisState = analysisCoordinator.state,
+                        initialSurvey = analysisCoordinator.state.survey,
+                        initialStep = when (mode) {
+                            AnalysisDetailMode.EDIT_SURVEY, AnalysisDetailMode.NEW_REPORT -> AnalysisFlowStep.SURVEY
+                            AnalysisDetailMode.REPORT -> AnalysisFlowStep.LOADING
+                        },
+                        initialYear = analysisYear,
+                        initialMonth = analysisMonth,
+                        continueAfterSurvey = mode == AnalysisDetailMode.NEW_REPORT,
+                        closeAfterResult = mode == AnalysisDetailMode.REPORT,
+                        onBack = { analysisDetailMode = null },
+                        onSurveySaved = analysisCoordinator::saveSurvey,
+                        onRequestReport = analysisCoordinator::generate,
+                        onClearFailure = analysisCoordinator::clearFailure,
                     )
                 }
             }
@@ -289,6 +335,9 @@ private fun AuthenticationContent(
     onOpenDocument: (MarkdownDocument) -> Unit,
     onOpenSettings: (SettingsDetailDestination) -> Unit,
     onOpenBudgetBook: (YearMonth) -> Unit,
+    onEditAnalysisSurvey: () -> Unit,
+    onNewAnalysisReport: () -> Unit,
+    onOpenAnalysisReport: (ReportSummaryData) -> Unit,
     onExit: () -> Unit,
 ) {
     val context = LocalContext.current
@@ -353,10 +402,9 @@ private fun AuthenticationContent(
                 },
                 analysisState = analysisCoordinator.state,
                 onAnalysisLoad = { analysisCoordinator.loadHistory() },
-                onAnalysisSurveySaved = analysisCoordinator::saveSurvey,
-                onRequestAnalysis = analysisCoordinator::generate,
-                onOpenAnalysisReport = analysisCoordinator::openReport,
-                onClearAnalysisFailure = analysisCoordinator::clearFailure,
+                onEditAnalysisSurvey = onEditAnalysisSurvey,
+                onNewAnalysisReport = onNewAnalysisReport,
+                onOpenAnalysisReport = onOpenAnalysisReport,
                 onLogout = {
                     analysisCoordinator.reset()
                     coordinator.signOut()

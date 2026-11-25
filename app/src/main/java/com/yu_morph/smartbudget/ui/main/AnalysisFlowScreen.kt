@@ -25,7 +25,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.outlined.ArrowBack
+import androidx.compose.material.icons.automirrored.rounded.ArrowBack
 import androidx.compose.material.icons.outlined.CalendarMonth
 import androidx.compose.material.icons.outlined.ChevronLeft
 import androidx.compose.material.icons.outlined.ChevronRight
@@ -35,12 +35,16 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -61,7 +65,6 @@ import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.yu_morph.smartbudget.R
@@ -84,10 +87,10 @@ internal data class AnalysisSurvey(
     val interest: String = "",
 )
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Suppress("LongMethod", "CyclomaticComplexMethod")
 @Composable
 internal fun AnalysisFlowScreen(
-    bottomPadding: Dp,
     analysisState: AnalysisUiState,
     initialSurvey: AnalysisSurvey,
     initialStep: AnalysisFlowStep,
@@ -113,7 +116,7 @@ internal fun AnalysisFlowScreen(
     var year by rememberSaveable { mutableStateOf(initialYear) }
     var month by rememberSaveable { mutableStateOf(initialMonth) }
 
-    BackHandler {
+    val handleBack: () -> Unit = {
         step = when (step) {
             AnalysisFlowStep.REQUEST -> AnalysisFlowStep.SURVEY
 
@@ -137,6 +140,7 @@ internal fun AnalysisFlowScreen(
             }
         }
     }
+    BackHandler(onBack = handleBack)
     LaunchedEffect(
         step,
         analysisState.isGenerating,
@@ -155,72 +159,92 @@ internal fun AnalysisFlowScreen(
         }
     }
 
-    when (step) {
-        AnalysisFlowStep.SURVEY -> SurveyScreen(
-            bottomPadding = bottomPadding,
-            survey = AnalysisSurvey(
-                gender, birthDate, job, workplace, education, hasLoan, loanDetails, direction, interest,
-            ),
-            onGenderChange = { gender = it },
-            onBirthDateChange = { birthDate = it },
-            onJobChange = { job = it },
-            onWorkplaceChange = { workplace = it },
-            onEducationChange = { education = it },
-            onLoanChange = { hasLoan = it },
-            onLoanDetailsChange = { loanDetails = it },
-            onDirectionChange = { direction = it },
-            onInterestChange = { interest = it },
-            onBack = onBack,
-            onSave = {
-                val completedSurvey = AnalysisSurvey(
+    val reportPeriod = analysisState.activeReport?.periodStart?.let {
+        runCatching { YearMonth.parse(it.take(7)) }.getOrNull()
+    }
+    val title = when (step) {
+        AnalysisFlowStep.SURVEY -> stringResource(R.string.analysis_survey_title)
+
+        AnalysisFlowStep.RESULT -> stringResource(
+            R.string.analysis_result_title,
+            reportPeriod?.year ?: year,
+            reportPeriod?.monthValue ?: month,
+        )
+
+        AnalysisFlowStep.REQUEST, AnalysisFlowStep.LOADING -> stringResource(R.string.analysis_title)
+    }
+    Scaffold(
+        containerColor = MaterialTheme.colorScheme.background,
+        topBar = {
+            TopAppBar(
+                expandedHeight = 52.dp,
+                title = { Text(title, fontSize = 18.sp, fontWeight = FontWeight.SemiBold) },
+                navigationIcon = {
+                    IconButton(onClick = handleBack) {
+                        Icon(Icons.AutoMirrored.Rounded.ArrowBack, stringResource(R.string.navigate_back))
+                    }
+                },
+                colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.background),
+            )
+        },
+    ) { innerPadding ->
+        when (step) {
+            AnalysisFlowStep.SURVEY -> SurveyScreen(
+                modifier = Modifier.padding(innerPadding),
+                survey = AnalysisSurvey(
                     gender, birthDate, job, workplace, education, hasLoan, loanDetails, direction, interest,
-                )
-                onSurveySaved(completedSurvey)
-                if (continueAfterSurvey) {
-                    step = AnalysisFlowStep.REQUEST
-                } else {
-                    onBack()
-                }
-            },
-        )
+                ),
+                onGenderChange = { gender = it },
+                onBirthDateChange = { birthDate = it },
+                onJobChange = { job = it },
+                onWorkplaceChange = { workplace = it },
+                onEducationChange = { education = it },
+                onLoanChange = { hasLoan = it },
+                onLoanDetailsChange = { loanDetails = it },
+                onDirectionChange = { direction = it },
+                onInterestChange = { interest = it },
+                onSave = {
+                    val completedSurvey = AnalysisSurvey(
+                        gender, birthDate, job, workplace, education, hasLoan, loanDetails, direction, interest,
+                    )
+                    onSurveySaved(completedSurvey)
+                    if (continueAfterSurvey) step = AnalysisFlowStep.REQUEST else onBack()
+                },
+            )
 
-        AnalysisFlowStep.REQUEST -> AnalysisRequestScreen(
-            bottomPadding = bottomPadding,
-            year = year,
-            month = month,
-            onYearMonthChange = { newYear, newMonth ->
-                year = newYear
-                month = newMonth
-            },
-            onBack = { step = AnalysisFlowStep.SURVEY },
-            failure = analysisState.failure,
-            onClearFailure = onClearFailure,
-            onStart = {
-                val requestSurvey = AnalysisSurvey(
-                    gender, birthDate, job, workplace, education, hasLoan, loanDetails, direction, interest,
-                )
-                onRequestReport(YearMonth.of(year, month), requestSurvey)
-                step = AnalysisFlowStep.LOADING
-            },
-        )
+            AnalysisFlowStep.REQUEST -> AnalysisRequestScreen(
+                modifier = Modifier.padding(innerPadding),
+                year = year,
+                month = month,
+                onYearMonthChange = { newYear, newMonth ->
+                    year = newYear
+                    month = newMonth
+                },
+                failure = analysisState.failure,
+                onClearFailure = onClearFailure,
+                onStart = {
+                    val requestSurvey = AnalysisSurvey(
+                        gender, birthDate, job, workplace, education, hasLoan, loanDetails, direction, interest,
+                    )
+                    onRequestReport(YearMonth.of(year, month), requestSurvey)
+                    step = AnalysisFlowStep.LOADING
+                },
+            )
 
-        AnalysisFlowStep.LOADING -> AnalysisLoadingScreen(bottomPadding)
+            AnalysisFlowStep.LOADING -> AnalysisLoadingScreen(Modifier.padding(innerPadding))
 
-        AnalysisFlowStep.RESULT -> AnalysisResultScreen(
-            bottomPadding = bottomPadding,
-            report = analysisState.activeReport,
-            content = analysisState.activeContent,
-            onBack = {
-                if (closeAfterResult) onBack() else step = AnalysisFlowStep.REQUEST
-            },
-        )
+            AnalysisFlowStep.RESULT -> AnalysisResultScreen(
+                modifier = Modifier.padding(innerPadding),
+                content = analysisState.activeContent,
+            )
+        }
     }
 }
 
 @Suppress("LongMethod")
 @Composable
 private fun SurveyScreen(
-    bottomPadding: Dp,
+    modifier: Modifier,
     survey: AnalysisSurvey,
     onGenderChange: (String) -> Unit,
     onBirthDateChange: (String) -> Unit,
@@ -231,11 +255,9 @@ private fun SurveyScreen(
     onLoanDetailsChange: (String) -> Unit,
     onDirectionChange: (String) -> Unit,
     onInterestChange: (String) -> Unit,
-    onBack: () -> Unit,
     onSave: () -> Unit,
 ) {
-    MainTabContainer(bottomPadding) {
-        AnalysisPageHeading(stringResource(R.string.analysis_survey_title), onBack)
+    MainTabContainer(bottomPadding = 0.dp, modifier = modifier) {
         Text(
             stringResource(R.string.analysis_survey_privacy),
             color = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -319,21 +341,6 @@ private fun SurveySection(title: Int, content: @Composable () -> Unit) {
         )
         Spacer(Modifier.height(12.dp))
         Column(verticalArrangement = Arrangement.spacedBy(14.dp)) { content() }
-    }
-}
-
-@Composable
-private fun AnalysisPageHeading(title: String, onBack: () -> Unit) {
-    Row(verticalAlignment = Alignment.CenterVertically) {
-        IconButton(onClick = onBack) {
-            Icon(Icons.AutoMirrored.Outlined.ArrowBack, contentDescription = stringResource(R.string.navigate_back))
-        }
-        Text(
-            title,
-            modifier = Modifier.semantics { heading() },
-            style = MaterialTheme.typography.headlineSmall,
-            fontWeight = FontWeight.Bold,
-        )
     }
 }
 
@@ -444,21 +451,17 @@ private fun EducationField(value: String, onChange: (String) -> Unit) {
 @Suppress("LongMethod")
 @Composable
 private fun AnalysisRequestScreen(
-    bottomPadding: Dp,
+    modifier: Modifier,
     year: Int,
     month: Int,
     onYearMonthChange: (Int, Int) -> Unit,
-    onBack: () -> Unit,
     failure: AnalysisFailure?,
     onClearFailure: () -> Unit,
     onStart: () -> Unit,
 ) {
     val selectedMonth = YearMonth.of(year, month)
     val currentMonth = YearMonth.now(analysisZone)
-    MainTabContainer(bottomPadding) {
-        IconButton(onClick = onBack) {
-            Icon(Icons.AutoMirrored.Outlined.ArrowBack, contentDescription = stringResource(R.string.navigate_back))
-        }
+    MainTabContainer(bottomPadding = 0.dp, modifier = modifier) {
         Text(stringResource(R.string.analysis_request_title), fontSize = 26.sp, fontWeight = FontWeight.Bold)
         Text(stringResource(R.string.analysis_request_subtitle), color = MaterialTheme.colorScheme.onSurfaceVariant)
         Spacer(Modifier.height(32.dp))
@@ -536,9 +539,9 @@ private fun AnalysisRequestScreen(
 }
 
 @Composable
-private fun AnalysisLoadingScreen(bottomPadding: Dp) {
+private fun AnalysisLoadingScreen(modifier: Modifier) {
     Column(
-        modifier = Modifier.fillMaxSize().padding(bottom = bottomPadding).padding(24.dp),
+        modifier = modifier.fillMaxSize().padding(24.dp),
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
@@ -568,23 +571,8 @@ private fun AnalysisLoadingScreen(bottomPadding: Dp) {
 }
 
 @Composable
-private fun AnalysisResultScreen(
-    bottomPadding: Dp,
-    report: com.yu_morph.smartbudget.data.remote.model.ReportDetailData?,
-    content: AnalysisReportContent?,
-    onBack: () -> Unit,
-) {
-    val period = report?.periodStart?.let { runCatching { YearMonth.parse(it.take(7)) }.getOrNull() }
-    MainTabContainer(bottomPadding) {
-        AnalysisPageHeading(
-            stringResource(
-                R.string.analysis_result_title,
-                period?.year ?: 0,
-                period?.monthValue ?: 0,
-            ),
-            onBack,
-        )
-        Spacer(Modifier.height(12.dp))
+private fun AnalysisResultScreen(modifier: Modifier, content: AnalysisReportContent?) {
+    MainTabContainer(bottomPadding = 0.dp, modifier = modifier) {
         content?.aWordFromAi?.let { body ->
             ResultCard(R.string.analysis_result_ai_title, highlighted = true) {
                 Text(body, style = MaterialTheme.typography.bodyLarge, lineHeight = 22.sp)

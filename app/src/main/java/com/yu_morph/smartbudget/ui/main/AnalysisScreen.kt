@@ -33,11 +33,6 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
@@ -55,8 +50,6 @@ import androidx.compose.ui.unit.sp
 import com.yu_morph.smartbudget.R
 import com.yu_morph.smartbudget.ui.theme.SmartBudgetGreen
 import java.time.LocalDate
-import java.time.YearMonth
-import java.time.ZoneId
 
 internal val AnalysisSlate = Color(0xFF667386)
 internal val AnalysisBlue = Color(0xFF8CA2B8)
@@ -66,60 +59,19 @@ internal fun AnalysisScreen(
     bottomPadding: Dp,
     state: AnalysisUiState,
     onLoad: () -> Unit,
-    onSurveySaved: (AnalysisSurvey) -> Unit,
-    onRequestReport: (YearMonth, AnalysisSurvey) -> Unit,
-    onOpenReport: (Int) -> Unit,
-    onClearFailure: () -> Unit,
+    onEditSurvey: () -> Unit,
+    onNewReport: () -> Unit,
+    onOpenReport: (com.yu_morph.smartbudget.data.remote.model.ReportSummaryData) -> Unit,
 ) {
-    var flow by rememberSaveable { mutableStateOf<AnalysisFlowStep?>(null) }
     val survey = state.survey
-    var requestAfterSurvey by rememberSaveable { mutableStateOf(false) }
-    var closeAfterResult by rememberSaveable { mutableStateOf(false) }
-    val currentMonth = remember { YearMonth.now(analysisZone) }
-    var selectedYear by rememberSaveable { mutableStateOf(currentMonth.year) }
-    var selectedMonth by rememberSaveable { mutableStateOf(currentMonth.monthValue) }
     LaunchedEffect(Unit) { onLoad() }
-    if (flow != null) {
-        AnalysisFlowScreen(
-            bottomPadding = bottomPadding,
-            analysisState = state,
-            initialSurvey = survey,
-            initialStep = flow ?: AnalysisFlowStep.SURVEY,
-            initialYear = selectedYear,
-            initialMonth = selectedMonth,
-            continueAfterSurvey = requestAfterSurvey,
-            closeAfterResult = closeAfterResult,
-            onBack = { flow = null },
-            onSurveySaved = onSurveySaved,
-            onRequestReport = onRequestReport,
-            onClearFailure = onClearFailure,
-        )
-        return
-    }
     MainTabContainer(bottomPadding = bottomPadding) {
-        SurveySummaryCard(survey = survey, onClick = {
-            requestAfterSurvey = false
-            closeAfterResult = false
-            flow = AnalysisFlowStep.SURVEY
-        })
+        SurveySummaryCard(survey = survey, onClick = onEditSurvey)
         Spacer(Modifier.height(14.dp))
         PreviousReportsCard(
             state = state,
-            onNewReport = {
-                requestAfterSurvey = true
-                closeAfterResult = false
-                flow = AnalysisFlowStep.SURVEY
-            },
-            onReportClick = { report ->
-                runCatching { LocalDate.parse(report.periodStart) }.getOrNull()?.let { date ->
-                    selectedYear = date.year
-                    selectedMonth = date.monthValue
-                }
-                requestAfterSurvey = false
-                closeAfterResult = true
-                onOpenReport(report.id)
-                flow = AnalysisFlowStep.LOADING
-            },
+            onNewReport = onNewReport,
+            onReportClick = onOpenReport,
         )
         Spacer(Modifier.height(16.dp))
     }
@@ -352,5 +304,3 @@ internal fun AnalysisCard(
         Column(modifier = Modifier.fillMaxWidth().padding(20.dp), content = content)
     }
 }
-
-private val analysisZone: ZoneId = ZoneId.of("Asia/Seoul")
