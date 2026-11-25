@@ -34,19 +34,24 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
+import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ProvideTextStyle
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
@@ -88,53 +93,75 @@ internal fun AnalysisScreen(
 
 @Composable
 private fun SurveySummaryCard(survey: AnalysisSurvey, onClick: () -> Unit) {
-    AnalysisCard {
-        AnalysisCardHeading(R.string.analysis_survey_summary_title, Modifier.fillMaxWidth())
+    val bodyColor = MaterialTheme.colorScheme.onSurfaceVariant
+    val editLabel = stringResource(R.string.analysis_edit_survey)
+    AnalysisCard(
+        modifier = Modifier.clip(RoundedCornerShape(24.dp)).clickable(
+            role = Role.Button,
+            onClickLabel = editLabel,
+            onClick = onClick,
+        ),
+    ) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            AnalysisCardHeading(R.string.analysis_survey_summary_title, Modifier.weight(1f), inset = 0.dp)
+            Icon(Icons.Outlined.ChevronRight, contentDescription = null, tint = bodyColor.copy(alpha = 0.65f))
+        }
         Spacer(Modifier.height(12.dp))
-        Column(verticalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.padding(horizontal = 8.dp)) {
-            val age = surveyAge(survey.birthDate)
-            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                Text(
-                    if (age == null) {
-                        survey.birthDate.ifBlank { stringResource(R.string.analysis_info_missing) }
-                    } else {
-                        stringResource(R.string.analysis_age_group, age / 10 * 10, survey.birthDate)
-                    },
-                )
-                if (survey.gender == "male" || survey.gender == "female") {
-                    val male = survey.gender == "male"
-                    Icon(
-                        if (male) Icons.Outlined.Male else Icons.Outlined.Female,
-                        stringResource(if (male) R.string.analysis_survey_male else R.string.analysis_survey_female),
-                        modifier = Modifier.size(18.dp),
-                        tint = if (male) Color(0xFF2879CB) else Color(0xFFD04459),
+        CompositionLocalProvider(LocalContentColor provides bodyColor) {
+            ProvideTextStyle(MaterialTheme.typography.bodySmall) {
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    SurveyDemographics(survey)
+                    SurveyProfileLine(Icons.Outlined.Person, R.string.analysis_survey_job, survey.job)
+                    SurveyProfileLine(Icons.Outlined.Business, R.string.analysis_survey_workplace, survey.workplace)
+                    SurveyProfileLine(Icons.Outlined.School, R.string.analysis_survey_education, survey.education)
+                    HorizontalDivider()
+                    SurveySummaryRow(
+                        stringResource(R.string.analysis_survey_loan),
+                        stringResource(
+                            if (survey.hasLoan) R.string.analysis_survey_yes else R.string.analysis_survey_no,
+                        ),
+                    )
+                    if (survey.hasLoan && survey.loanDetails.isNotBlank()) Text(survey.loanDetails)
+                    HorizontalDivider()
+                    SurveySummaryRow(
+                        stringResource(R.string.analysis_survey_goal_label),
+                        stringResource(
+                            if (survey.managementDirection == "maintain") {
+                                R.string.analysis_survey_maintain
+                            } else {
+                                R.string.analysis_survey_save
+                            },
+                        ),
                     )
                 }
             }
-            SurveyProfileLine(Icons.Outlined.Person, R.string.analysis_survey_job, survey.job)
-            SurveyProfileLine(Icons.Outlined.Business, R.string.analysis_survey_workplace, survey.workplace)
-            SurveyProfileLine(Icons.Outlined.School, R.string.analysis_survey_education, survey.education)
-            HorizontalDivider()
-            SurveySummaryRow(
-                stringResource(R.string.analysis_survey_loan),
-                stringResource(if (survey.hasLoan) R.string.analysis_survey_yes else R.string.analysis_survey_no),
-            )
-            if (survey.hasLoan && survey.loanDetails.isNotBlank()) Text(survey.loanDetails)
-            HorizontalDivider()
-            SurveySummaryRow(
-                stringResource(R.string.analysis_survey_goal_label),
-                stringResource(
-                    if (survey.managementDirection == "maintain") {
-                        R.string.analysis_survey_maintain
-                    } else {
-                        R.string.analysis_survey_save
-                    },
-                ),
-            )
         }
-        TextButton(onClick = onClick, modifier = Modifier.align(Alignment.End)) {
-            Text(stringResource(R.string.analysis_edit_survey))
-            Icon(Icons.Outlined.ChevronRight, contentDescription = null)
+    }
+}
+
+@Composable
+private fun SurveyDemographics(survey: AnalysisSurvey) {
+    val age = surveyAge(survey.birthDate)
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+    ) {
+        Text(
+            if (age == null) {
+                survey.birthDate.ifBlank { stringResource(R.string.analysis_info_missing) }
+            } else {
+                stringResource(R.string.analysis_age_group, age / 10 * 10, survey.birthDate)
+            },
+        )
+        if (survey.gender == "male" || survey.gender == "female") {
+            val male = survey.gender == "male"
+            Icon(
+                if (male) Icons.Outlined.Male else Icons.Outlined.Female,
+                stringResource(
+                    if (male) R.string.analysis_survey_male else R.string.analysis_survey_female,
+                ),
+                modifier = Modifier.size(14.dp),
+            )
         }
     }
 }
@@ -145,10 +172,10 @@ internal fun surveyAge(birthDate: String, today: LocalDate = LocalDate.now(ZoneI
         ?.let { Period.between(it, today).years }
 
 @Composable
-private fun AnalysisCardHeading(title: Int, modifier: Modifier) {
+private fun AnalysisCardHeading(title: Int, modifier: Modifier, inset: Dp = 8.dp) {
     Text(
         stringResource(title),
-        modifier = modifier.padding(start = 8.dp).semantics { heading() },
+        modifier = modifier.padding(start = inset).semantics { heading() },
         fontSize = 18.sp,
         fontWeight = FontWeight.Bold,
     )
@@ -157,7 +184,7 @@ private fun AnalysisCardHeading(title: Int, modifier: Modifier) {
 @Composable
 private fun SurveyProfileLine(icon: ImageVector, label: Int, value: String) {
     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-        Icon(icon, stringResource(label), modifier = Modifier.size(18.dp))
+        Icon(icon, stringResource(label), modifier = Modifier.size(14.dp))
         Text(value.ifBlank { stringResource(R.string.analysis_info_missing) })
     }
 }
@@ -169,14 +196,13 @@ private fun SurveySummaryRow(label: String, value: String) {
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Text(label, modifier = Modifier.weight(1f), color = MaterialTheme.colorScheme.onSurfaceVariant)
+        Text(label, modifier = Modifier.weight(1f))
         Text(
             value,
             maxLines = 2,
             overflow = TextOverflow.Ellipsis,
             modifier = Modifier.weight(1f),
             fontWeight = FontWeight.SemiBold,
-            fontSize = 14.sp,
         )
     }
 }

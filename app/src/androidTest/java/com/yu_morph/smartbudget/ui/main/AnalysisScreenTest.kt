@@ -5,16 +5,38 @@ import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollTo
+import androidx.compose.ui.unit.dp
 import androidx.test.platform.app.InstrumentationRegistry
 import com.yu_morph.smartbudget.R
 import com.yu_morph.smartbudget.data.remote.model.ReportDetailData
 import com.yu_morph.smartbudget.ui.theme.SmartBudgetTheme
+import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
 
 class AnalysisScreenTest {
     @get:Rule
     val composeRule = createComposeRule()
+
+    @Test
+    fun tappingProfileCardOpensSurvey() {
+        var opened = false
+        composeRule.setContent {
+            SmartBudgetTheme {
+                AnalysisScreen(
+                    bottomPadding = 0.dp,
+                    state = AnalysisUiState(),
+                    onLoad = {},
+                    onEditSurvey = { opened = true },
+                    onNewReport = {},
+                    onOpenReport = {},
+                )
+            }
+        }
+
+        text(R.string.analysis_survey_summary_title).performClick()
+        composeRule.runOnIdle { assertTrue(opened) }
+    }
 
     @Test
     fun surveyScreenShowsAppBarAndSaves() {

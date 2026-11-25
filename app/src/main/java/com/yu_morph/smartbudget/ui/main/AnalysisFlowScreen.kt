@@ -10,14 +10,17 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.selection.selectableGroup
@@ -273,7 +276,11 @@ private fun SurveyScreen(
     ) {
         SurveySection(R.string.analysis_survey_profile_section) {
             EditorField(stringResource(R.string.analysis_survey_gender)) {
-                Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.selectableGroup()) {
+                Row(
+                    modifier = Modifier.height(IntrinsicSize.Min).selectableGroup(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
                     GenderOption(
                         survey.gender,
                         "male",
@@ -419,7 +426,7 @@ private fun GenderOption(
 ) {
     val isSelected = selected == value
     Box(
-        modifier = Modifier.size(48.dp).clip(RoundedCornerShape(14.dp))
+        modifier = Modifier.width(48.dp).fillMaxHeight().clip(RoundedCornerShape(14.dp))
             .background(if (isSelected) tint.copy(alpha = 0.18f) else editorMutedBackground())
             .selectable(selected = isSelected, role = Role.RadioButton, onClick = { onSelect(value) }),
         contentAlignment = Alignment.Center,
@@ -475,7 +482,7 @@ private fun EducationField(value: String, onChange: (String) -> Unit) {
                 readOnly = true,
                 placeholder = stringResource(R.string.analysis_survey_education_hint),
             )
-            Box(Modifier.matchParentSize().clickable { expanded = true })
+            Box(Modifier.matchParentSize().clip(RoundedCornerShape(14.dp)).clickable { expanded = true })
             DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
                 listOf(
                     stringResource(R.string.analysis_education_middle_school),
