@@ -29,15 +29,17 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.yu_morph.smartbudget.R
 import com.yu_morph.smartbudget.data.remote.model.ReportSummaryData
-import com.yu_morph.smartbudget.ui.theme.SmartBudgetGreen
 import java.time.LocalDate
 
 @Composable
@@ -58,15 +60,15 @@ internal fun AnalysisHistory(
             Text(
                 stringResource(R.string.analysis_report_history),
                 modifier = Modifier.weight(1f).semantics { heading() },
-                style = MaterialTheme.typography.titleLarge,
+                fontSize = 18.sp,
                 color = colors.onSurface,
                 fontWeight = FontWeight.Bold,
             )
             Button(
                 onClick = onNewReport,
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = SmartBudgetGreen,
-                    contentColor = colors.onPrimary,
+                    containerColor = colors.surfaceContainerLow,
+                    contentColor = analysisHistoryActionColor(),
                 ),
             ) {
                 Icon(Icons.Outlined.Add, contentDescription = null, modifier = Modifier.size(16.dp))
@@ -124,6 +126,7 @@ private fun HistoryEntries(
         if (state.hasMoreReports) {
             TextButton(
                 onClick = onLoadMore,
+                colors = ButtonDefaults.textButtonColors(contentColor = analysisHistoryActionColor()),
                 enabled = !state.isLoadingHistory,
                 modifier = Modifier.align(Alignment.CenterHorizontally),
             ) {
@@ -141,6 +144,12 @@ private fun HistoryEntries(
             }
         }
     }
+}
+
+@Composable
+private fun analysisHistoryActionColor(): Color {
+    val colors = MaterialTheme.colorScheme
+    return if (colors.surfaceContainerLow.luminance() >= 0.5f) Color.Black else colors.onSurface
 }
 
 @Composable

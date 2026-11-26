@@ -348,7 +348,9 @@
     <string name="analysis_survey_interest">Interests</string>
     <string name="analysis_survey_education">Education</string>
     <string name="analysis_survey_privacy">※ Your information is used only for spending analysis. Data that could identify you is excluded from external requests.</string>
-    <string name="analysis_age_group">%1$ds (%2$s)</string>
+    <string name="analysis_age_group_early">Early %1$ds (%2$s)</string>
+    <string name="analysis_age_group_mid">Mid %1$ds (%2$s)</string>
+    <string name="analysis_age_group_late">Late %1$ds (%2$s)</string>
     <string name="analysis_info_missing">Not provided</string>
     <string name="analysis_loading_title">Analyzing spending</string>
     <string name="analysis_loading_status">Analyzing your spending…</string>

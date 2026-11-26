@@ -69,6 +69,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ImageBitmap
+import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.lerp
@@ -346,7 +347,12 @@ private fun AccountSettings(
 private enum class AccountEditDialog { DISPLAY_NAME, PASSWORD, BUDGET }
 
 @Composable
-internal fun ProfileImage(imageUri: String?, size: Dp = 72.dp, onClick: (() -> Unit)? = null) {
+internal fun ProfileImage(
+    imageUri: String?,
+    size: Dp = 72.dp,
+    shape: Shape = CircleShape,
+    onClick: (() -> Unit)? = null,
+) {
     val context = LocalContext.current
     val bitmap by produceState<ImageBitmap?>(initialValue = null, imageUri) {
         value =
@@ -364,7 +370,7 @@ internal fun ProfileImage(imageUri: String?, size: Dp = 72.dp, onClick: (() -> U
         modifier =
             Modifier
                 .size(size)
-                .clip(CircleShape)
+                .clip(shape)
                 .background(SettingsAvatarBackground)
                 .then(if (onClick != null) Modifier.clickable(onClick = onClick) else Modifier),
         contentAlignment = Alignment.Center,

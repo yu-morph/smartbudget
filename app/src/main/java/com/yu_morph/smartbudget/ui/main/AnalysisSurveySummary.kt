@@ -52,16 +52,20 @@ internal fun AnalysisSurveySummary(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(12.dp),
             ) {
-                ProfileImage(imageUri = profileImageUri, size = 42.dp)
+                ProfileImage(imageUri = profileImageUri, size = 42.dp, shape = RoundedCornerShape(14.dp))
                 Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
                     Text(
                         stringResource(R.string.analysis_survey_summary_title),
                         modifier = Modifier.semantics { heading() },
-                        style = MaterialTheme.typography.titleMedium,
+                        style = MaterialTheme.typography.titleSmall,
                         fontWeight = FontWeight.Bold,
                     )
                     if (displayName.isNotBlank()) {
-                        Text(displayName, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.SemiBold)
+                        Text(
+                            displayName,
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.SemiBold,
+                        )
                     }
                     SurveyDemographics(survey)
                 }
@@ -87,7 +91,7 @@ private fun SurveyDemographics(survey: AnalysisSurvey) {
                 text = if (age == null) {
                     survey.birthDate
                 } else {
-                    stringResource(R.string.analysis_age_group, age / 10 * 10, survey.birthDate)
+                    stringResource(analysisAgeGroupResource(age), age / 10 * 10, survey.birthDate)
                 },
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 style = MaterialTheme.typography.bodySmall,
@@ -103,6 +107,12 @@ private fun SurveyDemographics(survey: AnalysisSurvey) {
             )
         }
     }
+}
+
+internal fun analysisAgeGroupResource(age: Int): Int = when (age % 10) {
+    in 0..3 -> R.string.analysis_age_group_early
+    in 4..6 -> R.string.analysis_age_group_mid
+    else -> R.string.analysis_age_group_late
 }
 
 @OptIn(ExperimentalLayoutApi::class)
