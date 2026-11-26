@@ -121,6 +121,8 @@ class AnalysisScreenTest {
         }
 
         composeRule.onNodeWithText("테스트 사용자").assertIsDisplayed()
+        val context = InstrumentationRegistry.getInstrumentation().targetContext
+        composeRule.onNodeWithContentDescription(context.getString(R.string.settings_profile_image)).assertIsDisplayed()
         text(R.string.analysis_survey_summary_title).performClick()
         composeRule.runOnIdle { assertTrue(opened) }
     }

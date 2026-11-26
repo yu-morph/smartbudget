@@ -149,6 +149,9 @@ internal fun MainScreen(
 ) {
     val context = LocalContext.current
     val tabState = rememberSaveableStateHolder()
+    LaunchedEffect(selectedTab) {
+        if (selectedTab == MainTab.ANALYSIS) onSettingsLoad()
+    }
     val exitConfirmation = remember { ExitConfirmation() }
     BackHandler {
         if (exitConfirmation.shouldExit(SystemClock.elapsedRealtime())) {
@@ -209,6 +212,7 @@ internal fun MainScreen(
                             bottomPadding = innerPadding.calculateBottomPadding(),
                             state = analysisState,
                             displayName = settingsState.displayName,
+                            profileImageUri = settingsState.profileImageUri,
                             onLoad = onAnalysisLoad,
                             onLoadMore = onAnalysisLoadMore,
                             onEditSurvey = onEditAnalysisSurvey,

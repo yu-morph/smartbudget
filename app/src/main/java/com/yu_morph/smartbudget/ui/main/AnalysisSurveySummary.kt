@@ -4,7 +4,6 @@ package com.yu_morph.smartbudget.ui.main
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
@@ -19,7 +18,6 @@ import androidx.compose.material.icons.outlined.Business
 import androidx.compose.material.icons.outlined.ChevronRight
 import androidx.compose.material.icons.outlined.Female
 import androidx.compose.material.icons.outlined.Male
-import androidx.compose.material.icons.outlined.Person
 import androidx.compose.material.icons.outlined.School
 import androidx.compose.material.icons.outlined.WorkOutline
 import androidx.compose.material3.HorizontalDivider
@@ -40,7 +38,12 @@ import androidx.compose.ui.unit.dp
 import com.yu_morph.smartbudget.R
 
 @Composable
-internal fun AnalysisSurveySummary(survey: AnalysisSurvey, displayName: String, onEdit: () -> Unit) {
+internal fun AnalysisSurveySummary(
+    survey: AnalysisSurvey,
+    displayName: String,
+    profileImageUri: String?,
+    onEdit: () -> Unit,
+) {
     val colors = MaterialTheme.colorScheme
     AnalysisPanel(onClick = onEdit) {
         Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
@@ -49,13 +52,7 @@ internal fun AnalysisSurveySummary(survey: AnalysisSurvey, displayName: String, 
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(12.dp),
             ) {
-                Box(
-                    modifier = Modifier.size(42.dp)
-                        .background(colors.primary.copy(alpha = 0.13f), RoundedCornerShape(14.dp)),
-                    contentAlignment = Alignment.Center,
-                ) {
-                    Icon(Icons.Outlined.Person, contentDescription = null, tint = colors.primary)
-                }
+                ProfileImage(imageUri = profileImageUri, size = 42.dp)
                 Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
                     Text(
                         stringResource(R.string.analysis_survey_summary_title),

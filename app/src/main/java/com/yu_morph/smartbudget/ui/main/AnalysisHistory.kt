@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
@@ -48,7 +49,7 @@ internal fun AnalysisHistory(
     onOpenReport: (ReportSummaryData) -> Unit,
 ) {
     val colors = MaterialTheme.colorScheme
-    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+    AnalysisPanel {
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(8.dp),
@@ -58,7 +59,7 @@ internal fun AnalysisHistory(
                 stringResource(R.string.analysis_report_history),
                 modifier = Modifier.weight(1f).semantics { heading() },
                 style = MaterialTheme.typography.titleLarge,
-                color = colors.onBackground,
+                color = colors.onSurface,
                 fontWeight = FontWeight.Bold,
             )
             Button(
@@ -72,12 +73,11 @@ internal fun AnalysisHistory(
                 Text(stringResource(R.string.analysis_new_report), modifier = Modifier.padding(start = 4.dp))
             }
         }
-        AnalysisPanel {
-            if (state.reports.isEmpty()) {
-                EmptyHistory(state, onRetry)
-            } else {
-                HistoryEntries(state, onRetry, onLoadMore, onOpenReport)
-            }
+        Spacer(Modifier.size(8.dp))
+        if (state.reports.isEmpty()) {
+            EmptyHistory(state, onRetry)
+        } else {
+            HistoryEntries(state, onRetry, onLoadMore, onOpenReport)
         }
     }
 }

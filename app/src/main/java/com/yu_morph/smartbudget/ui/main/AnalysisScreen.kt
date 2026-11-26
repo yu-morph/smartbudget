@@ -33,6 +33,7 @@ internal fun AnalysisScreen(
     bottomPadding: Dp,
     state: AnalysisUiState,
     displayName: String,
+    profileImageUri: String? = null,
     onLoad: () -> Unit,
     onLoadMore: () -> Unit,
     onEditSurvey: () -> Unit,
@@ -45,7 +46,7 @@ internal fun AnalysisScreen(
             modifier = Modifier.align(Alignment.CenterHorizontally).widthIn(max = 640.dp).fillMaxWidth(),
             verticalArrangement = Arrangement.spacedBy(20.dp),
         ) {
-            AnalysisSurveySummary(state.survey, displayName, onEditSurvey)
+            AnalysisSurveySummary(state.survey, displayName, profileImageUri, onEditSurvey)
             LatestAnalysisSummary(state, onLoad, onOpenReport)
             AnalysisHistory(state, onLoad, onLoadMore, onNewReport, onOpenReport)
         }
