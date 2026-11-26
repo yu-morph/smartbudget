@@ -11,6 +11,17 @@ import org.junit.Test
 
 class HomeDashboardCoordinatorTest {
     @Test
+    fun `최근 지출은 수입을 제외하고 거래 날짜와 시각으로 선택한다`() {
+        val old = transaction(90, TransactionType.EXPENSE, 1000, date = "2026-11-16")
+        val latest = transaction(2, TransactionType.EXPENSE, 2000).copy(time = "20:00:00")
+        val morning = transaction(3, TransactionType.EXPENSE, 3000).copy(time = "08:00:00")
+        val income = transaction(4, TransactionType.INCOME, 4000, date = "2026-11-18")
+
+        assertEquals(latest, recentHomeExpense(listOf(old, latest, morning, income)))
+        assertEquals(null, recentHomeExpense(listOf(income)))
+    }
+
+    @Test
     fun `수입과 지출을 각각 합산한다`() {
         val transactions =
             listOf(

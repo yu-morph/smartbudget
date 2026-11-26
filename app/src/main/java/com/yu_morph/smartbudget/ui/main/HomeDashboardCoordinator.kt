@@ -29,6 +29,7 @@ data class HomeDashboardUiState(
     val budget: Int = DEFAULT_MONTHLY_BUDGET,
     val spendingTemperature: Double = 36.5,
     val isLoading: Boolean = false,
+    val recentExpense: TransactionData? = null,
 )
 
 data class HomeMonthlyAmounts(val income: Int, val expense: Int)
@@ -43,7 +44,11 @@ class HomeDashboardCoordinator(context: Context, private val api: SmartBudgetApi
     fun load(month: YearMonth = YearMonth.now()) {
         loadJob?.cancel()
         loadJob = scope.launch {
-            state = state.copy(month = month, isLoading = true)
+            state = state.copy(
+                month = month,
+                isLoading = true,
+                recentExpense = state.recentExpense.takeIf { month == state.month },
+            )
             try {
                 val (transactions, budget) = supervisorScope {
                     val transactionRequest = async { loadAllTransactions(month) }
@@ -57,6 +62,13 @@ class HomeDashboardCoordinator(context: Context, private val api: SmartBudgetApi
                         income = amounts?.income ?: state.income,
                         expense = amounts?.expense ?: state.expense,
                         budget = resolvedBudget,
+                        recentExpense = if (transactions ==
+                            null
+                        ) {
+                            state.recentExpense
+                        } else {
+                            recentHomeExpense(transactions)
+                        },
                         spendingTemperature =
                             transactions?.let {
                                 calculateSpendingTemperature(
@@ -156,3 +168,7 @@ internal fun summarizeHomeTransactions(transactions: List<TransactionData>): Hom
             TransactionType.EXPENSE -> summary.copy(expense = summary.expense + transaction.amount)
         }
     }
+
+internal fun recentHomeExpense(transactions: List<TransactionData>): TransactionData? =
+    transactions.asSequence().filter { it.type == TransactionType.EXPENSE }
+        .maxWithOrNull(compareBy<TransactionData> { it.date }.thenBy { it.time.orEmpty() }.thenBy { it.id })

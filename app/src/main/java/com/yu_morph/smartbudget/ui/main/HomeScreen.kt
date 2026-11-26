@@ -74,7 +74,7 @@ internal fun HomeScreen(
             displayName = displayName.ifBlank { stringResource(R.string.settings_profile_default_name) },
         )
         Spacer(Modifier.height(14.dp))
-        SpendingTemperatureCard(temperature = dashboardState.spendingTemperature)
+        HomeSpendingCards(dashboardState)
         Spacer(Modifier.height(14.dp))
         NewsCard(
             state = newsState,
@@ -117,14 +117,14 @@ private fun FinancialOverviewCard(state: HomeDashboardUiState, displayName: Stri
 }
 
 @Composable
-private fun SpendingTemperatureCard(temperature: Double) {
+internal fun SpendingTemperatureCard(temperature: Double, modifier: Modifier = Modifier) {
     Card(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = modifier.fillMaxWidth(),
         shape = RoundedCornerShape(24.dp),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
         elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
     ) {
-        SpendingTemperatureRow(temperature = temperature)
+        SpendingTemperatureRow(temperature = temperature, horizontalPadding = 12.dp)
     }
 }
 
@@ -293,7 +293,7 @@ internal fun budgetUsageColor(progress: Float): Color = when {
 }
 
 @Composable
-private fun formatHomeAmount(amount: Int): String {
+internal fun formatHomeAmount(amount: Int): String {
     val locale = LocalConfiguration.current.locales[0]
     return stringResource(
         R.string.settings_budget_history_amount,

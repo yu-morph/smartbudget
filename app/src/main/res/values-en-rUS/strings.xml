@@ -369,4 +369,7 @@
     <string name="analysis_latest_failed">The latest analysis summary could not be loaded.</string>
     <string name="analysis_latest_no_summary">This report has no AI summary.</string>
     <string name="analysis_retry">Try again</string>
+    <string name="home_recent_expense">Latest expense</string>
+    <string name="home_recent_expense_loading">Loading…</string>
+    <string name="home_recent_expense_empty">No expenses this month</string>
 </resources>

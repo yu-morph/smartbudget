@@ -41,6 +41,7 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
@@ -290,6 +291,11 @@ private fun ReportNoteSection(title: Int, notes: List<ReportNote>, highlighted: 
 @Composable
 private fun ReportNoteRow(note: ReportNote) {
     val colors = MaterialTheme.colorScheme
+    val highlights = if (colors.background.luminance() < 0.5f) {
+        ReportHighlightColors(Color(0xFFFF9292), Color(0xFF8CBFFF), Color(0xFF72DFAD))
+    } else {
+        ReportHighlightColors(Color(0xFFB4232C), Color(0xFF175CB0), Color(0xFF087A55))
+    }
     Row(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.spacedBy(12.dp),
@@ -304,7 +310,7 @@ private fun ReportNoteRow(note: ReportNote) {
                 color = colors.onSurface,
             )
             Text(
-                note.body,
+                highlightReportText(note.body, highlights),
                 style = MaterialTheme.typography.bodyMedium,
                 lineHeight = 23.sp,
                 color = colors.onSurfaceVariant,

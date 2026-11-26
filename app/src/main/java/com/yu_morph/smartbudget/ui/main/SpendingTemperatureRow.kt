@@ -50,7 +50,11 @@ private data class TemperatureAppearance(
 )
 
 @Composable
-internal fun SpendingTemperatureRow(temperature: Double, modifier: Modifier = Modifier) {
+internal fun SpendingTemperatureRow(
+    temperature: Double,
+    modifier: Modifier = Modifier,
+    horizontalPadding: androidx.compose.ui.unit.Dp = 24.dp,
+) {
     val appearance = spendingTemperatureLevel(temperature).appearance()
     val label = stringResource(appearance.label)
     val formattedTemperature = String.format(Locale.US, "%.1f°C", temperature)
@@ -59,7 +63,7 @@ internal fun SpendingTemperatureRow(temperature: Double, modifier: Modifier = Mo
         modifier =
             modifier
                 .fillMaxWidth()
-                .padding(start = 24.dp, top = 20.dp, end = 24.dp, bottom = 20.dp)
+                .padding(horizontal = horizontalPadding, vertical = 20.dp)
                 .semantics { contentDescription = description },
     ) {
         Text(
