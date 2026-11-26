@@ -70,13 +70,20 @@ internal fun AnalysisResultScreen(modifier: Modifier, period: YearMonth, content
                 .padding(start = 20.dp, top = 20.dp, end = 20.dp, bottom = 32.dp),
             verticalArrangement = Arrangement.spacedBy(24.dp),
         ) {
-            Text(
-                stringResource(R.string.analysis_result_title, period.year, period.monthValue),
-                modifier = Modifier.semantics { heading() },
-                style = MaterialTheme.typography.headlineMedium,
-                fontWeight = FontWeight.ExtraBold,
-                color = colors.onBackground,
-            )
+            Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                Text(
+                    stringResource(R.string.analysis_result_title, period.year, period.monthValue),
+                    modifier = Modifier.semantics { heading() },
+                    style = MaterialTheme.typography.headlineMedium,
+                    fontWeight = FontWeight.ExtraBold,
+                    color = colors.onBackground,
+                )
+                Text(
+                    stringResource(R.string.analysis_result_subtitle),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = colors.onSurfaceVariant,
+                )
+            }
             if (content?.hasReadableSection == true) {
                 ReportContent(content)
             } else {

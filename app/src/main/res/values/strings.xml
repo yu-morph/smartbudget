@@ -359,6 +359,7 @@
     <string name="analysis_loading_subtitle">거래 내역과 소비 패턴을 꼼꼼히 살펴보고 있어요.</string>
     <string name="analysis_loading_wait">잠시만 기다려주세요</string>
     <string name="analysis_result_title">%1$d년 %2$d월 소비 분석</string>
+    <string name="analysis_result_subtitle">한 달의 지출을 돌아보고, 다음 달의 소비를 계획해 보세요.</string>
     <string name="analysis_result_app_bar">소비 분석 리포트</string>
     <string name="analysis_result_ai_title">AI의 한마디</string>
     <string name="analysis_result_ai_body">전반적으로 잘 관리하고 있지만 외식 지출이 꾸준히 늘고 있어요. 이번 주에는 외식을 한 번 줄여보세요.</string>

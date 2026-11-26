@@ -328,6 +328,7 @@
     <string name="analysis_result_advice_heading">Spending advice</string>
     <string name="analysis_result_insights_heading">Spending insights</string>
     <string name="analysis_result_title">Spending analysis for %2$d/%1$d</string>
+    <string name="analysis_result_subtitle">Review this month’s spending and plan for the next.</string>
     <string name="analysis_result_app_bar">Spending analysis report</string>
     <string name="analysis_result_ai_title">AI summary</string>
     <string name="analysis_result_categories_title">Most frequent spending</string>
