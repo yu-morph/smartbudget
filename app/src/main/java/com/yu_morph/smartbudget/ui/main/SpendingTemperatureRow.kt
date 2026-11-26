@@ -9,6 +9,8 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
@@ -63,10 +65,12 @@ internal fun SpendingTemperatureRow(
         modifier =
             modifier
                 .fillMaxWidth()
+                .fillMaxHeight()
                 .padding(horizontal = horizontalPadding, vertical = 20.dp)
                 .semantics { contentDescription = description },
     ) {
         HomeSpendingCardHeading(stringResource(R.string.home_spending_temperature))
+        Spacer(Modifier.weight(1f))
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween,
