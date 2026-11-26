@@ -124,7 +124,7 @@ internal fun SpendingTemperatureCard(temperature: Double, modifier: Modifier = M
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
         elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
     ) {
-        SpendingTemperatureRow(temperature = temperature, horizontalPadding = 12.dp)
+        SpendingTemperatureRow(temperature = temperature, horizontalPadding = 20.dp)
     }
 }
 

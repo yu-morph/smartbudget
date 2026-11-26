@@ -1164,7 +1164,7 @@ private fun PreviousMonthBudgetStatus(budgetAmount: Int?, usedAmount: Int) {
     val progress = budgetUsageProgress(budgetAmount, usedAmount)
     val progressColor = progress?.let(::budgetUsageColor) ?: MaterialTheme.colorScheme.outlineVariant
     Column(
-        modifier = Modifier.fillMaxWidth().padding(bottom = 4.dp),
+        modifier = Modifier.fillMaxWidth().padding(start = 4.dp, end = 4.dp, bottom = 4.dp),
         verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {
         Row(
@@ -1219,7 +1219,7 @@ private fun MonthlyMetrics(stats: MonthlyLedgerStats) {
             else -> CalendarIncomeColor
         }
     Row(
-        modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
+        modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp, horizontal = 4.dp),
         horizontalArrangement = Arrangement.spacedBy(16.dp),
     ) {
         MonthlyMetric(
@@ -1303,9 +1303,14 @@ private fun MonthlyMetric(
 @Composable
 private fun CategoryStatisticsTags(title: String, tags: List<CategoryStatTag>) {
     Column(verticalArrangement = Arrangement.spacedBy(5.dp)) {
-        Text(title, color = MaterialTheme.colorScheme.onSurfaceVariant, fontSize = 11.sp)
+        Text(
+            title,
+            modifier = Modifier.fillMaxWidth().padding(start = 4.dp, end = 4.dp),
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            fontSize = 11.sp,
+        )
         Row(
-            modifier = Modifier.fillMaxWidth().padding(bottom = 4.dp),
+            modifier = Modifier.fillMaxWidth().padding(start = 4.dp, end = 4.dp, bottom = 4.dp),
             horizontalArrangement = Arrangement.spacedBy(6.dp),
         ) {
             tags.forEach { tag ->

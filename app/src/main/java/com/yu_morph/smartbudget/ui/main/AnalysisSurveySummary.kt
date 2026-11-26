@@ -76,7 +76,7 @@ internal fun AnalysisSurveySummary(
                 )
             }
             SurveyAttributes(survey)
-            HorizontalDivider(color = colors.outlineVariant.copy(alpha = 0.5f))
+            HorizontalDivider(color = colors.outlineVariant.copy(alpha = 0.2f))
             SurveyGoals(survey)
         }
     }
@@ -136,7 +136,7 @@ private fun SurveyAttribute(icon: ImageVector, label: Int, value: String) {
         val colors = MaterialTheme.colorScheme
         Row(
             modifier = Modifier.background(colors.surfaceVariant.copy(alpha = 0.32f), RoundedCornerShape(8.dp))
-                .padding(horizontal = 8.dp, vertical = 6.dp),
+                .padding(horizontal = 10.dp, vertical = 6.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(5.dp),
         ) {

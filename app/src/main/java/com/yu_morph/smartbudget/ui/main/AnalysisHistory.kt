@@ -112,7 +112,7 @@ private fun HistoryEntries(
     val colors = MaterialTheme.colorScheme
     Column {
         state.reports.forEachIndexed { index, report ->
-            if (index > 0) HorizontalDivider(color = colors.outlineVariant.copy(alpha = 0.45f))
+            if (index > 0) HorizontalDivider(color = colors.outlineVariant.copy(alpha = 0.2f))
             HistoryRow(report, number = index + 1, goal = state.reportGoals[report.id]) { onOpenReport(report) }
         }
         state.historyFailure?.let {

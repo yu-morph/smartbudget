@@ -178,7 +178,8 @@ internal fun ReportSummary(
             Text(
                 body,
                 style = MaterialTheme.typography.bodyLarge,
-                lineHeight = 26.sp,
+                fontSize = 14.sp,
+                lineHeight = 22.sp,
                 color = Color.White,
                 maxLines = maxLines,
                 overflow = TextOverflow.Ellipsis,

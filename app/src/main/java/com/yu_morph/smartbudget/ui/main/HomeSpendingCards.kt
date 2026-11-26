@@ -6,7 +6,6 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
@@ -26,16 +25,17 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.yu_morph.smartbudget.R
 
 @Composable
 internal fun HomeSpendingCards(state: HomeDashboardUiState) {
     Row(
-        modifier = Modifier.fillMaxWidth().height(IntrinsicSize.Min),
-        horizontalArrangement = Arrangement.spacedBy(10.dp),
+        modifier = Modifier.fillMaxWidth().height(100.dp),
+        horizontalArrangement = Arrangement.spacedBy(12.dp),
     ) {
-        RecentExpenseCard(state, Modifier.weight(2f).fillMaxHeight())
-        SpendingTemperatureCard(state.spendingTemperature, Modifier.weight(3f).fillMaxHeight())
+        RecentExpenseCard(state, Modifier.weight(3f).fillMaxHeight())
+        SpendingTemperatureCard(state.spendingTemperature, Modifier.weight(2f).fillMaxHeight())
     }
 }
 
@@ -48,7 +48,7 @@ private fun RecentExpenseCard(state: HomeDashboardUiState, modifier: Modifier) {
         colors = CardDefaults.cardColors(containerColor = colors.surface),
     ) {
         Column(
-            modifier = Modifier.fillMaxWidth().fillMaxHeight().padding(horizontal = 12.dp, vertical = 20.dp),
+            modifier = Modifier.fillMaxWidth().fillMaxHeight().padding(horizontal = 20.dp, vertical = 16.dp),
         ) {
             HomeSpendingCardHeading(stringResource(R.string.home_recent_expense))
             Spacer(Modifier.height(8.dp))
@@ -60,25 +60,30 @@ private fun RecentExpenseCard(state: HomeDashboardUiState, modifier: Modifier) {
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
                     Box(
-                        modifier = Modifier.size(28.dp)
+                        modifier = Modifier.size(20.dp)
                             .background(category.color.copy(alpha = 0.15f), RoundedCornerShape(8.dp)),
                         contentAlignment = Alignment.Center,
                     ) {
-                        Icon(category.icon, null, modifier = Modifier.size(17.dp), tint = category.color)
+                        Icon(category.icon, null, modifier = Modifier.size(12.dp), tint = category.color)
                     }
                     Text(
                         stringResource(category.label),
                         color = category.color,
                         style = MaterialTheme.typography.bodyMedium,
+                        fontSize = 13.sp,
+                        lineHeight = 13.sp,
                         fontWeight = FontWeight.SemiBold,
                     )
                 }
-                Spacer(Modifier.weight(1f).height(4.dp))
+                Spacer(Modifier.weight(1f).height(2.dp))
                 Text(
                     formatHomeAmount(expense.amount),
-                    modifier = Modifier.align(Alignment.End),
+                    modifier = Modifier.align(Alignment.Start),
+                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.92f),
                     textAlign = androidx.compose.ui.text.style.TextAlign.End,
                     style = MaterialTheme.typography.titleMedium,
+                    fontSize = 14.sp,
+                    lineHeight = 14.sp,
                     fontWeight = FontWeight.Bold,
                 )
             } else {
