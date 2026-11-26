@@ -30,11 +30,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.semantics.heading
-import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.yu_morph.smartbudget.R
 
 @Composable
@@ -54,16 +53,11 @@ internal fun AnalysisSurveySummary(
             ) {
                 ProfileImage(imageUri = profileImageUri, size = 42.dp, shape = RoundedCornerShape(14.dp))
                 Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                    Text(
-                        stringResource(R.string.analysis_survey_summary_title),
-                        modifier = Modifier.semantics { heading() },
-                        style = MaterialTheme.typography.titleSmall,
-                        fontWeight = FontWeight.Bold,
-                    )
                     if (displayName.isNotBlank()) {
                         Text(
                             displayName,
                             style = MaterialTheme.typography.titleMedium,
+                            fontSize = 16.sp,
                             fontWeight = FontWeight.SemiBold,
                         )
                     }
@@ -85,14 +79,7 @@ internal fun AnalysisSurveySummary(
 @Composable
 private fun SurveyDemographics(survey: AnalysisSurvey) {
     val age = surveyAge(survey.birthDate)
-    Row(horizontalArrangement = Arrangement.spacedBy(5.dp), verticalAlignment = Alignment.CenterVertically) {
-        if (age != null) {
-            Text(
-                text = stringResource(analysisAgeGroupResource(age), age / 10 * 10),
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                style = MaterialTheme.typography.bodySmall,
-            )
-        }
+    Row(horizontalArrangement = Arrangement.spacedBy(2.dp), verticalAlignment = Alignment.CenterVertically) {
         if (survey.gender == "male" || survey.gender == "female") {
             val male = survey.gender == "male"
             Icon(
@@ -100,6 +87,13 @@ private fun SurveyDemographics(survey: AnalysisSurvey) {
                 stringResource(if (male) R.string.analysis_survey_male else R.string.analysis_survey_female),
                 modifier = Modifier.size(16.dp),
                 tint = if (male) Color(0xFF2879CB) else Color(0xFFD04459),
+            )
+        }
+        if (age != null) {
+            Text(
+                text = stringResource(analysisAgeGroupResource(age), age / 10 * 10),
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                style = MaterialTheme.typography.bodySmall,
             )
         }
     }
