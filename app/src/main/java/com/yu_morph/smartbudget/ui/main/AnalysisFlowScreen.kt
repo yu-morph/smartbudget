@@ -40,7 +40,6 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -63,8 +62,6 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
-import androidx.compose.ui.semantics.heading
-import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
@@ -175,15 +172,8 @@ internal fun AnalysisFlowScreen(
     }
     val title = when (step) {
         AnalysisFlowStep.SURVEY -> stringResource(R.string.analysis_survey_title)
-
-        AnalysisFlowStep.RESULT -> stringResource(
-            R.string.analysis_result_title,
-            reportPeriod?.year ?: year,
-            reportPeriod?.monthValue ?: month,
-        )
-
+        AnalysisFlowStep.RESULT -> stringResource(R.string.analysis_result_app_bar)
         AnalysisFlowStep.REQUEST -> stringResource(R.string.analysis_title)
-
         AnalysisFlowStep.LOADING -> stringResource(R.string.analysis_loading_title)
     }
     Scaffold(
@@ -251,6 +241,7 @@ internal fun AnalysisFlowScreen(
                 message = R.string.analysis_loading_status,
             )
 
+                period = reportPeriod ?: YearMonth.of(year, month),
             AnalysisFlowStep.RESULT -> AnalysisResultScreen(
                 modifier = Modifier.padding(innerPadding),
                 content = analysisState.activeContent,
@@ -596,66 +587,6 @@ private fun AnalysisMonthControl(selectedMonth: YearMonth, onChange: (Long) -> U
         )
         IconButton(enabled = selectedMonth < YearMonth.now(analysisZone), onClick = { onChange(1) }) {
             Icon(Icons.Outlined.ChevronRight, stringResource(R.string.analysis_next_month))
-        }
-    }
-}
-
-@Composable
-private fun AnalysisResultScreen(modifier: Modifier, content: AnalysisReportContent?) {
-    Column(
-        modifier = modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)
-            .verticalScroll(rememberScrollState()),
-    ) {
-        if (content != null) {
-            val categories = content.topSpendingCategories
-            val sections = listOf(
-                R.string.analysis_result_ai_title to content.aWordFromAi,
-                R.string.analysis_result_categories_title to null,
-                R.string.analysis_result_health_title to content.spendingHealth,
-                R.string.analysis_result_weekday_title to content.spendingByDayOfWeek,
-                R.string.analysis_result_news_title to content.newsDrivenInsights,
-                R.string.analysis_result_save_advice to content.tipsForSaving,
-                R.string.analysis_result_maintain_advice to content.tipsToKeepItUp,
-                R.string.analysis_result_interest_title to content.tipsForInterests,
-            ).filter { (title, body) ->
-                body != null || (title == R.string.analysis_result_categories_title && categories.isNotEmpty())
-            }
-            sections.forEachIndexed { index, (title, body) ->
-                if (index > 0) HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
-                Column(
-                    modifier = Modifier.fillMaxWidth().padding(horizontal = 20.dp, vertical = 18.dp),
-                    verticalArrangement = Arrangement.spacedBy(8.dp),
-                ) {
-                    Text(
-                        stringResource(title),
-                        modifier = Modifier.semantics { heading() },
-                        style = MaterialTheme.typography.titleMedium,
-                    )
-                    if (body != null) {
-                        Text(body, lineHeight = 22.sp)
-                    } else {
-                        categories.forEach { AnalysisCategoryRow(it) }
-                    }
-                }
-            }
-        }
-    }
-}
-
-@Composable
-private fun AnalysisCategoryRow(category: AnalysisCategoryInsight) {
-    Column(modifier = Modifier.fillMaxWidth().padding(vertical = 6.dp)) {
-        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-            Text(category.name, fontWeight = FontWeight.Bold)
-            category.occurrence?.let { Text(stringResource(R.string.analysis_result_occurrence, it)) }
-        }
-        if (category.tip.isNotBlank()) {
-            Text(
-                category.tip,
-                modifier = Modifier.padding(top = 4.dp),
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                lineHeight = 20.sp,
-            )
         }
     }
 }

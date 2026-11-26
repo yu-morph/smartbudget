@@ -68,6 +68,7 @@ class AnalysisScreenTest {
     fun generatedReportShowsServerAnalysisInDarkMode() {
         showAnalysisFlow(initialStep = AnalysisFlowStep.RESULT, darkTheme = true)
 
+        text(R.string.analysis_result_app_bar).assertIsDisplayed()
         text(R.string.analysis_result_title, 2026, 10).assertIsDisplayed()
         composeRule.onNodeWithText("서버가 생성한 분석이에요.").assertIsDisplayed()
         val weekday = text(R.string.analysis_result_weekday_title).fetchSemanticsNode()

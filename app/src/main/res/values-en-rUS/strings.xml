@@ -326,6 +326,9 @@
     <string name="analysis_survey_finance_section">Loans</string>
     <string name="analysis_survey_goal_section">Goals and interests</string>
     <string name="analysis_result_advice_heading">Spending advice</string>
+    <string name="analysis_result_title">Spending analysis for %2$d/%1$d</string>
+    <string name="analysis_result_app_bar">Spending analysis report</string>
+    <string name="analysis_result_categories_title">Most frequent spending</string>
     <string name="analysis_result_occurrence">%1$d times</string>
     <string name="analysis_error_authentication">Your session has expired. Please sign in again.</string>
     <string name="analysis_error_no_transactions">There are no transactions to analyze for this month.</string>

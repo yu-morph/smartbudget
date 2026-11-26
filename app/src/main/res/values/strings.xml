@@ -358,12 +358,13 @@
     <string name="analysis_loading_subtitle">거래 내역과 소비 패턴을 꼼꼼히 살펴보고 있어요.</string>
     <string name="analysis_loading_wait">잠시만 기다려주세요</string>
     <string name="analysis_result_title">%1$d년 %2$d월 소비 분석</string>
+    <string name="analysis_result_app_bar">소비 분석 리포트</string>
     <string name="analysis_result_ai_title">AI의 한마디</string>
     <string name="analysis_result_ai_body">전반적으로 잘 관리하고 있지만 외식 지출이 꾸준히 늘고 있어요. 이번 주에는 외식을 한 번 줄여보세요.</string>
     <string name="analysis_result_total_title">이번 달 총지출</string>
     <string name="analysis_result_total">1,240,000원</string>
     <string name="analysis_result_change" formatted="false">+10,000원 (+0.8%)</string>
-    <string name="analysis_result_categories_title">많이 쓴 항목</string>
+    <string name="analysis_result_categories_title">자주 발생한 소비</string>
     <string name="analysis_result_occurrence">%1$d회</string>
     <string name="analysis_result_food_category">식비</string>
     <string name="analysis_result_food_count">24회</string>
