@@ -66,13 +66,7 @@ internal fun SpendingTemperatureRow(
                 .padding(horizontal = horizontalPadding, vertical = 20.dp)
                 .semantics { contentDescription = description },
     ) {
-        Text(
-            text = stringResource(R.string.home_spending_temperature),
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            fontSize = 12.sp,
-            lineHeight = 12.sp,
-            fontWeight = FontWeight.SemiBold,
-        )
+        HomeSpendingCardHeading(stringResource(R.string.home_spending_temperature))
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween,
@@ -105,6 +99,17 @@ internal fun SpendingTemperatureRow(
             position = spendingTemperaturePosition(temperature),
         )
     }
+}
+
+@Composable
+internal fun HomeSpendingCardHeading(title: String) {
+    Text(
+        text = title,
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
+        fontSize = 12.sp,
+        lineHeight = 12.sp,
+        fontWeight = FontWeight.SemiBold,
+    )
 }
 
 @Composable
