@@ -419,4 +419,11 @@
     <string name="sample_report_goal">예산 목표 달성</string>
     <string name="analysis_age_group">%1$d대 (%2$s)</string>
     <string name="analysis_info_missing">미입력</string>
+    <string name="analysis_report_more">더 보기</string>
+    <string name="analysis_report_period">기간: %1$d월 %2$d일~%3$d월 %4$d일</string>
+    <string name="analysis_report_period_unknown">기간 정보 없음</string>
+    <string name="analysis_report_goal_save">절약</string>
+    <string name="analysis_report_goal_maintain">유지</string>
+    <string name="analysis_report_id">#%1$d</string>
+    <string name="analysis_report_goal_period">%1$s · %2$s</string>
 </resources>

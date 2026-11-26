@@ -57,8 +57,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.yu_morph.smartbudget.R
 import java.time.LocalDate
-import java.time.Period
-import java.time.ZoneId
 
 internal val AnalysisSlate = Color(0xFF667386)
 internal val AnalysisBlue = Color(0xFF8CA2B8)
@@ -69,6 +67,7 @@ internal fun AnalysisScreen(
     state: AnalysisUiState,
     displayName: String,
     onLoad: () -> Unit,
+    onLoadMore: () -> Unit,
     onEditSurvey: () -> Unit,
     onNewReport: () -> Unit,
     onOpenReport: (com.yu_morph.smartbudget.data.remote.model.ReportSummaryData) -> Unit,
@@ -81,6 +80,7 @@ internal fun AnalysisScreen(
         PreviousReportsCard(
             state = state,
             onNewReport = onNewReport,
+            onLoadMore = onLoadMore,
             onReportClick = onOpenReport,
         )
         Spacer(Modifier.height(16.dp))
@@ -209,11 +209,6 @@ private fun SurveyDemographics(survey: AnalysisSurvey) {
     }
 }
 
-internal fun surveyAge(birthDate: String, today: LocalDate = LocalDate.now(ZoneId.of("Asia/Seoul"))): Int? =
-    runCatching { LocalDate.parse(birthDate) }.getOrNull()
-        ?.takeUnless { it.isAfter(today) }
-        ?.let { Period.between(it, today).years }
-
 @Composable
 private fun AnalysisCardHeading(title: Int, modifier: Modifier, inset: Dp = 8.dp) {
     Text(
@@ -256,6 +251,7 @@ private fun SurveySummaryRow(label: String, value: String) {
 @Composable
 private fun PreviousReportsCard(
     state: AnalysisUiState,
+    onLoadMore: () -> Unit,
     onNewReport: () -> Unit,
     onReportClick: (com.yu_morph.smartbudget.data.remote.model.ReportSummaryData) -> Unit,
 ) {
@@ -278,13 +274,13 @@ private fun PreviousReportsCard(
         }
         Spacer(Modifier.height(8.dp))
         when {
-            state.isLoadingHistory -> Text(
+            state.isLoadingHistory && state.reports.isEmpty() -> Text(
                 stringResource(R.string.analysis_history_loading),
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
 
-            state.failure != null && state.reports.isEmpty() -> Text(
-                analysisFailureMessage(state.failure),
+            state.historyFailure != null && state.reports.isEmpty() -> Text(
+                analysisFailureMessage(state.historyFailure),
                 color = MaterialTheme.colorScheme.error,
             )
 
@@ -294,46 +290,98 @@ private fun PreviousReportsCard(
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
 
-            else -> state.reports.forEachIndexed { index, report ->
-                ReportRow(report = report) { onReportClick(report) }
-                if (index != state.reports.lastIndex) HorizontalDivider()
+            else -> {
+                ReportHistoryEntries(state, onLoadMore, onReportClick)
             }
         }
     }
 }
 
 @Composable
-private fun ReportRow(report: com.yu_morph.smartbudget.data.remote.model.ReportSummaryData, onClick: () -> Unit) {
-    val month = runCatching { LocalDate.parse(report.periodStart) }.getOrNull()
+private fun ReportHistoryEntries(
+    state: AnalysisUiState,
+    onLoadMore: () -> Unit,
+    onReportClick: (com.yu_morph.smartbudget.data.remote.model.ReportSummaryData) -> Unit,
+) {
+    Column {
+        state.reports.forEachIndexed { index, report ->
+            ReportRow(report, state.reportGoals[report.id]) { onReportClick(report) }
+            if (index != state.reports.lastIndex) HorizontalDivider()
+        }
+        state.historyFailure?.let {
+            Text(analysisFailureMessage(it), color = MaterialTheme.colorScheme.error, fontSize = 13.sp)
+        }
+        if (state.hasMoreReports) {
+            TextButton(
+                onClick = onLoadMore,
+                enabled = !state.isLoadingHistory,
+                modifier = Modifier.align(Alignment.CenterHorizontally),
+            ) {
+                Text(
+                    stringResource(
+                        if (state.isLoadingHistory) {
+                            R.string.analysis_history_loading
+                        } else {
+                            R.string.analysis_report_more
+                        },
+                    ),
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun ReportRow(
+    report: com.yu_morph.smartbudget.data.remote.model.ReportSummaryData,
+    goal: String?,
+    onClick: () -> Unit,
+) {
+    val start = runCatching { LocalDate.parse(report.periodStart) }.getOrNull()
+    val end = runCatching { LocalDate.parse(report.periodEnd) }.getOrNull()
+    val period = if (start != null && end != null) {
+        stringResource(
+            R.string.analysis_report_period,
+            start.monthValue,
+            start.dayOfMonth,
+            end.monthValue,
+            end.dayOfMonth,
+        )
+    } else {
+        stringResource(R.string.analysis_report_period_unknown)
+    }
+    val goalLabel = when (goal) {
+        "save" -> stringResource(R.string.analysis_report_goal_save)
+        "maintain" -> stringResource(R.string.analysis_report_goal_maintain)
+        else -> null
+    }
     Row(
         modifier = Modifier.fillMaxWidth().clickable(onClick = onClick).padding(vertical = 11.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Box(
-            modifier = Modifier.size(36.dp).background(MaterialTheme.colorScheme.surfaceVariant, CircleShape),
-            contentAlignment = Alignment.Center,
-        ) {
-            Icon(
-                Icons.Outlined.CalendarMonth,
-                null,
-                modifier = Modifier.size(18.dp),
-                tint = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
-        }
-        Column(modifier = Modifier.padding(start = 12.dp).weight(1f)) {
+        Text(
+            stringResource(R.string.analysis_report_id, report.id),
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            fontSize = 11.sp,
+        )
+        Column(modifier = Modifier.padding(horizontal = 12.dp).weight(1f)) {
             Text(
-                stringResource(R.string.analysis_report_month, month?.year ?: 0, month?.monthValue ?: 0),
+                start?.let { stringResource(R.string.analysis_report_month, it.year, it.monthValue) }
+                    ?: stringResource(R.string.analysis_report_history),
                 fontWeight = FontWeight.SemiBold,
             )
             Text(
-                if (report.isStale) {
-                    stringResource(R.string.analysis_report_stale)
-                } else {
-                    stringResource(R.string.analysis_report_ready)
-                },
+                goalLabel?.let { stringResource(R.string.analysis_report_goal_period, it, period) } ?: period,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 fontSize = 12.sp,
             )
+            if (report.isStale) {
+                Text(
+                    stringResource(R.string.analysis_report_stale),
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    fontSize = 12.sp,
+                )
+            }
         }
         Icon(Icons.Outlined.ChevronRight, null, tint = MaterialTheme.colorScheme.onSurfaceVariant)
     }

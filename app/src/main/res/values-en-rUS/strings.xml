@@ -343,4 +343,11 @@
     <string name="analysis_loading_status">Analyzing your spending…</string>
     <string name="analysis_error_invalid_request">The analysis request could not be processed. Check the selected month and survey details.</string>
     <string name="analysis_error_provider">The server could not get a result from the spending analysis service. Try again later.</string>
+    <string name="analysis_report_more">Show more</string>
+    <string name="analysis_report_period">Period: %1$d/%2$d–%3$d/%4$d</string>
+    <string name="analysis_report_period_unknown">Period unavailable</string>
+    <string name="analysis_report_goal_save">Save</string>
+    <string name="analysis_report_goal_maintain">Maintain</string>
+    <string name="analysis_report_id">#%1$d</string>
+    <string name="analysis_report_goal_period">%1$s · %2$s</string>
 </resources>

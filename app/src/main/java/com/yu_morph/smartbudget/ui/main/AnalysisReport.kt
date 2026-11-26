@@ -151,3 +151,8 @@ internal fun todayNewsTitles(
 
 private const val MIN_ANALYSIS_AGE = 10
 private const val MAX_ANALYSIS_AGE = 150
+
+internal fun surveyAge(birthDate: String, today: LocalDate = LocalDate.now(ZoneId.of("Asia/Seoul"))): Int? =
+    runCatching { LocalDate.parse(birthDate) }.getOrNull()
+        ?.takeUnless { it.isAfter(today) }
+        ?.let { Period.between(it, today).years }

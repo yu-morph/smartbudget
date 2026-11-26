@@ -416,6 +416,7 @@ private fun AuthenticationContent(
                 },
                 analysisState = analysisCoordinator.state,
                 onAnalysisLoad = { analysisCoordinator.loadHistory() },
+                onAnalysisLoadMore = analysisCoordinator::loadMoreHistory,
                 onEditAnalysisSurvey = onEditAnalysisSurvey,
                 onNewAnalysisReport = onNewAnalysisReport,
                 onOpenAnalysisReport = onOpenAnalysisReport,

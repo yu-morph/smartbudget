@@ -46,6 +46,9 @@ internal data class AnalysisUiState(
     val activeReport: ReportDetailData? = null,
     val activeContent: AnalysisReportContent? = null,
     val isLoadingHistory: Boolean = false,
+    val hasMoreReports: Boolean = false,
+    val historyFailure: AnalysisFailure? = null,
+    val reportGoals: Map<Int, String> = emptyMap(),
     val isLoadingReport: Boolean = false,
     val isGenerating: Boolean = false,
     val failure: AnalysisFailure? = null,
@@ -63,7 +66,12 @@ internal class AnalysisCoordinator(
 ) : Closeable {
     private var historyJob: Job? = null
     private var reportJob: Job? = null
+    private val reportGoals = context.applicationContext.getSharedPreferences(
+        "analysis_report_goals",
+        Context.MODE_PRIVATE,
+    )
     private var historyRequested = false
+    private var historyPage = MonthlyReportPage()
     private var surveyOwner: String? = null
 
     var state by mutableStateOf(AnalysisUiState())
@@ -71,30 +79,54 @@ internal class AnalysisCoordinator(
 
     fun loadHistory(force: Boolean = false) {
         restoreSurvey()
-        if (force) {
-            historyJob?.cancel()
-        } else if (historyRequested || historyJob?.isActive == true) {
-            return
-        }
-        historyRequested = true
-        historyJob = scope.launch {
-            state = state.copy(isLoadingHistory = true, failure = null)
-            try {
-                when (val result = api.reports.list()) {
-                    is ApiResult.Success -> state = state.copy(
-                        reports = result.data?.items.orEmpty().filter { it.periodType == MONTHLY_PERIOD_TYPE },
-                    )
+        if (force) historyJob?.cancel()
+        if (force || (!historyRequested && historyJob?.isActive != true)) loadHistoryPage(replace = true)
+    }
 
-                    else -> state = state.copy(failure = result.toAnalysisFailure())
-                }
+    fun loadMoreHistory() {
+        if (state.hasMoreReports && historyJob?.isActive != true) loadHistoryPage(replace = false)
+    }
+
+    private fun loadHistoryPage(replace: Boolean) {
+        historyJob = scope.launch {
+            state = state.copy(isLoadingHistory = true, historyFailure = null)
+            try {
+                val previousPage = if (replace) MonthlyReportPage() else historyPage
+                val page = previousPage.load { query -> api.reports.list(query) }
+                historyPage = page
+                val existing = if (replace) emptyList() else state.reports
+                val reports = (existing + page.visible).distinctBy { it.id }
+                historyRequested = true
+                state = state.copy(
+                    reports = reports,
+                    hasMoreReports = page.buffered.isNotEmpty(),
+                    reportGoals = readReportGoals(reports),
+                )
             } catch (exception: CancellationException) {
                 throw exception
+            } catch (exception: ReportHistoryException) {
+                state = state.copy(historyFailure = exception.failure)
             } catch (_: Exception) {
-                state = state.copy(failure = AnalysisFailure.SERVICE)
+                state = state.copy(historyFailure = AnalysisFailure.SERVICE)
             } finally {
                 state = state.copy(isLoadingHistory = false)
             }
         }
+    }
+
+    private fun readReportGoals(reports: List<ReportSummaryData>): Map<Int, String> {
+        val username = userIdentityStore.readUsername() ?: return emptyMap()
+        return reports.mapNotNull { report ->
+            val goal = reportGoals.getString(reportGoalKey(username, report.id, report.generatedAt), null)
+            goal?.let { report.id to it }
+        }.toMap()
+    }
+
+    private fun rememberReportGoal(report: ReportDetailData, survey: AnalysisSurvey) {
+        val username = userIdentityStore.readUsername() ?: return
+        reportGoals.edit()
+            .putString(reportGoalKey(username, report.id, report.generatedAt), survey.managementDirection)
+            .apply()
     }
 
     fun generate(month: YearMonth, survey: AnalysisSurvey) {
@@ -110,8 +142,10 @@ internal class AnalysisCoordinator(
                 val today = LocalDate.now(clock)
                 val news = loadTodayNews(today)
                 val request = buildMonthlyReportRequest(month, survey, news, today)
-                applyReportResult(api.reports.requestReport(request, UUID.randomUUID().toString()))
-                if (state.activeReport != null) loadHistory(force = true)
+                val result = api.reports.requestReport(request, UUID.randomUUID().toString())
+                (result as? ApiResult.Success)?.data?.let { rememberReportGoal(it, survey) }
+                applyReportResult(result)
+                if (result is ApiResult.Success) loadHistory(force = true)
             } catch (exception: CancellationException) {
                 throw exception
             } catch (_: Exception) {
@@ -159,6 +193,7 @@ internal class AnalysisCoordinator(
         historyJob?.cancel()
         reportJob?.cancel()
         historyRequested = false
+        historyPage = MonthlyReportPage()
         surveyOwner = null
         api.reports.invalidateCache()
         state = AnalysisUiState()
@@ -213,7 +248,6 @@ internal class AnalysisCoordinator(
 
     private companion object {
         val KOREA_ZONE: ZoneId = ZoneId.of("Asia/Seoul")
-        const val MONTHLY_PERIOD_TYPE = "monthly"
     }
 }
 

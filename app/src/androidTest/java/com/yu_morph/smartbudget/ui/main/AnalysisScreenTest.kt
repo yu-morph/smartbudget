@@ -44,6 +44,7 @@ class AnalysisScreenTest {
                     state = AnalysisUiState(),
                     displayName = "테스트 사용자",
                     onLoad = {},
+                    onLoadMore = {},
                     onEditSurvey = { opened = true },
                     onNewReport = {},
                     onOpenReport = {},
