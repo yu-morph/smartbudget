@@ -11,12 +11,13 @@ import org.junit.Test
 
 class MonthlyReportPageTest {
     @Test
-    fun showsThreeMonthlyReportsPerPageAndKeepsOneAsLookahead() = runBlocking {
+    fun countsAllMonthlyReportsAndRevealsThreeAtATime() = runBlocking {
         val source = (1..8).map { report(it, if (it == 2) "daily" else "monthly") }
         val first = MonthlyReportPage().load { page(source, it.cursor, requireNotNull(it.limit)) }
-        val second = first.load { page(source, it.cursor, requireNotNull(it.limit)) }
-        val third = second.load { page(source, it.cursor, requireNotNull(it.limit)) }
+        val second = first.load { error("추가 요청 없이 저장된 목록을 펼쳐야 합니다.") }
+        val third = second.load { error("추가 요청 없이 저장된 목록을 펼쳐야 합니다.") }
 
+        assertEquals(7, first.visible.size + first.buffered.size)
         assertEquals(listOf(1, 3, 4), first.visible.map { it.id })
         assertEquals(listOf(5, 6, 7), second.visible.map { it.id })
         assertEquals(listOf(8), third.visible.map { it.id })
@@ -33,7 +34,7 @@ class MonthlyReportPageTest {
 
     private fun page(source: List<ReportSummaryData>, cursor: String?, limit: Int): ApiResult<ReportPageData> {
         val offset = cursor?.toInt() ?: 0
-        val items = source.drop(offset).take(limit)
+        val items = source.drop(offset).take(minOf(limit, 4))
         val next = (offset + items.size).takeIf { it < source.size }
         return ApiResult.Success(ReportPageData(items, next?.toString()), 200, "SUCCESS", "", ResponseSource.NETWORK)
     }

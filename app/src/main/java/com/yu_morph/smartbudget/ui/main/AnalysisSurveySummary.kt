@@ -86,13 +86,9 @@ internal fun AnalysisSurveySummary(
 private fun SurveyDemographics(survey: AnalysisSurvey) {
     val age = surveyAge(survey.birthDate)
     Row(horizontalArrangement = Arrangement.spacedBy(5.dp), verticalAlignment = Alignment.CenterVertically) {
-        if (survey.birthDate.isNotBlank()) {
+        if (age != null) {
             Text(
-                text = if (age == null) {
-                    survey.birthDate
-                } else {
-                    stringResource(analysisAgeGroupResource(age), age / 10 * 10, survey.birthDate)
-                },
+                text = stringResource(analysisAgeGroupResource(age), age / 10 * 10),
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 style = MaterialTheme.typography.bodySmall,
             )

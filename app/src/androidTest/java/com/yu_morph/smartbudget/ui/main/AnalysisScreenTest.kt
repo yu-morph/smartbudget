@@ -37,7 +37,10 @@ class AnalysisScreenTest {
                 false,
             )
         }
-        val state = mutableStateOf(AnalysisUiState(reports = reports.take(3), hasMoreReports = true))
+        val state =
+            mutableStateOf(
+                AnalysisUiState(reports = reports.take(3), hasMoreReports = true, reportCount = reports.size),
+            )
         var openedId: Int? = null
         composeRule.setContent {
             SmartBudgetTheme {
@@ -51,13 +54,14 @@ class AnalysisScreenTest {
             }
         }
 
-        text(R.string.analysis_report_number, 1).assertIsDisplayed()
+        text(R.string.analysis_report_number, 4).assertIsDisplayed()
         text(R.string.analysis_report_number, 3).assertIsDisplayed()
-        text(R.string.analysis_report_number, 4).assertDoesNotExist()
+        text(R.string.analysis_report_number, 1).assertDoesNotExist()
         text(R.string.analysis_report_number, 290).assertDoesNotExist()
         text(R.string.analysis_report_more).performClick()
 
-        text(R.string.analysis_report_number, 4).performClick()
+        text(R.string.analysis_report_number, 4).assertIsDisplayed()
+        text(R.string.analysis_report_number, 1).performClick()
         composeRule.runOnIdle { assertEquals(reports.last().id, openedId) }
     }
 

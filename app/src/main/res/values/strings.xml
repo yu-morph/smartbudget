@@ -419,9 +419,9 @@
     <string name="sample_report_food" formatted="false">외식비 8% 감소</string>
     <string name="sample_report_fixed">고정비 비중 증가</string>
     <string name="sample_report_goal">예산 목표 달성</string>
-    <string name="analysis_age_group_early">%1$d대 초반 (%2$s)</string>
-    <string name="analysis_age_group_mid">%1$d대 중반 (%2$s)</string>
-    <string name="analysis_age_group_late">%1$d대 후반 (%2$s)</string>
+    <string name="analysis_age_group_early">%1$d대 초반</string>
+    <string name="analysis_age_group_mid">%1$d대 중반</string>
+    <string name="analysis_age_group_late">%1$d대 후반</string>
     <string name="analysis_info_missing">미입력</string>
     <string name="analysis_report_more">더 보기</string>
     <string name="analysis_report_period">기간: %1$d월 %2$d일~%3$d월 %4$d일</string>

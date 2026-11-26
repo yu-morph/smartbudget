@@ -48,6 +48,7 @@ internal data class AnalysisUiState(
     val activeContent: AnalysisReportContent? = null,
     val isLoadingHistory: Boolean = false,
     val hasMoreReports: Boolean = false,
+    val reportCount: Int = 0,
     val historyFailure: AnalysisFailure? = null,
     val reportGoals: Map<Int, String> = emptyMap(),
     val isLoadingReport: Boolean = false,
@@ -110,6 +111,7 @@ internal class AnalysisCoordinator(
                 state = state.copy(
                     reports = reports,
                     hasMoreReports = page.buffered.isNotEmpty(),
+                    reportCount = reports.size + page.buffered.size,
                     reportGoals = readReportGoals(reports),
                 )
                 if (latestChanged) refreshLatestPreview(latest)

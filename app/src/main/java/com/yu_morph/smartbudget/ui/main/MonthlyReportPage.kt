@@ -6,27 +6,29 @@ import com.yu_morph.smartbudget.data.remote.model.ReportPageData
 import com.yu_morph.smartbudget.data.remote.model.ReportSummaryData
 
 private const val REPORTS_PER_PAGE = 3
+private const val REPORT_QUERY_LIMIT = 100
 
 internal data class MonthlyReportPage(
     val visible: List<ReportSummaryData> = emptyList(),
     val buffered: List<ReportSummaryData> = emptyList(),
-    val cursor: String? = null,
     val exhausted: Boolean = false,
 ) {
     suspend fun load(fetch: suspend (ReportListQuery) -> ApiResult<ReportPageData>): MonthlyReportPage {
         val reports = buffered.toMutableList()
-        val lookaheadLimit = REPORTS_PER_PAGE + 1
-        var next = cursor
+        var next: String? = null
+        val seenCursors = mutableSetOf<String>()
         var done = exhausted
-        while (!done && reports.size < lookaheadLimit) {
-            val result = fetch(ReportListQuery(limit = lookaheadLimit - reports.size, cursor = next))
+        while (!done) {
+            val result = fetch(ReportListQuery(limit = REPORT_QUERY_LIMIT, cursor = next))
             if (result !is ApiResult.Success) throw ReportHistoryException(result.toAnalysisFailure())
             reports += result.data?.items.orEmpty().filter { it.periodType == "monthly" }
             val following = result.data?.nextCursor
-            done = following == null || following == next
+            if (following != null && !seenCursors.add(following)) throw ReportHistoryException(AnalysisFailure.RESPONSE)
+            done = following == null
             next = following
         }
-        return MonthlyReportPage(reports.take(REPORTS_PER_PAGE), reports.drop(REPORTS_PER_PAGE), next, done)
+        val unique = reports.distinctBy { it.id }
+        return MonthlyReportPage(unique.take(REPORTS_PER_PAGE), unique.drop(REPORTS_PER_PAGE), exhausted = true)
     }
 }
 

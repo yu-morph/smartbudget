@@ -7,6 +7,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -66,6 +67,7 @@ internal fun AnalysisHistory(
             )
             Button(
                 onClick = onNewReport,
+                contentPadding = PaddingValues(horizontal = 4.dp, vertical = 8.dp),
                 colors = ButtonDefaults.buttonColors(
                     containerColor = colors.surfaceContainerLow,
                     contentColor = analysisHistoryActionColor(),
@@ -113,7 +115,8 @@ private fun HistoryEntries(
     Column {
         state.reports.forEachIndexed { index, report ->
             if (index > 0) HorizontalDivider(color = colors.outlineVariant.copy(alpha = 0.2f))
-            HistoryRow(report, number = index + 1, goal = state.reportGoals[report.id]) { onOpenReport(report) }
+            val number = maxOf(state.reportCount, state.reports.size) - index
+            HistoryRow(report, number = number, goal = state.reportGoals[report.id]) { onOpenReport(report) }
         }
         state.historyFailure?.let {
             Text(
@@ -126,7 +129,7 @@ private fun HistoryEntries(
         if (state.hasMoreReports) {
             TextButton(
                 onClick = onLoadMore,
-                colors = ButtonDefaults.textButtonColors(contentColor = analysisHistoryActionColor()),
+                colors = ButtonDefaults.textButtonColors(contentColor = colors.onSurfaceVariant.copy(alpha = 0.66f)),
                 enabled = !state.isLoadingHistory,
                 modifier = Modifier.align(Alignment.CenterHorizontally),
             ) {
