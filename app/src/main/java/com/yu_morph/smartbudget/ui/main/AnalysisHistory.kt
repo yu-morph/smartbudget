@@ -28,7 +28,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.heading
@@ -37,7 +36,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.yu_morph.smartbudget.R
 import com.yu_morph.smartbudget.data.remote.model.ReportSummaryData
-import com.yu_morph.smartbudget.ui.theme.SmartBudgetLogoGradientEnd
+import com.yu_morph.smartbudget.ui.theme.SmartBudgetGreen
 import java.time.LocalDate
 
 @Composable
@@ -49,7 +48,6 @@ internal fun AnalysisHistory(
     onOpenReport: (ReportSummaryData) -> Unit,
 ) {
     val colors = MaterialTheme.colorScheme
-    val actionColor = if (colors.background.luminance() > 0.5f) SmartBudgetLogoGradientEnd else colors.primary
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
         Row(
             modifier = Modifier.fillMaxWidth(),
@@ -65,7 +63,10 @@ internal fun AnalysisHistory(
             )
             Button(
                 onClick = onNewReport,
-                colors = ButtonDefaults.buttonColors(containerColor = actionColor, contentColor = colors.onPrimary),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = SmartBudgetGreen,
+                    contentColor = colors.onPrimary,
+                ),
             ) {
                 Icon(Icons.Outlined.Add, contentDescription = null, modifier = Modifier.size(16.dp))
                 Text(stringResource(R.string.analysis_new_report), modifier = Modifier.padding(start = 4.dp))
@@ -110,7 +111,7 @@ private fun HistoryEntries(
     Column {
         state.reports.forEachIndexed { index, report ->
             if (index > 0) HorizontalDivider(color = colors.outlineVariant.copy(alpha = 0.45f))
-            HistoryRow(report, state.reportGoals[report.id]) { onOpenReport(report) }
+            HistoryRow(report, number = index + 1, goal = state.reportGoals[report.id]) { onOpenReport(report) }
         }
         state.historyFailure?.let {
             Text(
@@ -143,7 +144,7 @@ private fun HistoryEntries(
 }
 
 @Composable
-private fun HistoryRow(report: ReportSummaryData, goal: String?, onClick: () -> Unit) {
+private fun HistoryRow(report: ReportSummaryData, number: Int, goal: String?, onClick: () -> Unit) {
     val start = runCatching { LocalDate.parse(report.periodStart) }.getOrNull()
     val end = runCatching { LocalDate.parse(report.periodEnd) }.getOrNull()
     val colors = MaterialTheme.colorScheme
@@ -158,7 +159,7 @@ private fun HistoryRow(report: ReportSummaryData, goal: String?, onClick: () -> 
                 .padding(horizontal = 7.dp, vertical = 5.dp),
         ) {
             Text(
-                stringResource(R.string.analysis_report_id, report.id),
+                stringResource(R.string.analysis_report_number, number),
                 color = colors.onSurfaceVariant,
                 style = MaterialTheme.typography.labelSmall,
             )

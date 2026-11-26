@@ -1,5 +1,6 @@
 package com.yu_morph.smartbudget.ui.main
 
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.createComposeRule
@@ -22,6 +23,43 @@ import org.junit.Test
 class AnalysisScreenTest {
     @get:Rule
     val composeRule = createComposeRule()
+
+    @Test
+    fun reportNumbersContinueAfterLoadingMoreWithoutChangingReportIdentity() {
+        val reports = listOf(290, 104, 72, 36).mapIndexed { index, id ->
+            val month = YearMonth.of(2026, 11).minusMonths(index.toLong())
+            ReportSummaryData(
+                id,
+                "${month.atEndOfMonth()}T11:00:00+09:00",
+                "monthly",
+                month.atDay(1).toString(),
+                month.atEndOfMonth().toString(),
+                false,
+            )
+        }
+        val state = mutableStateOf(AnalysisUiState(reports = reports.take(3), hasMoreReports = true))
+        var openedId: Int? = null
+        composeRule.setContent {
+            SmartBudgetTheme {
+                AnalysisHistory(
+                    state = state.value,
+                    onRetry = {},
+                    onLoadMore = { state.value = state.value.copy(reports = reports, hasMoreReports = false) },
+                    onNewReport = {},
+                    onOpenReport = { openedId = it.id },
+                )
+            }
+        }
+
+        text(R.string.analysis_report_number, 1).assertIsDisplayed()
+        text(R.string.analysis_report_number, 3).assertIsDisplayed()
+        text(R.string.analysis_report_number, 4).assertDoesNotExist()
+        text(R.string.analysis_report_number, 290).assertDoesNotExist()
+        text(R.string.analysis_report_more).performClick()
+
+        text(R.string.analysis_report_number, 4).performClick()
+        composeRule.runOnIdle { assertEquals(reports.last().id, openedId) }
+    }
 
     @Test
     fun tappingLatestAiSummaryOpensNewestReport() {

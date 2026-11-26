@@ -426,7 +426,7 @@
     <string name="analysis_report_period_unknown">기간 정보 없음</string>
     <string name="analysis_report_goal_save">절약</string>
     <string name="analysis_report_goal_maintain">유지</string>
-    <string name="analysis_report_id">#%1$d</string>
+    <string name="analysis_report_number">#%1$d</string>
     <string name="analysis_report_goal_period">%1$s · %2$s</string>
     <string name="analysis_survey_interest_summary">관심사 · %1$s</string>
     <string name="analysis_latest_month">최근 리포트 · %1$d년 %2$d월</string>
