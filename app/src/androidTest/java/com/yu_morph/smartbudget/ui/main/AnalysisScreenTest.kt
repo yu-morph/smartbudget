@@ -1,5 +1,6 @@
 package com.yu_morph.smartbudget.ui.main
 
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithContentDescription
@@ -11,6 +12,7 @@ import androidx.test.platform.app.InstrumentationRegistry
 import com.yu_morph.smartbudget.R
 import com.yu_morph.smartbudget.data.remote.model.ReportDetailData
 import com.yu_morph.smartbudget.ui.theme.SmartBudgetTheme
+import java.time.YearMonth
 import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
@@ -71,12 +73,33 @@ class AnalysisScreenTest {
         text(R.string.analysis_result_app_bar).assertIsDisplayed()
         text(R.string.analysis_result_title, 2026, 10).assertIsDisplayed()
         composeRule.onNodeWithText("서버가 생성한 분석이에요.").assertIsDisplayed()
+        text(R.string.analysis_result_categories_title).performScrollTo().assertIsDisplayed()
+        text(R.string.analysis_result_occurrence, 12).performScrollTo().assertIsDisplayed()
         val weekday = text(R.string.analysis_result_weekday_title).fetchSemanticsNode()
         val news = text(R.string.analysis_result_news_title).fetchSemanticsNode()
         val advice = text(R.string.analysis_result_maintain_advice).fetchSemanticsNode()
         assertTrue(weekday.positionInRoot.y < news.positionInRoot.y)
         assertTrue(news.positionInRoot.y < advice.positionInRoot.y)
         composeRule.onNodeWithText("예산 기록을 이어가세요.").performScrollTo().assertIsDisplayed()
+    }
+
+    @Test
+    fun reportWithOnlyAdviceOmitsOtherSections() {
+        composeRule.setContent {
+            SmartBudgetTheme(darkTheme = false) {
+                AnalysisResultScreen(
+                    modifier = Modifier,
+                    period = YearMonth.of(2026, 10),
+                    content = AnalysisReportContent(tipsForSaving = "외식 예산을 정해보세요."),
+                )
+            }
+        }
+
+        text(R.string.analysis_result_advice_heading).assertIsDisplayed()
+        composeRule.onNodeWithText("외식 예산을 정해보세요.").assertIsDisplayed()
+        text(R.string.analysis_result_ai_title).assertDoesNotExist()
+        text(R.string.analysis_result_categories_title).assertDoesNotExist()
+        text(R.string.analysis_result_insights_heading).assertDoesNotExist()
     }
 
     private fun showAnalysisFlow(
@@ -100,6 +123,10 @@ class AnalysisScreenTest {
                     activeContent =
                         AnalysisReportContent(
                             aWordFromAi = "서버가 생성한 분석이에요.",
+                            topSpendingCategories = listOf(
+                                AnalysisCategoryInsight("식비", 12, "주간 식비 한도를 정해보세요."),
+                                AnalysisCategoryInsight("교통비", 5, "대중교통 이용을 유지해보세요."),
+                            ),
                             spendingByDayOfWeek = "금요일의 지출이 가장 많았어요.",
                             newsDrivenInsights = "대중교통 요금 변동을 확인해 보세요.",
                             tipsToKeepItUp = "예산 기록을 이어가세요.",

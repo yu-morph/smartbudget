@@ -312,6 +312,7 @@
     <string name="analysis_survey_finance_section">대출 현황</string>
     <string name="analysis_survey_goal_section">관리 목표와 관심사</string>
     <string name="analysis_result_advice_heading">소비 관리 조언</string>
+    <string name="analysis_result_insights_heading">소비 인사이트</string>
     <string name="analysis_custom_title">맞춤 소비 분석</string>
     <string name="analysis_survey_heading">더 정확한 분석을 위해 알려주세요</string>
     <string name="analysis_survey_privacy">※ 입력된 정보는 소비 분석 기능에만 사용되며, 사용자 개인 식별이 가능한 데이터는 외부 요청 시 포함되지 않습니다.</string>
