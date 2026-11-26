@@ -327,7 +327,7 @@ private fun ReportIcon(icon: ImageVector, tint: Color) {
 private fun ReportBlockTitle(@StringRes title: Int) {
     Text(
         stringResource(title),
-        modifier = Modifier.semantics { heading() },
+        modifier = Modifier.semantics { heading() }.padding(top = 8.dp),
         style = MaterialTheme.typography.titleLarge,
         fontWeight = FontWeight.Bold,
         color = MaterialTheme.colorScheme.onBackground,

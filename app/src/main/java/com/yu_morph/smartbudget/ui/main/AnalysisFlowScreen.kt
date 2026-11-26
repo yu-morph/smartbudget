@@ -24,19 +24,16 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.selection.selectableGroup
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.ArrowBack
-import androidx.compose.material.icons.outlined.CalendarMonth
 import androidx.compose.material.icons.outlined.ChevronLeft
 import androidx.compose.material.icons.outlined.ChevronRight
 import androidx.compose.material.icons.outlined.Female
 import androidx.compose.material.icons.outlined.Male
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -56,6 +53,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -241,9 +239,9 @@ internal fun AnalysisFlowScreen(
                 message = R.string.analysis_loading_status,
             )
 
-                period = reportPeriod ?: YearMonth.of(year, month),
             AnalysisFlowStep.RESULT -> AnalysisResultScreen(
                 modifier = Modifier.padding(innerPadding),
+                period = reportPeriod ?: YearMonth.of(year, month),
                 content = analysisState.activeContent,
             )
         }
@@ -445,11 +443,6 @@ private fun ChoiceRow(labels: List<Int>, values: List<String>, selected: String,
                         .background(
                             if (isSelected) colors.primary.copy(alpha = 0.12f) else editorMutedBackground(),
                         )
-                        .border(
-                            1.dp,
-                            if (isSelected) colors.primary else colors.outlineVariant,
-                            RoundedCornerShape(14.dp),
-                        )
                         .selectable(selected = isSelected, role = Role.RadioButton, onClick = {
                             onSelect(values[index])
                         })
@@ -459,6 +452,7 @@ private fun ChoiceRow(labels: List<Int>, values: List<String>, selected: String,
                     Text(
                         stringResource(label),
                         color = if (isSelected) colors.primary else colors.onSurface,
+                        fontSize = 14.sp,
                         fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
                     )
                 }
@@ -527,7 +521,7 @@ private fun AnalysisRequestScreen(
             Image(
                 painterResource(R.drawable.spending_analysis_robot),
                 contentDescription = null,
-                modifier = Modifier.size(210.dp),
+                modifier = Modifier.size(300.dp),
             )
         }
         failure?.let {
@@ -570,23 +564,32 @@ private fun AnalysisMonthControl(selectedMonth: YearMonth, onChange: (Long) -> U
     Row(
         modifier = Modifier.fillMaxWidth().border(
             width = 1.dp,
-            color = MaterialTheme.colorScheme.outlineVariant,
+            color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.2f),
             shape = RoundedCornerShape(12.dp),
-        ),
+        ).padding(vertical = 2.dp, horizontal = 4.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         IconButton(onClick = { onChange(-1) }) {
-            Icon(Icons.Outlined.ChevronLeft, stringResource(R.string.analysis_previous_month))
+            Icon(
+                Icons.Outlined.ChevronLeft,
+                stringResource(R.string.analysis_previous_month),
+                modifier = Modifier.size(18.dp).alpha(0.6f),
+            )
         }
         Text(
             stringResource(R.string.year_month, selectedMonth.year, selectedMonth.monthValue),
             modifier = Modifier.weight(1f),
             textAlign = TextAlign.Center,
-            fontSize = 18.sp,
+            fontSize = 15.sp,
             fontWeight = FontWeight.SemiBold,
+            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.9f),
         )
         IconButton(enabled = selectedMonth < YearMonth.now(analysisZone), onClick = { onChange(1) }) {
-            Icon(Icons.Outlined.ChevronRight, stringResource(R.string.analysis_next_month))
+            Icon(
+                Icons.Outlined.ChevronRight,
+                stringResource(R.string.analysis_next_month),
+                modifier = Modifier.size(18.dp).alpha(0.6f),
+            )
         }
     }
 }
