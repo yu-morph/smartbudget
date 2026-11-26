@@ -70,6 +70,11 @@ class AnalysisScreenTest {
 
         text(R.string.analysis_result_title, 2026, 10).assertIsDisplayed()
         composeRule.onNodeWithText("서버가 생성한 분석이에요.").assertIsDisplayed()
+        val weekday = text(R.string.analysis_result_weekday_title).fetchSemanticsNode()
+        val news = text(R.string.analysis_result_news_title).fetchSemanticsNode()
+        val advice = text(R.string.analysis_result_maintain_advice).fetchSemanticsNode()
+        assertTrue(weekday.positionInRoot.y < news.positionInRoot.y)
+        assertTrue(news.positionInRoot.y < advice.positionInRoot.y)
         composeRule.onNodeWithText("예산 기록을 이어가세요.").performScrollTo().assertIsDisplayed()
     }
 
@@ -94,6 +99,8 @@ class AnalysisScreenTest {
                     activeContent =
                         AnalysisReportContent(
                             aWordFromAi = "서버가 생성한 분석이에요.",
+                            spendingByDayOfWeek = "금요일의 지출이 가장 많았어요.",
+                            newsDrivenInsights = "대중교통 요금 변동을 확인해 보세요.",
                             tipsToKeepItUp = "예산 기록을 이어가세요.",
                         ),
                 )

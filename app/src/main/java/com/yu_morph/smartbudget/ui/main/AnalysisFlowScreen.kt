@@ -40,6 +40,7 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -62,6 +63,8 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
@@ -599,26 +602,43 @@ private fun AnalysisMonthControl(selectedMonth: YearMonth, onChange: (Long) -> U
 
 @Composable
 private fun AnalysisResultScreen(modifier: Modifier, content: AnalysisReportContent?) {
-    MainTabContainer(bottomPadding = 0.dp, modifier = modifier) {
-        content?.aWordFromAi?.let { body ->
-            ResultCard(R.string.analysis_result_ai_title, highlighted = true) {
-                Text(body, style = MaterialTheme.typography.bodyLarge, lineHeight = 22.sp)
+    Column(
+        modifier = modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)
+            .verticalScroll(rememberScrollState()),
+    ) {
+        if (content != null) {
+            val categories = content.topSpendingCategories
+            val sections = listOf(
+                R.string.analysis_result_ai_title to content.aWordFromAi,
+                R.string.analysis_result_categories_title to null,
+                R.string.analysis_result_health_title to content.spendingHealth,
+                R.string.analysis_result_weekday_title to content.spendingByDayOfWeek,
+                R.string.analysis_result_news_title to content.newsDrivenInsights,
+                R.string.analysis_result_save_advice to content.tipsForSaving,
+                R.string.analysis_result_maintain_advice to content.tipsToKeepItUp,
+                R.string.analysis_result_interest_title to content.tipsForInterests,
+            ).filter { (title, body) ->
+                body != null || (title == R.string.analysis_result_categories_title && categories.isNotEmpty())
             }
-        }
-        if (content?.topSpendingCategories?.isNotEmpty() == true) {
-            ResultCard(R.string.analysis_result_categories_title) {
-                content.topSpendingCategories.forEach { category ->
-                    AnalysisCategoryRow(category)
+            sections.forEachIndexed { index, (title, body) ->
+                if (index > 0) HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+                Column(
+                    modifier = Modifier.fillMaxWidth().padding(horizontal = 20.dp, vertical = 18.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp),
+                ) {
+                    Text(
+                        stringResource(title),
+                        modifier = Modifier.semantics { heading() },
+                        style = MaterialTheme.typography.titleMedium,
+                    )
+                    if (body != null) {
+                        Text(body, lineHeight = 22.sp)
+                    } else {
+                        categories.forEach { AnalysisCategoryRow(it) }
+                    }
                 }
             }
         }
-        content?.spendingHealth?.let { AnalysisTextResultCard(R.string.analysis_result_health_title, it) }
-        content?.spendingByDayOfWeek?.let { AnalysisTextResultCard(R.string.analysis_result_weekday_title, it) }
-        content?.tipsForSaving?.let { AnalysisTextResultCard(R.string.analysis_result_save_advice, it) }
-        content?.tipsToKeepItUp?.let { AnalysisTextResultCard(R.string.analysis_result_maintain_advice, it) }
-        content?.tipsForInterests?.let { AnalysisTextResultCard(R.string.analysis_result_interest_title, it) }
-        content?.newsDrivenInsights?.let { AnalysisTextResultCard(R.string.analysis_result_news_title, it) }
-        Spacer(Modifier.height(16.dp))
     }
 }
 
@@ -638,11 +658,6 @@ private fun AnalysisCategoryRow(category: AnalysisCategoryInsight) {
             )
         }
     }
-}
-
-@Composable
-private fun AnalysisTextResultCard(title: Int, body: String) {
-    ResultCard(title) { Text(body, lineHeight = 21.sp) }
 }
 
 @Composable
