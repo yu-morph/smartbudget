@@ -71,6 +71,11 @@ internal fun SpendingTemperatureRow(
     ) {
         HomeSpendingCardHeading(stringResource(R.string.home_spending_temperature))
         Spacer(Modifier.weight(1f))
+        Text(
+            text = label,
+            style = MaterialTheme.typography.labelSmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween,
