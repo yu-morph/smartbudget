@@ -6,6 +6,7 @@ import androidx.annotation.StringRes
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -23,6 +24,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.AutoAwesome
 import androidx.compose.material.icons.outlined.CalendarToday
 import androidx.compose.material.icons.outlined.CheckCircleOutline
+import androidx.compose.material.icons.outlined.ChevronRight
 import androidx.compose.material.icons.outlined.FavoriteBorder
 import androidx.compose.material.icons.outlined.Lightbulb
 import androidx.compose.material.icons.outlined.Newspaper
@@ -41,9 +43,11 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.yu_morph.smartbudget.R
@@ -117,10 +121,24 @@ private fun ReportContent(content: AnalysisReportContent) {
 }
 
 @Composable
-private fun ReportSummary(body: String) {
+internal fun ReportSummary(
+    body: String,
+    caption: String? = null,
+    maxLines: Int = Int.MAX_VALUE,
+    onClick: (() -> Unit)? = null,
+) {
     val shape = RoundedCornerShape(24.dp)
+    val action = if (onClick == null) {
+        Modifier
+    } else {
+        Modifier.clickable(
+            role = Role.Button,
+            onClickLabel = stringResource(R.string.analysis_latest_open),
+            onClick = onClick,
+        )
+    }
     Box(
-        modifier = Modifier.fillMaxWidth().clip(shape).background(
+        modifier = Modifier.fillMaxWidth().clip(shape).then(action).background(
             Brush.linearGradient(listOf(ReportHeroDarkGreen, ReportHeroLightGreen)),
         ),
     ) {
@@ -146,17 +164,23 @@ private fun ReportSummary(body: String) {
                 Icon(Icons.Outlined.AutoAwesome, contentDescription = null, tint = ReportHeroMint)
                 Text(
                     stringResource(R.string.analysis_result_ai_title),
-                    modifier = Modifier.semantics { heading() },
+                    modifier = Modifier.weight(1f).semantics { heading() },
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold,
                     color = ReportHeroMint,
                 )
+                if (onClick != null) Icon(Icons.Outlined.ChevronRight, contentDescription = null, tint = ReportHeroMint)
+            }
+            if (caption != null) {
+                Text(caption, style = MaterialTheme.typography.labelMedium, color = ReportHeroMint)
             }
             Text(
                 body,
                 style = MaterialTheme.typography.bodyLarge,
                 lineHeight = 26.sp,
                 color = Color.White,
+                maxLines = maxLines,
+                overflow = TextOverflow.Ellipsis,
             )
         }
     }

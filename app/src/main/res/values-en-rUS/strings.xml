@@ -361,4 +361,12 @@
     <string name="analysis_report_goal_maintain">Maintain</string>
     <string name="analysis_report_id">#%1$d</string>
     <string name="analysis_report_goal_period">%1$s · %2$s</string>
+    <string name="analysis_survey_interest_summary">Interests · %1$s</string>
+    <string name="analysis_latest_month">Latest report · %2$d/%1$d</string>
+    <string name="analysis_latest_open">Open the latest report</string>
+    <string name="analysis_latest_empty">Once you create a monthly report, its highlights will appear here.</string>
+    <string name="analysis_latest_loading">Loading the latest analysis summary…</string>
+    <string name="analysis_latest_failed">The latest analysis summary could not be loaded.</string>
+    <string name="analysis_latest_no_summary">This report has no AI summary.</string>
+    <string name="analysis_retry">Try again</string>
 </resources>

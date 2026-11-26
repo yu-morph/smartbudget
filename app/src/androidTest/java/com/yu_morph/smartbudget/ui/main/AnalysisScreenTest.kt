@@ -11,8 +11,10 @@ import androidx.compose.ui.unit.dp
 import androidx.test.platform.app.InstrumentationRegistry
 import com.yu_morph.smartbudget.R
 import com.yu_morph.smartbudget.data.remote.model.ReportDetailData
+import com.yu_morph.smartbudget.data.remote.model.ReportSummaryData
 import com.yu_morph.smartbudget.ui.theme.SmartBudgetTheme
 import java.time.YearMonth
+import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
@@ -20,6 +22,32 @@ import org.junit.Test
 class AnalysisScreenTest {
     @get:Rule
     val composeRule = createComposeRule()
+
+    @Test
+    fun tappingLatestAiSummaryOpensNewestReport() {
+        val latest = ReportSummaryData(42, "2026-11-26T11:00:00+09:00", "monthly", "2026-11-01", "2026-11-30", false)
+        var openedId: Int? = null
+        composeRule.setContent {
+            SmartBudgetTheme {
+                AnalysisScreen(
+                    bottomPadding = 0.dp,
+                    state = AnalysisUiState(
+                        reports = listOf(latest),
+                        latestPreview = LatestReportPreview.Ready("평일 점심 지출을 살펴보세요."),
+                    ),
+                    displayName = "테스트 사용자",
+                    onLoad = {},
+                    onLoadMore = {},
+                    onEditSurvey = {},
+                    onNewReport = {},
+                    onOpenReport = { openedId = it.id },
+                )
+            }
+        }
+
+        composeRule.onNodeWithText("평일 점심 지출을 살펴보세요.").performScrollTo().performClick()
+        composeRule.runOnIdle { assertEquals(latest.id, openedId) }
+    }
 
     @Test
     fun editingSurveyFromStartKeepsSelectedMonth() {

@@ -43,6 +43,7 @@ internal enum class AnalysisFailure {
 internal data class AnalysisUiState(
     val survey: AnalysisSurvey = AnalysisSurvey(),
     val reports: List<ReportSummaryData> = emptyList(),
+    val latestPreview: LatestReportPreview? = null,
     val activeReport: ReportDetailData? = null,
     val activeContent: AnalysisReportContent? = null,
     val isLoadingHistory: Boolean = false,
@@ -66,6 +67,7 @@ internal class AnalysisCoordinator(
 ) : Closeable {
     private var historyJob: Job? = null
     private var reportJob: Job? = null
+    private var latestPreviewJob: Job? = null
     private val reportGoals = context.applicationContext.getSharedPreferences(
         "analysis_report_goals",
         Context.MODE_PRIVATE,
@@ -80,7 +82,13 @@ internal class AnalysisCoordinator(
     fun loadHistory(force: Boolean = false) {
         restoreSurvey()
         if (force) historyJob?.cancel()
-        if (force || (!historyRequested && historyJob?.isActive != true)) loadHistoryPage(replace = true)
+        val retryHistory = state.historyFailure != null && !state.hasMoreReports
+        val needsHistory = !historyRequested || retryHistory
+        if (force || (needsHistory && historyJob?.isActive != true)) {
+            loadHistoryPage(replace = true)
+        } else if (state.latestPreview is LatestReportPreview.Failed) {
+            refreshLatestPreview(state.reports.firstOrNull())
+        }
     }
 
     fun loadMoreHistory() {
@@ -96,12 +104,15 @@ internal class AnalysisCoordinator(
                 historyPage = page
                 val existing = if (replace) emptyList() else state.reports
                 val reports = (existing + page.visible).distinctBy { it.id }
+                val latest = reports.firstOrNull()
+                val latestChanged = latest != state.reports.firstOrNull()
                 historyRequested = true
                 state = state.copy(
                     reports = reports,
                     hasMoreReports = page.buffered.isNotEmpty(),
                     reportGoals = readReportGoals(reports),
                 )
+                if (latestChanged) refreshLatestPreview(latest)
             } catch (exception: CancellationException) {
                 throw exception
             } catch (exception: ReportHistoryException) {
@@ -111,6 +122,30 @@ internal class AnalysisCoordinator(
             } finally {
                 state = state.copy(isLoadingHistory = false)
             }
+        }
+    }
+
+    private fun refreshLatestPreview(report: ReportSummaryData?) {
+        latestPreviewJob?.cancel()
+        if (report == null) {
+            state = state.copy(latestPreview = null)
+            return
+        }
+        val active = state.activeReport
+        if (active?.id == report.id && active.generatedAt == report.generatedAt) {
+            state = state.copy(latestPreview = LatestReportPreview.Ready(state.activeContent?.aWordFromAi))
+            return
+        }
+        state = state.copy(latestPreview = LatestReportPreview.Loading)
+        latestPreviewJob = scope.launch {
+            val preview = try {
+                api.reports.get(report.id).toLatestReportPreview(report.id)
+            } catch (exception: CancellationException) {
+                throw exception
+            } catch (_: Exception) {
+                LatestReportPreview.Failed(AnalysisFailure.SERVICE)
+            }
+            if (state.reports.firstOrNull() == report) state = state.copy(latestPreview = preview)
         }
     }
 
@@ -192,6 +227,7 @@ internal class AnalysisCoordinator(
     fun reset() {
         historyJob?.cancel()
         reportJob?.cancel()
+        latestPreviewJob?.cancel()
         historyRequested = false
         historyPage = MonthlyReportPage()
         surveyOwner = null
@@ -202,6 +238,7 @@ internal class AnalysisCoordinator(
     override fun close() {
         historyJob?.cancel()
         reportJob?.cancel()
+        latestPreviewJob?.cancel()
         newsRepository.close()
     }
 

@@ -428,4 +428,12 @@
     <string name="analysis_report_goal_maintain">유지</string>
     <string name="analysis_report_id">#%1$d</string>
     <string name="analysis_report_goal_period">%1$s · %2$s</string>
+    <string name="analysis_survey_interest_summary">관심사 · %1$s</string>
+    <string name="analysis_latest_month">최근 리포트 · %1$d년 %2$d월</string>
+    <string name="analysis_latest_open">최신 리포트 열기</string>
+    <string name="analysis_latest_empty">월간 리포트가 만들어지면 이곳에서 최근 분석의 핵심 내용을 볼 수 있어요.</string>
+    <string name="analysis_latest_loading">최근 분석 요약을 불러오는 중…</string>
+    <string name="analysis_latest_failed">최근 분석 요약을 불러오지 못했어요.</string>
+    <string name="analysis_latest_no_summary">이 리포트에는 AI 요약이 없어요.</string>
+    <string name="analysis_retry">다시 시도</string>
 </resources>
